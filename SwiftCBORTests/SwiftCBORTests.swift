@@ -47,6 +47,17 @@ class SwiftCBORTests: XCTestCase {
 		XCTAssertEqual(try! CBORDecoder(input: [0x5f, 0x58, 3, 0xc0, 0xff, 0xee, 0x43, 0xc0, 0xff, 0xee, 0xff]).decodeItem() as! [UInt8], [0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee])
 	}
 	
+	func testDecodeUtf8Strings() {
+		XCTAssertEqual(try! CBORDecoder(input: [0x60]).decodeItem() as! String, "")
+		XCTAssertEqual(try! CBORDecoder(input: [0x61, 0x42]).decodeItem() as! String, "B")
+		XCTAssertEqual(try! CBORDecoder(input: [0x78, 0]).decodeItem() as! String, "")
+		XCTAssertEqual(try! CBORDecoder(input: [0x78, 1, 0x42]).decodeItem() as! String, "B")
+		XCTAssertEqual(try! CBORDecoder(input: [0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem() as! String, "ABC")
+		XCTAssertEqual(try! CBORDecoder(input: [0x7a, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem() as! String, "ABC")
+		XCTAssertEqual(try! CBORDecoder(input: [0x7b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem() as! String, "ABC")
+		XCTAssertEqual(try! CBORDecoder(input: [0x7f, 0x78, 3, 0x41, 0x42, 0x43, 0x63, 0x41, 0x42, 0x43, 0xff]).decodeItem() as! String, "ABCABC")
+	}
+	
 	func testPerformanceExample() {
 		self.measureBlock {
 		}
