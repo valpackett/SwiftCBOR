@@ -25,6 +25,14 @@ class SwiftCBORTests: XCTestCase {
 		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem() as? UInt, 1000000000000)
 		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem() as? UInt, 18446744073709551615)
 		do { try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
+
+		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem() as? Int, -1)
+		XCTAssertEqual(try! CBORDecoder(input: [0x21]).decodeItem() as? Int, -2)
+		XCTAssertEqual(try! CBORDecoder(input: [0x37]).decodeItem() as? Int, -24)
+		XCTAssertEqual(try! CBORDecoder(input: [0x38, 0xff]).decodeItem() as? Int, -256)
+		XCTAssertEqual(try! CBORDecoder(input: [0x39, 0x03, 0xe7]).decodeItem() as? Int, -1000)
+		XCTAssertEqual(try! CBORDecoder(input: [0x3a, 0x00, 0x0f, 0x42, 0x3f]).decodeItem() as? Int, -1000000)
+		XCTAssertEqual((try! CBORDecoder(input: [0x3b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x0f, 0xff]).decodeItem() as! LargeNegativeInt).i, 999999999999)
 	}
 	
 	func testPerformanceExample() {
