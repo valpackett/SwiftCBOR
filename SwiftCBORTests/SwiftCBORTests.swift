@@ -77,8 +77,14 @@ class SwiftCBORTests: XCTestCase {
 		XCTAssertEqual((rf["key"] as! [String : Any])["key"] as? Int, -24)
 	}
 
-	func testPerformanceExample() {
+	func testDecodePerformance() {
+		var data : ArraySlice<UInt8> = [0x9f]
+		for i in (0..<255) {
+			data.appendContentsOf([0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x18, UInt8(i), 0xff])
+		}
+		data.append(0xff)
 		self.measureBlock {
+			try! CBORDecoder(input: data).decodeItem()
 		}
 	}
 

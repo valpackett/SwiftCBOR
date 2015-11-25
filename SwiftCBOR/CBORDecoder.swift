@@ -65,6 +65,7 @@ final class CBORDecoder {
 			guard let oval = val else { throw CBORError.UnfinishedSequence }
 			result[skey] = oval
 			do { key = try decodeItem() } catch CBORError.UnfinishedSequence { key = nil }
+			guard ((key as? CBORBreak) == nil) else { break } // don't eat the val after the break!
 			do { val = try decodeItem() } catch CBORError.UnfinishedSequence { val = nil }
 		}
 		return result
