@@ -9,16 +9,17 @@ internal struct ArraySliceUInt8 {
 }
 
 extension ArraySliceUInt8: CBORInputStream {
-	
+
 	mutating func popByte() throws -> UInt8 {
+		if slice.count < 1 { throw CBORError.UnfinishedSequence }
 		return slice.removeFirst()
 	}
-	
+
 	mutating func popBytes(n: Int) throws -> ArraySlice<UInt8> {
 		if slice.count < n { throw CBORError.UnfinishedSequence }
 		let result = slice.prefix(n)
 		slice = slice.dropFirst(n)
 		return result
 	}
-	
+
 }

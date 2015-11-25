@@ -1,5 +1,5 @@
 final class Util {
-	
+
 	// https://stackoverflow.com/questions/24465475/how-can-i-create-a-string-from-utf8-in-swift
 	static func decodeUtf8(bytes: ArraySlice<UInt8>) throws -> String {
 		var result = ""
@@ -19,5 +19,5 @@ final class Util {
 		} while (!finished)
 		return result
 	}
-	
+
 }
