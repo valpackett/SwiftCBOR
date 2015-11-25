@@ -42,6 +42,10 @@ final class CBORDecoder {
 		return result
 	}
 	
+	private func readN(n: Int) throws -> [Any] {
+		return try (0..<n).map { _ in guard let r = try decodeItem() else { throw CBORError.UnfinishedSequence }; return r }
+	}
+	
 	func decodeItem() throws -> Any? {
 		switch try istream.popByte() {
 		case let b where b <= 0x17: return UInt(b)
@@ -69,7 +73,14 @@ final class CBORDecoder {
 		case 0x7a: return try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(4) as UInt32)))
 		case 0x7b: return try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(8) as UInt64)))
 		case 0x7f: return try readUntilBreak().map { x -> String in guard let r = x as? String else { throw CBORError.WrongTypeInsideSequence }; return r }.joinWithSeparator("")
-		
+
+		case let b where 0x80 <= b && b <= 0x97: return try readN(Int(b - 0x80))
+		case 0x98: return try readN(Int(try istream.popByte()))
+		case 0x99: return try readN(Int(try readUInt(2) as UInt16))
+		case 0x9a: return try readN(Int(try readUInt(4) as UInt32))
+		case 0x9b: return try readN(Int(try readUInt(8) as UInt64))
+		case 0x9f: return try readUntilBreak()
+
 		case 0xff: return CBORBreak()
 		default: return nil
 		}
