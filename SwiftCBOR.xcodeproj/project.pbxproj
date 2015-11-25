@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		37CA325C1C048EF400D36B5B /* Util.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CA325B1C048EF400D36B5B /* Util.swift */; };
+		37CA325E1C0648EF00D36B5B /* CBORInputStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37CA325D1C0648EF00D36B5B /* CBORInputStream.swift */; };
 		37F34C051C0265AE00D36B5B /* SwiftCBOR.h in Headers */ = {isa = PBXBuildFile; fileRef = 37F34C041C0265AE00D36B5B /* SwiftCBOR.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		37F34C0C1C0265AE00D36B5B /* SwiftCBOR.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37F34C011C0265AD00D36B5B /* SwiftCBOR.framework */; };
 		37F34C111C0265AE00D36B5B /* SwiftCBORTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F34C101C0265AE00D36B5B /* SwiftCBORTests.swift */; };
@@ -24,6 +26,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		37CA325B1C048EF400D36B5B /* Util.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Util.swift; sourceTree = "<group>"; };
+		37CA325D1C0648EF00D36B5B /* CBORInputStream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CBORInputStream.swift; sourceTree = "<group>"; };
 		37F34C011C0265AD00D36B5B /* SwiftCBOR.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftCBOR.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		37F34C041C0265AE00D36B5B /* SwiftCBOR.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftCBOR.h; sourceTree = "<group>"; };
 		37F34C061C0265AE00D36B5B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -76,6 +80,8 @@
 				37F34C041C0265AE00D36B5B /* SwiftCBOR.h */,
 				37F34C061C0265AE00D36B5B /* Info.plist */,
 				37F34C1B1C0328B300D36B5B /* CBORDecoder.swift */,
+				37CA325B1C048EF400D36B5B /* Util.swift */,
+				37CA325D1C0648EF00D36B5B /* CBORInputStream.swift */,
 			);
 			path = SwiftCBOR;
 			sourceTree = "<group>";
@@ -198,6 +204,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				37F34C1C1C0328B300D36B5B /* CBORDecoder.swift in Sources */,
+				37CA325E1C0648EF00D36B5B /* CBORInputStream.swift in Sources */,
+				37CA325C1C048EF400D36B5B /* Util.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -398,6 +406,7 @@
 				37F34C171C0265AE00D36B5B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		37F34C181C0265AE00D36B5B /* Build configuration list for PBXNativeTarget "SwiftCBORTests" */ = {
 			isa = XCConfigurationList;
@@ -406,6 +415,7 @@
 				37F34C1A1C0265AE00D36B5B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
