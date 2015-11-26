@@ -106,6 +106,26 @@ public class CBORDecoder {
 		case 0xbb: return CBOR.Map(try readNPairs(Int(try readUInt(8) as UInt64)))
 		case 0xbf: return CBOR.Map(try readPairsUntilBreak())
 
+		case let b where 0xc0 <= b && b <= 0xd7:
+			guard let item = try decodeItem() else { throw CBORError.UnfinishedSequence }
+			return CBOR.Tagged(UInt(b - 0xc0), item)
+		case 0xd8:
+			let tag = UInt(try istream.popByte())
+			guard let item = try decodeItem() else { throw CBORError.UnfinishedSequence }
+			return CBOR.Tagged(tag, item)
+		case 0xd9:
+			let tag = UInt(try readUInt(2) as UInt16)
+			guard let item = try decodeItem() else { throw CBORError.UnfinishedSequence }
+			return CBOR.Tagged(tag, item)
+		case 0xda:
+			let tag = UInt(try readUInt(4) as UInt32)
+			guard let item = try decodeItem() else { throw CBORError.UnfinishedSequence }
+			return CBOR.Tagged(tag, item)
+		case 0xdb:
+			let tag = UInt(try readUInt(8) as UInt64)
+			guard let item = try decodeItem() else { throw CBORError.UnfinishedSequence }
+			return CBOR.Tagged(tag, item)
+
 		case let b where 0xe0 <= b && b <= 0xf3: return CBOR.Simple(b - 0xe0)
 		case 0xf4: return CBOR.Boolean(false)
 		case 0xf5: return CBOR.Boolean(true)

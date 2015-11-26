@@ -5,6 +5,8 @@ A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder
 - No `Foundation` dependency! Ready for the cross-platform future of Swift.
 - Configured as a [universal iOS / OS X framework](https://colemancda.github.io/programming/2015/02/11/universal-ios-osx-framework/).
 - Negative 64-bit integers are decoded as `LargeNegativeInt(UInt)`, where the actual number is `-1 - i`, because CBOR's negative integers can be larger than 64-bit signed integers.
+- Tags are decoded, but not processed. Do it yourself :-)
+- Literal convertibles are defined for the `CBOR` type!
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
 - [cbor.me](http://cbor.me) is recommended for viewing your CBOR-encoded data.
 

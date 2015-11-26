@@ -1,4 +1,4 @@
-public enum CBOR : Equatable, Hashable,
+public indirect enum CBOR : Equatable, Hashable,
 	NilLiteralConvertible, IntegerLiteralConvertible, StringLiteralConvertible,
 	ArrayLiteralConvertible, DictionaryLiteralConvertible, BooleanLiteralConvertible,
 	FloatLiteralConvertible {
@@ -8,6 +8,7 @@ public enum CBOR : Equatable, Hashable,
 	case UTF8String(String)
 	case Array([CBOR])
 	case Map([CBOR : CBOR])
+	case Tagged(UInt, CBOR)
 	case Simple(UInt8)
 	case Boolean(Bool)
 	case Null
@@ -16,7 +17,7 @@ public enum CBOR : Equatable, Hashable,
 	case Float(Float32)
 	case Double(Float64)
 	case Break
-	
+
 	public var hashValue : Int {
 		switch self {
 		case let .PositiveInt(l): return l.hashValue
@@ -25,6 +26,7 @@ public enum CBOR : Equatable, Hashable,
 		case let .UTF8String(l):  return l.hashValue
 		case let .Array(l):	      return Util.djb2Hash(l.map { $0.hashValue })
 		case let .Map(l):         return Util.djb2Hash(l.map { $0.hashValue &+ $1.hashValue })
+		case let .Tagged(t, l):   return t.hashValue &+ l.hashValue
 		case let .Simple(l):      return l.hashValue
 		case let .Boolean(l):     return l.hashValue
 		case Null:                return -1
@@ -63,6 +65,7 @@ public func ==(lhs: CBOR, rhs: CBOR) -> Bool {
 	case (let .UTF8String(l),  let .UTF8String(r)):  return l == r
 	case (let .Array(l),       let .Array(r)):       return l == r
 	case (let .Map(l),         let .Map(r)):         return l == r
+	case (let .Tagged(tl, l),  let .Tagged(tr, r)):  return tl == tr && l == r
 	case (let .Simple(l),      let .Simple(r)):      return l == r
 	case (let .Boolean(l),     let .Boolean(r)):     return l == r
 	case (.Null,               .Null):               return true
