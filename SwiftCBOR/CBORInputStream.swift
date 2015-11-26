@@ -1,4 +1,4 @@
-protocol CBORInputStream {
+public protocol CBORInputStream {
 	mutating func popByte() throws -> UInt8
 	mutating func popBytes(n: Int) throws -> ArraySlice<UInt8>
 }

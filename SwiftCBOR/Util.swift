@@ -20,4 +20,8 @@ final class Util {
 		return result
 	}
 
+	static func djb2Hash(array: [Int]) -> Int {
+		return array.reduce(5381, combine: { hash, elem in ((hash << 5) &+ hash) &+ Int(elem) })
+	}
+
 }
