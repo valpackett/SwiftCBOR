@@ -71,6 +71,24 @@ class SwiftCBORTests: XCTestCase {
 			CBOR.Map([CBOR.UTF8String("key") : CBOR.Map([CBOR.UTF8String("key") : CBOR.NegativeInt(23)])]))
 	}
 
+	func testDecodeSimple() {
+		XCTAssertEqual(try! CBORDecoder(input: [0xe0]).decodeItem(), CBOR.Simple(0))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf3]).decodeItem(), CBOR.Simple(19))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf8, 19]).decodeItem(), CBOR.Simple(19))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf4]).decodeItem(), CBOR.Boolean(false))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf5]).decodeItem(), CBOR.Boolean(true))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf6]).decodeItem(), CBOR.Null)
+		XCTAssertEqual(try! CBORDecoder(input: [0xf7]).decodeItem(), CBOR.Undefined)
+	}
+
+	func testDecodeFloats() {
+		XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.Half(-4.0))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xfc, 0x00]).decodeItem(), CBOR.Half(-Float.infinity))
+		XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x47, 0xc3, 0x50, 0x00]).decodeItem(), CBOR.Float(100000.0))
+		XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x7f, 0x80, 0x00, 0x00]).decodeItem(), CBOR.Float(Float.infinity))
+		XCTAssertEqual(try! CBORDecoder(input: [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66]).decodeItem(), CBOR.Double(-4.1))
+	}
+
 	func testDecodePerformance() {
 		var data : ArraySlice<UInt8> = [0x9f]
 		for i in (0..<255) {

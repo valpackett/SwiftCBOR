@@ -1,4 +1,4 @@
-enum CBORError : ErrorType {
+public enum CBORError : ErrorType {
 	case UnfinishedSequence
 	case WrongTypeInsideSequence
 	case IncorrectUTF8String
@@ -101,6 +101,17 @@ final public class CBORDecoder {
 		case 0xba: return CBOR.Map(try readNPairs(Int(try readUInt(4) as UInt32)))
 		case 0xbb: return CBOR.Map(try readNPairs(Int(try readUInt(8) as UInt64)))
 		case 0xbf: return CBOR.Map(try readPairsUntilBreak())
+
+		case let b where 0xe0 <= b && b <= 0xf3: return CBOR.Simple(b - 0xe0)
+		case 0xf4: return CBOR.Boolean(false)
+		case 0xf5: return CBOR.Boolean(true)
+		case 0xf6: return CBOR.Null
+		case 0xf7: return CBOR.Undefined
+		case 0xf8: return CBOR.Simple(try istream.popByte())
+
+		case 0xf9: return CBOR.Half(loadFromF16(UnsafePointer<UInt16>(Array(try istream.popBytes(2)).reverse())))
+		case 0xfa: return CBOR.Float(UnsafePointer<Float32>(Array(try istream.popBytes(4)).reverse()).memory)
+		case 0xfb: return CBOR.Double(UnsafePointer<Float64>(Array(try istream.popBytes(8)).reverse()).memory)
 
 		case 0xff: return CBOR.Break
 		default: return nil
