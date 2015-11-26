@@ -7,22 +7,22 @@ class SwiftCBORTests: XCTestCase {
 		for i in (0..<24) {
 			XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.PositiveInt(UInt(i)))
 		}
-		XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), CBOR.PositiveInt(255))
-		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), CBOR.PositiveInt(1000)) // Network byte order!
-		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0xff, 0xff]).decodeItem(), CBOR.PositiveInt(65535))
+		XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), 255)
+		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), 1000) // Network byte order!
+		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0xff, 0xff]).decodeItem(), 65535)
 		do { try CBORDecoder(input: [0x19, 0xff]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
-		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0x00, 0x0f, 0x42, 0x40]).decodeItem(), CBOR.PositiveInt(1000000))
-		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.PositiveInt(4294967295))
+		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0x00, 0x0f, 0x42, 0x40]).decodeItem(), 1000000)
+		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), 4294967295)
 		do { try CBORDecoder(input: [0x1a]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
-		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), CBOR.PositiveInt(1000000000000))
+		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), 1000000000000)
 		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.PositiveInt(18446744073709551615))
 		do { try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
 
-		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem(), CBOR.NegativeInt(0))
+		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem(), -1)
 		XCTAssertEqual(try! CBORDecoder(input: [0x21]).decodeItem(), CBOR.NegativeInt(1))
-		XCTAssertEqual(try! CBORDecoder(input: [0x37]).decodeItem(), CBOR.NegativeInt(23))
-		XCTAssertEqual(try! CBORDecoder(input: [0x38, 0xff]).decodeItem(), CBOR.NegativeInt(255))
-		XCTAssertEqual(try! CBORDecoder(input: [0x39, 0x03, 0xe7]).decodeItem(), CBOR.NegativeInt(999))
+		XCTAssertEqual(try! CBORDecoder(input: [0x37]).decodeItem(), -24)
+		XCTAssertEqual(try! CBORDecoder(input: [0x38, 0xff]).decodeItem(), -256)
+		XCTAssertEqual(try! CBORDecoder(input: [0x39, 0x03, 0xe7]).decodeItem(), -1000)
 		XCTAssertEqual(try! CBORDecoder(input: [0x3a, 0x00, 0x0f, 0x42, 0x3f]).decodeItem(), CBOR.NegativeInt(999999))
 		XCTAssertEqual(try! CBORDecoder(input: [0x3b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x0f, 0xff]).decodeItem(), CBOR.NegativeInt(999999999999))
 	}
@@ -41,42 +41,36 @@ class SwiftCBORTests: XCTestCase {
 
 	func testDecodeUtf8Strings() {
 		XCTAssertEqual(try! CBORDecoder(input: [0x60]).decodeItem(), CBOR.UTF8String(""))
-		XCTAssertEqual(try! CBORDecoder(input: [0x61, 0x42]).decodeItem(), CBOR.UTF8String("B"))
-		XCTAssertEqual(try! CBORDecoder(input: [0x78, 0]).decodeItem(), CBOR.UTF8String(""))
-		XCTAssertEqual(try! CBORDecoder(input: [0x78, 1, 0x42]).decodeItem(), CBOR.UTF8String("B"))
+		XCTAssertEqual(try! CBORDecoder(input: [0x61, 0x42]).decodeItem(), "B")
+		XCTAssertEqual(try! CBORDecoder(input: [0x78, 0]).decodeItem(), "")
+		XCTAssertEqual(try! CBORDecoder(input: [0x78, 1, 0x42]).decodeItem(), "B")
 		XCTAssertEqual(try! CBORDecoder(input: [0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.UTF8String("ABC"))
-		XCTAssertEqual(try! CBORDecoder(input: [0x7a, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.UTF8String("ABC"))
-		XCTAssertEqual(try! CBORDecoder(input: [0x7b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.UTF8String("ABC"))
-		XCTAssertEqual(try! CBORDecoder(input: [0x7f, 0x78, 3, 0x41, 0x42, 0x43, 0x63, 0x41, 0x42, 0x43, 0xff]).decodeItem(), CBOR.UTF8String("ABCABC"))
+		XCTAssertEqual(try! CBORDecoder(input: [0x7a, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), "ABC")
+		XCTAssertEqual(try! CBORDecoder(input: [0x7b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), "ABC")
+		XCTAssertEqual(try! CBORDecoder(input: [0x7f, 0x78, 3, 0x41, 0x42, 0x43, 0x63, 0x41, 0x42, 0x43, 0xff]).decodeItem(), "ABCABC")
 	}
 
 	func testDecodeArrays() {
-		XCTAssertEqual(try! CBORDecoder(input: [0x80]).decodeItem(), CBOR.Array([]))
-		XCTAssertEqual(try! CBORDecoder(input: [0x82, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(),
-			CBOR.Array([CBOR.PositiveInt(1), CBOR.UTF8String("ABC")]))
-		XCTAssertEqual(try! CBORDecoder(input: [0x98, 0]).decodeItem(), CBOR.Array([]))
-		XCTAssertEqual(try! CBORDecoder(input: [0x98, 3, 0x18, 2, 0x18, 2, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0xff]).decodeItem(),
-			CBOR.Array([CBOR.PositiveInt(2), CBOR.PositiveInt(2), CBOR.UTF8String("ABC")]))
-		XCTAssertEqual(try! CBORDecoder(input: [0x9f, 0x18, 255, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 2, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0xff]).decodeItem(),
-			CBOR.Array([CBOR.PositiveInt(255), CBOR.Array([CBOR.PositiveInt(1), CBOR.UTF8String("ABC")]), CBOR.UTF8String("ABC")]))
+		XCTAssertEqual(try! CBORDecoder(input: [0x80]).decodeItem(), [])
+		XCTAssertEqual(try! CBORDecoder(input: [0x82, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), [1, "ABC"])
+		XCTAssertEqual(try! CBORDecoder(input: [0x98, 0]).decodeItem(), [])
+		XCTAssertEqual(try! CBORDecoder(input: [0x98, 3, 0x18, 2, 0x18, 2, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0xff]).decodeItem(), [2, 2, "ABC"])
+		XCTAssertEqual(try! CBORDecoder(input: [0x9f, 0x18, 255, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 2, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0xff]).decodeItem(), [255, [1, "ABC"], "ABC"])
 	}
 
 	func testDecodeMaps() {
-		XCTAssertEqual(try! CBORDecoder(input: [0xa0]).decodeItem(), CBOR.Map([:]))
-		XCTAssertEqual(try! CBORDecoder(input: [0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37]).decodeItem(),
-			CBOR.Map([CBOR.UTF8String("key") : CBOR.NegativeInt(23)]))
-		XCTAssertEqual(try! CBORDecoder(input: [0xb8, 1, 0x63, 0x6b, 0x65, 0x79, 0x81, 0x37]).decodeItem(),
-			CBOR.Map([CBOR.UTF8String("key") : CBOR.Array([CBOR.NegativeInt(23)])]))
-		XCTAssertEqual(try! CBORDecoder(input: [0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(),
-			CBOR.Map([CBOR.UTF8String("key") : CBOR.Map([CBOR.UTF8String("key") : CBOR.NegativeInt(23)])]))
+		XCTAssertEqual(try! CBORDecoder(input: [0xa0]).decodeItem(), [:])
+		XCTAssertEqual(try! CBORDecoder(input: [0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37]).decodeItem(), ["key" : -24])
+		XCTAssertEqual(try! CBORDecoder(input: [0xb8, 1, 0x63, 0x6b, 0x65, 0x79, 0x81, 0x37]).decodeItem(), ["key" : [-24]])
+		XCTAssertEqual(try! CBORDecoder(input: [0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(), ["key" : ["key" : -24]])
 	}
 
 	func testDecodeSimple() {
 		XCTAssertEqual(try! CBORDecoder(input: [0xe0]).decodeItem(), CBOR.Simple(0))
 		XCTAssertEqual(try! CBORDecoder(input: [0xf3]).decodeItem(), CBOR.Simple(19))
 		XCTAssertEqual(try! CBORDecoder(input: [0xf8, 19]).decodeItem(), CBOR.Simple(19))
-		XCTAssertEqual(try! CBORDecoder(input: [0xf4]).decodeItem(), CBOR.Boolean(false))
-		XCTAssertEqual(try! CBORDecoder(input: [0xf5]).decodeItem(), CBOR.Boolean(true))
+		XCTAssertEqual(try! CBORDecoder(input: [0xf4]).decodeItem(), false)
+		XCTAssertEqual(try! CBORDecoder(input: [0xf5]).decodeItem(), true)
 		XCTAssertEqual(try! CBORDecoder(input: [0xf6]).decodeItem(), CBOR.Null)
 		XCTAssertEqual(try! CBORDecoder(input: [0xf7]).decodeItem(), CBOR.Undefined)
 	}
@@ -84,7 +78,7 @@ class SwiftCBORTests: XCTestCase {
 	func testDecodeFloats() {
 		XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.Half(-4.0))
 		XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xfc, 0x00]).decodeItem(), CBOR.Half(-Float.infinity))
-		XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x47, 0xc3, 0x50, 0x00]).decodeItem(), CBOR.Float(100000.0))
+		XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x47, 0xc3, 0x50, 0x00]).decodeItem(), 100000.0)
 		XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x7f, 0x80, 0x00, 0x00]).decodeItem(), CBOR.Float(Float.infinity))
 		XCTAssertEqual(try! CBORDecoder(input: [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66]).decodeItem(), CBOR.Double(-4.1))
 	}

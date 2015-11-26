@@ -1,4 +1,7 @@
-public enum CBOR : Equatable, Hashable {
+public enum CBOR : Equatable, Hashable,
+	NilLiteralConvertible, IntegerLiteralConvertible, StringLiteralConvertible,
+	ArrayLiteralConvertible, DictionaryLiteralConvertible, BooleanLiteralConvertible,
+	FloatLiteralConvertible {
 	case PositiveInt(UInt)
 	case NegativeInt(UInt)
 	case ByteString([UInt8])
@@ -32,6 +35,24 @@ public enum CBOR : Equatable, Hashable {
 		case Break:               return Int.min
 		}
 	}
+
+	public init(nilLiteral: ()) { self = .Null }
+	public init(integerLiteral value: Int) {
+		if value < 0 { self = .NegativeInt(UInt(-value) - 1) } else { self = .PositiveInt(UInt(value)) }
+	}
+	public init(extendedGraphemeClusterLiteral value: String) { self = .UTF8String(value) }
+	public init(unicodeScalarLiteral value: String) { self = .UTF8String(value) }
+	public init(stringLiteral value: String) { self = .UTF8String(value) }
+	public init(arrayLiteral elements: CBOR...) { self = .Array(elements) }
+	public init(dictionaryLiteral elements: (CBOR, CBOR)...) {
+		var result = [CBOR : CBOR]()
+		for (key, value) in elements {
+			result[key] = value
+		}
+		self = .Map(result)
+	}
+	public init(booleanLiteral value: Bool) { self = .Boolean(value) }
+	public init(floatLiteral value: Float32) { self = .Float(value) }
 }
 
 public func ==(lhs: CBOR, rhs: CBOR) -> Bool {
