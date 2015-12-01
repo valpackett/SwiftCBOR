@@ -60,7 +60,7 @@ class SwiftCBORTests: XCTestCase {
 
 	func testDecodeMaps() {
 		XCTAssertEqual(try! CBORDecoder(input: [0xa0]).decodeItem(), [:])
-		XCTAssertEqual(try! CBORDecoder(input: [0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37]).decodeItem(), ["key" : -24])
+		XCTAssertEqual(try! CBORDecoder(input: [0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37]).decodeItem()!["key"], -24)
 		XCTAssertEqual(try! CBORDecoder(input: [0xb8, 1, 0x63, 0x6b, 0x65, 0x79, 0x81, 0x37]).decodeItem(), ["key" : [-24]])
 		XCTAssertEqual(try! CBORDecoder(input: [0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(), ["key" : ["key" : -24]])
 	}

@@ -37,6 +37,23 @@ public indirect enum CBOR : Equatable, Hashable,
 		case Break:               return Int.min
 		}
 	}
+	
+	public subscript(position: CBOR) -> CBOR? {
+		get {
+			switch (self, position) {
+			case (let .Array(l), let .PositiveInt(i)): return l[Int(i)]
+			case (let .Map(l), let i): return l[i]
+			default: return nil
+			}
+		}
+		set(x) {
+			switch (self, position) {
+			case (var .Array(l), let .PositiveInt(i)): l[Int(i)] = x!
+			case (var .Map(l), let i): l[i] = x!
+			default: break
+			}
+		}
+	}
 
 	public init(nilLiteral: ()) { self = .Null }
 	public init(integerLiteral value: Int) {
