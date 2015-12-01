@@ -7,6 +7,7 @@ A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder
 - Negative integers are decoded as `NegativeInt(UInt)`, where the actual number is `-1 - i` (CBOR's negative integers can be larger than 64-bit signed integers).
 - Tags are decoded, but not processed. Do it yourself :-)
 - Literal convertibles are defined for the `CBOR` type!
+- And `subscript` too. So you can access CBOR maps and arrays like this: `myDecodedObject["numbers"][1]`.
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
 - [cbor.me](http://cbor.me) is recommended for viewing your CBOR-encoded data.
 
@@ -17,6 +18,8 @@ Use [Carthage](https://github.com/Carthage/Carthage).
 ```
 github "myfreeweb/SwiftCBOR"
 ```
+
+Or add it as a Git submodule.
 
 ## Usage
 

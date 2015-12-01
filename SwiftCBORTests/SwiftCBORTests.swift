@@ -5,7 +5,7 @@ class SwiftCBORTests: XCTestCase {
 
 	func testDecodeNumbers() {
 		for i in (0..<24) {
-			XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.PositiveInt(UInt(i)))
+			XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.UnsignedInt(UInt(i)))
 		}
 		XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), 255)
 		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), 1000) // Network byte order!
@@ -15,7 +15,7 @@ class SwiftCBORTests: XCTestCase {
 		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), 4294967295)
 		do { try CBORDecoder(input: [0x1a]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
 		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), 1000000000000)
-		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.PositiveInt(18446744073709551615))
+		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.UnsignedInt(18446744073709551615))
 		do { try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
 
 		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem(), -1)

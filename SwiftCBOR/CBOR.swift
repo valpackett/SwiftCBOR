@@ -2,7 +2,7 @@ public indirect enum CBOR : Equatable, Hashable,
 	NilLiteralConvertible, IntegerLiteralConvertible, StringLiteralConvertible,
 	ArrayLiteralConvertible, DictionaryLiteralConvertible, BooleanLiteralConvertible,
 	FloatLiteralConvertible {
-	case PositiveInt(UInt)
+	case UnsignedInt(UInt)
 	case NegativeInt(UInt)
 	case ByteString([UInt8])
 	case UTF8String(String)
@@ -20,7 +20,7 @@ public indirect enum CBOR : Equatable, Hashable,
 
 	public var hashValue : Int {
 		switch self {
-		case let .PositiveInt(l): return l.hashValue
+		case let .UnsignedInt(l): return l.hashValue
 		case let .NegativeInt(l): return l.hashValue
 		case let .ByteString(l):  return Util.djb2Hash(l.map { Int($0) })
 		case let .UTF8String(l):  return l.hashValue
@@ -41,14 +41,14 @@ public indirect enum CBOR : Equatable, Hashable,
 	public subscript(position: CBOR) -> CBOR? {
 		get {
 			switch (self, position) {
-			case (let .Array(l), let .PositiveInt(i)): return l[Int(i)]
+			case (let .Array(l), let .UnsignedInt(i)): return l[Int(i)]
 			case (let .Map(l), let i): return l[i]
 			default: return nil
 			}
 		}
 		set(x) {
 			switch (self, position) {
-			case (var .Array(l), let .PositiveInt(i)): l[Int(i)] = x!
+			case (var .Array(l), let .UnsignedInt(i)): l[Int(i)] = x!
 			case (var .Map(l), let i): l[i] = x!
 			default: break
 			}
@@ -57,7 +57,7 @@ public indirect enum CBOR : Equatable, Hashable,
 
 	public init(nilLiteral: ()) { self = .Null }
 	public init(integerLiteral value: Int) {
-		if value < 0 { self = .NegativeInt(UInt(-value) - 1) } else { self = .PositiveInt(UInt(value)) }
+		if value < 0 { self = .NegativeInt(UInt(-value) - 1) } else { self = .UnsignedInt(UInt(value)) }
 	}
 	public init(extendedGraphemeClusterLiteral value: String) { self = .UTF8String(value) }
 	public init(unicodeScalarLiteral value: String) { self = .UTF8String(value) }
@@ -76,7 +76,7 @@ public indirect enum CBOR : Equatable, Hashable,
 
 public func ==(lhs: CBOR, rhs: CBOR) -> Bool {
 	switch (lhs, rhs) {
-	case (let .PositiveInt(l), let .PositiveInt(r)): return l == r
+	case (let .UnsignedInt(l), let .UnsignedInt(r)): return l == r
 	case (let .NegativeInt(l), let .NegativeInt(r)): return l == r
 	case (let .ByteString(l),  let .ByteString(r)):  return l == r
 	case (let .UTF8String(l),  let .UTF8String(r)):  return l == r

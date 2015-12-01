@@ -66,11 +66,11 @@ public class CBORDecoder {
 
 	public func decodeItem() throws -> CBOR? {
 		switch try istream.popByte() {
-		case let b where b <= 0x17: return CBOR.PositiveInt(UInt(b))
-		case 0x18: return CBOR.PositiveInt(UInt(try istream.popByte()))
-		case 0x19: return CBOR.PositiveInt(UInt(try readUInt(2) as UInt16))
-		case 0x1a: return CBOR.PositiveInt(UInt(try readUInt(4) as UInt32))
-		case 0x1b: return CBOR.PositiveInt(UInt(try readUInt(8) as UInt64))
+		case let b where b <= 0x17: return CBOR.UnsignedInt(UInt(b))
+		case 0x18: return CBOR.UnsignedInt(UInt(try istream.popByte()))
+		case 0x19: return CBOR.UnsignedInt(UInt(try readUInt(2) as UInt16))
+		case 0x1a: return CBOR.UnsignedInt(UInt(try readUInt(4) as UInt32))
+		case 0x1b: return CBOR.UnsignedInt(UInt(try readUInt(8) as UInt64))
 
 		case let b where 0x20 <= b && b <= 0x37: return CBOR.NegativeInt(UInt(b - 0x20))
 		case 0x38: return CBOR.NegativeInt(UInt(try istream.popByte()))
