@@ -28,7 +28,7 @@ import SwiftCBOR
 
 let decoded = try! CBORDecoder(input: [0x9f, 0x18, 255, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 2, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0x79, 0x00, 3, 0x41, 0x42, 0x43, 0xff]).decodeItem()
 print(decoded)
-// CBOR.Array([CBOR.PositiveInt(255), CBOR.Array([CBOR.PositiveInt(1), CBOR.UTF8String("ABC")]), CBOR.UTF8String("ABC")])
+// CBOR.Array([CBOR.UnsignedInt(255), CBOR.Array([CBOR.UnsignedInt(1), CBOR.UTF8String("ABC")]), CBOR.UTF8String("ABC")])
 ```
 
 ## Contributing
