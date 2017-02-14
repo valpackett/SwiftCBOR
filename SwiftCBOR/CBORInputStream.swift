@@ -8,6 +8,10 @@ struct ArraySliceUInt8 {
 	var slice : ArraySlice<UInt8>
 }
 
+struct ArrayUInt8 {
+    var array : Array<UInt8>
+}
+
 extension ArraySliceUInt8: CBORInputStream {
 
 	mutating func popByte() throws -> UInt8 {
@@ -22,4 +26,17 @@ extension ArraySliceUInt8: CBORInputStream {
 		return result
 	}
 
+}
+
+extension ArrayUInt8: CBORInputStream {
+    mutating func popByte() throws -> UInt8 {
+        guard array.count > 0 else { throw CBORError.unfinishedSequence }
+        return array.removeFirst()
+    }
+    mutating func popBytes(_ n: Int) throws -> ArraySlice<UInt8> {
+        guard array.count >= n else { throw CBORError.unfinishedSequence }
+        let res = array.prefix(n)
+        array = Array(array.dropFirst(n))
+        return res
+    }
 }
