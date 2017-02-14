@@ -4,6 +4,12 @@ public enum CBORError : Error {
 	case incorrectUTF8String
 }
 
+extension CBOR {
+    static func decode(_ input: [UInt8]) throws -> CBOR? {
+        return try CBORDecoder(input: input).decodeItem()
+    }
+}
+
 public class CBORDecoder {
 
 	private var istream : CBORInputStream
@@ -17,7 +23,7 @@ public class CBORDecoder {
 	}
 
 	public init(input: [UInt8]) {
-		istream = ArraySliceUInt8(slice: input[0..<input.count])
+		istream = ArrayUInt8(array: input)
 	}
 
 	private func readUInt<T: UnsignedInteger>(_ n: Int) throws -> T {
