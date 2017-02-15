@@ -1,7 +1,7 @@
 import XCTest
 @testable import SwiftCBOR
 
-class SwiftCBORTests: XCTestCase {
+class CBORDecoderTests: XCTestCase {
 
 	func testDecodeNumbers() {
 		for i in (0..<24) {
