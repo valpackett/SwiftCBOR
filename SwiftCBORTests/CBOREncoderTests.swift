@@ -180,4 +180,24 @@ class CBOREncoderTests: XCTestCase {
             + CBOR.encodeStreamEnd()
         XCTAssertEqual(encoded, cbor)
     }
+
+    func testReadmeExamples() {
+        XCTAssertEqual(100.encode(),     [0x18, 0x64])
+        XCTAssertEqual(CBOR.encode(100), [0x18, 0x64])
+        XCTAssertEqual("hello".encode(), [0x65, 0x68, 0x65, 0x6c, 0x6c, 0x6f])
+        XCTAssertEqual(CBOR.encode(["a", "b", "c"]), [0x83, 0x61, 0x61, 0x61, 0x62, 0x61, 0x63])
+
+        struct MyStruct: CBOREncodable {
+            var x: Int
+            var y: String
+
+            public func encode() -> [UInt8] {
+                let cborWrapper = CBOR(dictionaryLiteral:
+                    ("x", CBOR(integerLiteral: self.x)),
+                                       ("y", CBOR(stringLiteral: self.y)))
+                return cborWrapper.encode()
+            }
+        }
+        XCTAssertEqual(MyStruct(x: 42, y: "words").encode(), [0xa2, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x61, 0x78, 0x18, 0x2a])
+    }
 }

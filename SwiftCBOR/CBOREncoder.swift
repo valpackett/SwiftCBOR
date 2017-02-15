@@ -26,7 +26,7 @@ extension CBOR {
 
 
     /// Encodes an array as either a CBOR array type or a CBOR bytestring type, depending on `asByteString`.
-    /// NOTE: arrays of [UInt8] are naturally interpreted as bytes in network byte order.
+    /// NOTE: when `asByteString` is true and T = UInt8, the array is interpreted in network byte order
     /// Arrays with values of all other types will have their bytes reversed if the system is little endian.
     public static func encode<T: CBOREncodable>(_ array: [T], asByteString: Bool = false) -> [UInt8] {
         if asByteString {
@@ -202,7 +202,7 @@ extension CBOR {
     }
 
     //TODO: unify definite and indefinite code
-    public static func encodeArrayChunk<T: CBOREncodable>(_ chunk: [T], asByteString: Bool = false) -> [UInt8] {
+    public static func encodeArrayChunk<T: CBOREncodable>(_ chunk: [T]) -> [UInt8] {
         var res: [UInt8] = []
         res.reserveCapacity(chunk.count * MemoryLayout<T>.size)
         res.append(contentsOf: chunk.flatMap{ return $0.encode() })
