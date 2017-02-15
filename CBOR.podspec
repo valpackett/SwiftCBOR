@@ -4,7 +4,6 @@ Pod::Spec.new do |s|
   s.license = { :type => "public domain", :file => 'UNLICENSE' }
   s.summary = 'A CBOR implementation for Swift'
   s.homepage = 'https://github.com/myfreeweb/SwiftCBOR'
-  s.social_media_url = 'https://twitter.com/myfreeweb'
   s.authors = { 'Greg' => 'greg@unrelenting.technology' }
   s.source = { :git => 'https://github.com/myfreeweb/SwiftCBOR.git' }
 
