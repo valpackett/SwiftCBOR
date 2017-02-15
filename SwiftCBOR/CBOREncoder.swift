@@ -168,4 +168,55 @@ extension CBOR {
         return x ? [0xf5] : [0xf4]
     }
 
+
+    // -----------------------
+    // Indefinite length items
+
+    /// Returns a CBOR value indicating the opening of an indefinite-length data item.
+    /// The user is responsible for creating and sending subsequent valid CBOR.
+    /// In particular, the user must end the stream with the CBOR.break byte, which
+    /// can be returned with `encodeStreamEnd()`.
+    ///
+    /// The stream API is limited right now, but will get better when Swift allows
+    /// one to generically constrain the elements of generic Iterators, in which case
+    /// streaming implementation is trivial
+    public static func encodeArrayStreamStart() -> [UInt8] {
+        return [0x9f]
+    }
+
+    public static func encodeMapStreamStart() -> [UInt8] {
+        return [0xbf]
+    }
+
+    public static func encodeStringStreamStart() -> [UInt8] {
+        return [0x7f]
+    }
+
+    public static func encodeByteStringStreamStart() -> [UInt8] {
+        return [0x5f]
+    }
+
+    /// This is the same as a CBOR "break" value
+    public static func encodeStreamEnd() -> [UInt8] {
+        return [0xff]
+    }
+
+    //TODO: unify definite and indefinite code
+    public static func encodeArrayChunk<T: CBOREncodable>(_ chunk: [T], asByteString: Bool = false) -> [UInt8] {
+        var res: [UInt8] = []
+        res.reserveCapacity(chunk.count * MemoryLayout<T>.size)
+        res.append(contentsOf: chunk.flatMap{ return $0.encode() })
+        return res
+    }
+
+    public static func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8] {
+        var res: [UInt8] = []
+        let count = map.count
+        res.reserveCapacity(count * MemoryLayout<A>.size + count * MemoryLayout<B>.size)
+        for (k, v) in map {
+            res.append(contentsOf: k.encode())
+            res.append(contentsOf: v.encode())
+        }
+        return res
+    }
 }
