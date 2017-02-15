@@ -133,4 +133,51 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(0.0), [0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
     }
 
+    func testEncodeIndefiniteArrays() {
+        var indefArray = CBOR.encodeArrayStreamStart()
+        XCTAssertEqual(indefArray, [0x9f])
+        let a: [Int] = [1, 2]
+        indefArray.append(contentsOf: CBOR.encodeArrayChunk(a)) // this encode a definite array!
+        // send current indef array (without close. the receiver would be programmed to anticipate this.
+        indefArray.append(contentsOf: 3.encode())
+        indefArray.append(contentsOf: CBOR.encodeStreamEnd())
+        XCTAssertEqual(indefArray, [0x9f, 0x01, 0x02, 0x03, 0xff])
+
+        indefArray.removeLast() // remove stream end
+        let innerArray = [UInt8]([1,2,3])
+        indefArray.append(contentsOf: CBOR.encodeArrayStreamStart() + CBOR.encodeArrayChunk(innerArray))
+        indefArray.append(contentsOf: CBOR.encodeStreamEnd()) // close inner array
+        indefArray.append(contentsOf: CBOR.encodeStreamEnd()) // close outer
+        XCTAssertEqual(indefArray, [0x9f, 0x01, 0x02, 0x03, 0x9f, 0x01, 0x02, 0x03, 0xff, 0xff])
+    }
+
+    func testEncodeIndefiniteMaps() {
+        XCTAssertEqual(CBOR.encodeMapStreamStart(), [0xbf])
+        let map: [String: Int] = ["a": 1]
+        let map2 = ["B": 2]
+        let a1_enc: [UInt8] = [0x61, 0x61, 0x01]
+        let b2_enc: [UInt8] = [0x61, 0x42, 0x02]
+        let final: [UInt8] = CBOR.encodeMapStreamStart() + CBOR.encodeMapChunk(map) + CBOR.encodeMapChunk(map2) + CBOR.encodeStreamEnd()
+        XCTAssertEqual(final, [0xbf] + a1_enc + b2_enc + [0xff])
+    }
+
+    func testEncodeIndefiniteStrings() {
+        XCTAssertEqual(CBOR.encodeStringStreamStart(), [0x7f])
+        let s = "a"
+        let t = "B"
+        let st_enc: [UInt8] = [0x7f, 0x61, 0x61, 0x61, 0x42, 0xff]
+        XCTAssertEqual(CBOR.encodeStringStreamStart() + CBOR.encode(s) + CBOR.encode(t) + CBOR.encodeStreamEnd(), st_enc)
+    }
+
+    func testEncodeIndefiniteByteStrings() {
+        XCTAssertEqual(CBOR.encodeByteStringStreamStart(), [0x5f])
+        let bs: [UInt8] = [0xf0]
+        let bs2: [UInt8] = [0xff]
+        let cbor: [UInt8] = [0x5f, 0x41, 0xf0, 0x41, 0xff, 0xff]
+        let encoded = CBOR.encodeByteStringStreamStart()
+            + CBOR.encode(bs, asByteString: true)
+            + CBOR.encode(bs2, asByteString: true)
+            + CBOR.encodeStreamEnd()
+        XCTAssertEqual(encoded, cbor)
+    }
 }
