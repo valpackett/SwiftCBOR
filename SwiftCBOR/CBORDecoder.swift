@@ -92,7 +92,9 @@ public class CBORDecoder {
 		case 0x5f: return CBOR.byteString(try readUntilBreak().flatMap { x -> [UInt8] in guard case .byteString(let r) = x else { throw CBORError.wrongTypeInsideSequence }; return r })
 
 		case let b where 0x60 <= b && b <= 0x77: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(b - 0x60))))
-		case 0x78: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try istream.popByte()))))
+		case 0x78: 
+            let numBytes: Int =  Int(try istream.popByte())
+            return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(numBytes)))
 		case 0x79: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(2) as UInt16))))
 		case 0x7a: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(4) as UInt32))))
 		case 0x7b: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(8) as UInt64))))
