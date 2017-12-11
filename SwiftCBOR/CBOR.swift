@@ -19,6 +19,26 @@ public indirect enum CBOR : Equatable, Hashable,
 	case float(Float32)
 	case double(Float64)
 	case `break`
+		
+	public var value : Any? {
+		switch self {
+		case let .unsignedInt(l): return l
+		case let .negativeInt(l): return l
+		case let .byteString(l):  return l
+		case let .utf8String(l):  return l
+		case let .array(l):       return l
+		case let .map(l):         return l
+		case let .tagged(t, l):   return (t, l)
+		case let .simple(l):      return l
+		case let .boolean(l):     return l
+		case .null:               return nil
+		case .undefined:          return nil
+		case let .half(l):        return l
+		case let .float(l):       return l
+		case let .double(l):      return l
+		case .break:              return nil
+		}
+	}
 
 	public var hashValue : Int {
 		switch self {
