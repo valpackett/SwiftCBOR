@@ -85,7 +85,9 @@ public class CBORDecoder {
 		case 0x3b: return CBOR.negativeInt(UInt(try readUInt(8) as UInt64))
 
 		case let b where 0x40 <= b && b <= 0x57: return CBOR.byteString(Array(try istream.popBytes(Int(b - 0x40))))
-		case 0x58: return CBOR.byteString(Array(try istream.popBytes(Int(try istream.popByte()))))
+		case 0x58: 
+			let numBytes: Int = Int(try istream.popByte())
+			return CBOR.byteString(Array(try istream.popBytes(numBytes)))
 		case 0x59: return CBOR.byteString(Array(try istream.popBytes(Int(try readUInt(2) as UInt16))))
 		case 0x5a: return CBOR.byteString(Array(try istream.popBytes(Int(try readUInt(4) as UInt32))))
 		case 0x5b: return CBOR.byteString(Array(try istream.popBytes(Int(try readUInt(8) as UInt64))))
@@ -93,7 +95,7 @@ public class CBORDecoder {
 
 		case let b where 0x60 <= b && b <= 0x77: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(b - 0x60))))
 		case 0x78: 
-            		let numBytes: Int =  Int(try istream.popByte())
+            		let numBytes: Int = Int(try istream.popByte())
             		return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(numBytes)))
 		case 0x79: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(2) as UInt16))))
 		case 0x7a: return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(Int(try readUInt(4) as UInt32))))
