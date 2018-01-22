@@ -10,13 +10,13 @@ class CBORDecoderTests: XCTestCase {
         XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), 255)
         XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), 1000) // Network byte order!
         XCTAssertEqual(try! CBORDecoder(input: [0x19, 0xff, 0xff]).decodeItem(), 65535)
-		do { try CBORDecoder(input: [0x19, 0xff]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
+		do { _ = try CBORDecoder(input: [0x19, 0xff]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
         XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0x00, 0x0f, 0x42, 0x40]).decodeItem(), 1000000)
         XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), 4294967295)
-		do { try CBORDecoder(input: [0x1a]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
+		do { _ = try CBORDecoder(input: [0x1a]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
         XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), 1000000000000)
         XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.unsignedInt(18446744073709551615))
-        do { try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
+        do { _ = try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
 
 		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem(), -1)
 		XCTAssertEqual(try! CBORDecoder(input: [0x21]).decodeItem(), CBOR.negativeInt(1))
@@ -98,7 +98,7 @@ class CBORDecoderTests: XCTestCase {
 		}
 		data.append(0xff)
 		self.measure {
-			try! CBORDecoder(input: data).decodeItem()
+			_ = try! CBORDecoder(input: data).decodeItem()
 		}
 	}
 
