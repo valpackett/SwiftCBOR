@@ -34,9 +34,9 @@ extension Int: CBOREncodable {
         } else {
             let uint64 = UInt64(self)
             switch uint64 {
-            case let x where x <= 255: return CBOR.encodeUInt8(UInt8(x))
-            case let x where x <= 65535: return CBOR.encodeUInt16(UInt16(x))
-            case let x where x <= 4294967295: return CBOR.encodeUInt32(UInt32(x))
+            case let x where x <= UInt8.max: return CBOR.encodeUInt8(UInt8(x))
+            case let x where x <= UInt16.max: return CBOR.encodeUInt16(UInt16(x))
+            case let x where x <= UInt32.max: return CBOR.encodeUInt32(UInt32(x))
             default: return CBOR.encodeUInt64(uint64)
             }
         }
@@ -46,9 +46,9 @@ extension Int: CBOREncodable {
 extension UInt: CBOREncodable {
     public func encode() -> [UInt8] {
         switch self {
-        case let x where x <= 255: return CBOR.encodeUInt8(UInt8(x))
-        case let x where x <= 65535: return CBOR.encodeUInt16(UInt16(x))
-        case let x where x <= 4294967295: return CBOR.encodeUInt32(UInt32(x))
+        case let x where x <= UInt8.max: return CBOR.encodeUInt8(UInt8(x))
+        case let x where x <= UInt16.max: return CBOR.encodeUInt16(UInt16(x))
+        case let x where x <= UInt32.max: return CBOR.encodeUInt32(UInt32(x))
         default: return CBOR.encodeUInt64(UInt64(self))
 //        if MemoryLayout<UInt>.size == 4 {
 //            return CBOR.encodeUInt32(UInt32(self))
