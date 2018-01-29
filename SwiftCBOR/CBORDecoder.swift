@@ -5,7 +5,7 @@ public enum CBORError : Error {
 }
 
 extension CBOR {
-    static func decode(_ input: [UInt8]) throws -> CBOR? {
+    static public func decode(_ input: [UInt8]) throws -> CBOR? {
         return try CBORDecoder(input: input).decodeItem()
     }
 }
