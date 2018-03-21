@@ -8,11 +8,9 @@ let isBigEndian = Int(bigEndian: 42) == 42
  T must be a simple type. It cannot be a collection type.
  */
 func rawBytes<T>(of x: T) -> [UInt8] {
-    let size = MemoryLayout<T>.size
-    let bigendian_res = UnsafePointer<T>([x]).withMemoryRebound(to: UInt8.self, capacity: size, { ptr in
-        return (0..<size).map { (ptr + $0).pointee }
-    })
-    return isBigEndian ? bigendian_res : bigendian_res.reversed()
+    var x = x
+    let bigEndianResult = withUnsafeBytes(of: &x) { Array($0) }
+    return isBigEndian ? bigEndianResult : bigEndianResult.reversed()
 }
 
 /// Defines basic CBOR.encode API.
