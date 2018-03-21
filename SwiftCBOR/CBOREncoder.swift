@@ -8,7 +8,7 @@ let isBigEndian = Int(bigEndian: 42) == 42
  T must be a simple type. It cannot be a collection type.
  */
 func rawBytes<T>(of x: T) -> [UInt8] {
-    var x = x
+    var x = x // create mutable copy for `withUnsafeBytes`
     let bigEndianResult = withUnsafeBytes(of: &x) { Array($0) }
     return isBigEndian ? bigEndianResult : bigEndianResult.reversed()
 }
