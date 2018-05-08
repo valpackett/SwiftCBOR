@@ -8,8 +8,8 @@ extension CBOR: CBOREncodable {
     /// Encodes a wrapped CBOR value. CBOR.half (Float16) is not supported and encodes as `undefined`.
     public func encode() -> [UInt8] {
         switch self {
-        case let .unsignedInt(ui): return ui.encode()
-        case let .negativeInt(ni): return (-Int(ni) - 1).encode()
+        case let .unsignedInt(ui): return CBOR.encodeVarUInt(ui)
+        case let .negativeInt(ni): return CBOR.encodeNegativeInt(~Int64(bitPattern: ni))
         case let .byteString(bs): return CBOR.encodeByteString(bs)
         case let .utf8String(str): return str.encode()
         case let .array(a): return CBOR.encodeArray(a)
@@ -30,32 +30,16 @@ extension CBOR: CBOREncodable {
 extension Int: CBOREncodable {
     public func encode() -> [UInt8] {
         if (self < 0) {
-            return CBOR.encodeNegativeInt(self)
+            return CBOR.encodeNegativeInt(Int64(self))
         } else {
-            let uint64 = UInt64(self)
-            switch uint64 {
-            case let x where x <= UInt8.max: return CBOR.encodeUInt8(UInt8(x))
-            case let x where x <= UInt16.max: return CBOR.encodeUInt16(UInt16(x))
-            case let x where x <= UInt32.max: return CBOR.encodeUInt32(UInt32(x))
-            default: return CBOR.encodeUInt64(uint64)
-            }
+            return CBOR.encodeVarUInt(UInt64(self))
         }
     }
 }
 
 extension UInt: CBOREncodable {
     public func encode() -> [UInt8] {
-        switch self {
-        case let x where x <= UInt8.max: return CBOR.encodeUInt8(UInt8(x))
-        case let x where x <= UInt16.max: return CBOR.encodeUInt16(UInt16(x))
-        case let x where x <= UInt32.max: return CBOR.encodeUInt32(UInt32(x))
-        default: return CBOR.encodeUInt64(UInt64(self))
-//        if MemoryLayout<UInt>.size == 4 {
-//            return CBOR.encodeUInt32(UInt32(self))
-//        } else {
-//            return CBOR.encodeUInt64(UInt64(self))
-//        }
-        }
+		return CBOR.encodeVarUInt(UInt64(self))
     }
 }
 

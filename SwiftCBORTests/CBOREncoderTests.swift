@@ -62,9 +62,9 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(Array<Int>()), [0x80])
         XCTAssertEqual(CBOR.encode([1, 2, 3]), [0x83, 0x01, 0x02, 0x03])
 
-        let arr: [[Int]] = [[1], [2, 3], [4, 5]]
+        let arr: [[UInt64]] = [[1], [2, 3], [4, 5]]
        
-        let wrapped = arr.map{ inner in return CBOR.array(inner.map{ return CBOR.unsignedInt(UInt($0)) })}
+        let wrapped = arr.map{ inner in return CBOR.array(inner.map{ return CBOR.unsignedInt($0) })}
         print(wrapped)
         XCTAssertEqual(CBOR.encode(wrapped), [0x83, 0x81, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05])
         
@@ -89,7 +89,8 @@ class CBOREncoderTests: XCTestCase {
     func testEncodeTagged() {
         let bignum: [UInt8] = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] // 2**64
         let bignumCBOR = CBOR.byteString(bignum)
-        XCTAssertEqual(CBOR.encodeTagged(tag: 2, value: bignumCBOR), [0xc2, 0x49] + bignum)
+        XCTAssertEqual(CBOR.encodeTagged(tag: .positiveBignum, value: bignumCBOR), [0xc2, 0x49] + bignum)
+		XCTAssertEqual(CBOR.encodeTagged(tag: .init(rawValue: UInt64.max), value: bignumCBOR), [0xdb, 255, 255, 255, 255, 255, 255, 255, 255, 0x49] + bignum)
     }
 
     func testEncodeSimple() {

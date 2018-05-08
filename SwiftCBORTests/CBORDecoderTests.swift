@@ -5,18 +5,18 @@ class CBORDecoderTests: XCTestCase {
 
 	func testDecodeNumbers() {
 		for i in (0..<24) {
-            XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.unsignedInt(UInt(i)))
+			XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.unsignedInt(UInt64(i)))
 		}
-        XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), 255)
-        XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), 1000) // Network byte order!
-        XCTAssertEqual(try! CBORDecoder(input: [0x19, 0xff, 0xff]).decodeItem(), 65535)
+		XCTAssertEqual(try! CBORDecoder(input: [0x18, 0xff]).decodeItem(), 255)
+		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0x03, 0xe8]).decodeItem(), 1000) // Network byte order!
+		XCTAssertEqual(try! CBORDecoder(input: [0x19, 0xff, 0xff]).decodeItem(), 65535)
 		do { _ = try CBORDecoder(input: [0x19, 0xff]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
-        XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0x00, 0x0f, 0x42, 0x40]).decodeItem(), 1000000)
-        XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), 4294967295)
+		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0x00, 0x0f, 0x42, 0x40]).decodeItem(), 1000000)
+		XCTAssertEqual(try! CBORDecoder(input: [0x1a, 0xff, 0xff, 0xff, 0xff]).decodeItem(), 4294967295)
 		do { _ = try CBORDecoder(input: [0x1a]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
-        XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), 1000000000000)
-        XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.unsignedInt(18446744073709551615))
-        do { _ = try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
+		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x10, 0x00]).decodeItem(), 1000000000000)
+		XCTAssertEqual(try! CBORDecoder(input: [0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]).decodeItem(), CBOR.unsignedInt(18446744073709551615))
+		do { _ = try CBORDecoder(input: [0x1b, 0x00, 0x00]).decodeItem(); XCTAssertTrue(false) } catch { XCTAssertTrue(true) }
 
 		XCTAssertEqual(try! CBORDecoder(input: [0x20]).decodeItem(), -1)
 		XCTAssertEqual(try! CBORDecoder(input: [0x21]).decodeItem(), CBOR.negativeInt(1))
@@ -64,13 +64,13 @@ class CBORDecoderTests: XCTestCase {
 		XCTAssertEqual(try! CBORDecoder(input: [0xb8, 1, 0x63, 0x6b, 0x65, 0x79, 0x81, 0x37]).decodeItem(), ["key" : [-24]])
 		XCTAssertEqual(try! CBORDecoder(input: [0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(), ["key" : ["key" : -24]])
 	}
-    
+
 	func testDecodeTagged() {
-		XCTAssertEqual(try! CBORDecoder(input: [0xc0, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.tagged(0, "ABC"))
-		XCTAssertEqual(try! CBORDecoder(input: [0xd8, 255, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.tagged(255, "ABC"))
-		XCTAssertEqual(try! CBORDecoder(input: [0xdb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(), CBOR.tagged(3, ["key" : ["key" : -24]]))
+		XCTAssertEqual(try! CBORDecoder(input: [0xc0, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.tagged(.standardDateTimeString, "ABC"))
+		XCTAssertEqual(try! CBORDecoder(input: [0xd8, 255, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.tagged(.init(rawValue: 255), "ABC"))
+		XCTAssertEqual(try! CBORDecoder(input: [0xdb, 255, 255, 255, 255, 255, 255, 255, 255, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), CBOR.tagged(.init(rawValue: UInt64.max), "ABC"))
+		XCTAssertEqual(try! CBORDecoder(input: [0xdb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0xbf, 0x63, 0x6b, 0x65, 0x79, 0xa1, 0x63, 0x6b, 0x65, 0x79, 0x37, 0xff]).decodeItem(), CBOR.tagged(.negativeBignum, ["key" : ["key" : -24]]))
 	}
-    
 
 	func testDecodeSimple() {
 		XCTAssertEqual(try! CBORDecoder(input: [0xe0]).decodeItem(), CBOR.simple(0))
@@ -81,7 +81,6 @@ class CBORDecoderTests: XCTestCase {
 		XCTAssertEqual(try! CBORDecoder(input: [0xf6]).decodeItem(), CBOR.null)
 		XCTAssertEqual(try! CBORDecoder(input: [0xf7]).decodeItem(), CBOR.undefined)
 	}
-
 
 	func testDecodeFloats() {
 		XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.half(-4.0))
