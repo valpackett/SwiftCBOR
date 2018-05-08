@@ -71,20 +71,21 @@ extension CBOR {
     public static func encodeUInt64(_ x: UInt64) -> [UInt8] {
         return [0x1b] + rawBytes(of: x)
     }
+
+    internal static func encodeVarUInt(_ x: UInt64) -> [UInt8] {
+        switch x {
+        case let x where x <= UInt8.max: return CBOR.encodeUInt8(UInt8(x))
+        case let x where x <= UInt16.max: return CBOR.encodeUInt16(UInt16(x))
+        case let x where x <= UInt32.max: return CBOR.encodeUInt32(UInt32(x))
+        default: return CBOR.encodeUInt64(x)
+        }
+    }
     
     // major 1: negative integer
-    public static func encodeNegativeInt(_ x: Int) -> [UInt8] {
+    public static func encodeNegativeInt(_ x: Int64) -> [UInt8] {
         assert(x < 0)
-        var res = Int(-x - 1).encode()
-        let c = res.count
-        switch c {
-        case 1: res[0] = 0b001_00000 | res[0]
-        case 2: res[0] = 0x38
-        case 3: res[0] = 0x39
-        case 5: res[0] = 0x3a
-        case 9: res[0] = 0x3b
-        default: assert(false)
-        }
+        var res = encodeVarUInt(~UInt64(bitPattern: x))
+        res[0] = res[0] | 0b001_00000
         return res
     }
     
@@ -119,17 +120,19 @@ extension CBOR {
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
         res = map.count.encode()
         res[0] = res[0] | 0b101_00000
-        for (k,v) in map {
+        for (k, v) in map {
             res.append(contentsOf: k.encode())
             res.append(contentsOf: v.encode())
         }
         return res
     }
     
-    // major 6:
-    // TODO: tagging typechecks etc.
-    public static func encodeTagged<T: CBOREncodable>(tag: UInt8, value: T) -> [UInt8] {
-        return [0b110_00000 | tag] + value.encode()
+    // major 6: tagged values
+    public static func encodeTagged<T: CBOREncodable>(tag: Tag, value: T) -> [UInt8] {
+        var res = encodeVarUInt(tag.rawValue)
+        res[0] = res[0] | 0b110_00000
+        res.append(contentsOf: value.encode())
+        return res
     }
     
     
