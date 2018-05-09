@@ -54,15 +54,15 @@ extension CBOR {
         if (x < 24) { return [x] }
         else { return [0x18, x] }
     }
-    
+
     public static func encodeUInt16(_ x: UInt16) -> [UInt8] {
         return [0x19] + rawBytes(of: x)
     }
-    
+
     public static func encodeUInt32(_ x: UInt32) -> [UInt8] {
         return [0x1a] + rawBytes(of: x)
     }
-    
+
     public static func encodeUInt64(_ x: UInt64) -> [UInt8] {
         return [0x1b] + rawBytes(of: x)
     }
@@ -93,7 +93,7 @@ extension CBOR {
         res.append(contentsOf: bs)
         return res
     }
-    
+
     // MARK: - major 3: UTF8 string
 
     public static func encodeString(_ str: String) -> [UInt8] {
@@ -103,7 +103,7 @@ extension CBOR {
         res.append(contentsOf: utf8array)
         return res
     }
-    
+
     // MARK: - major 4: array of data items
 
     public static func encodeArray<T: CBOREncodable>(_ arr: [T]) -> [UInt8] {
@@ -112,7 +112,7 @@ extension CBOR {
         res.append(contentsOf: arr.flatMap{ return $0.encode() })
         return res
     }
-    
+
     // MARK: - major 5: a map of pairs of data items
 
     public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8] {
@@ -126,7 +126,7 @@ extension CBOR {
         }
         return res
     }
-    
+
     // MARK: - major 6: tagged values
 
     public static func encodeTagged<T: CBOREncodable>(tag: Tag, value: T) -> [UInt8] {
@@ -145,27 +145,27 @@ extension CBOR {
             return [0xf8, x]
         }
     }
-    
+
     public static func encodeNull() -> [UInt8] {
         return [0xf6]
     }
-    
+
     public static func encodeUndefined() -> [UInt8] {
         return [0xf7]
     }
-    
+
     public static func encodeBreak() -> [UInt8] {
         return [0xff]
     }
-    
+
     public static func encodeFloat(_ x: Float) -> [UInt8] {
         return [0xfa] + rawBytes(of: x)
     }
-    
+
     public static func encodeDouble(_ x: Double) -> [UInt8] {
         return [0xfb] + rawBytes(of: x)
     }
-    
+
     public static func encodeBool(_ x: Bool) -> [UInt8] {
         return x ? [0xf5] : [0xf4]
     }

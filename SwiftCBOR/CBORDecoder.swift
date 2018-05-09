@@ -167,7 +167,7 @@ public class CBORDecoder {
         default: return nil
         }
     }
-    
+
 }
 
 private enum VarUIntSize: UInt8 {
