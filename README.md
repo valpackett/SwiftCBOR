@@ -34,9 +34,11 @@ print(decoded)
 // CBOR.array([CBOR.unsignedInt(255), CBOR.array([CBOR.unsignedInt(1), CBOR.utf8String("ABC")]), CBOR.utf8String("ABC")])
 ```
 
+To unwrap the decoded `CBOR` values, use [PATTERN MATCHING](https://alisoftware.github.io/swift/pattern-matching/2016/05/16/pattern-matching-4/)!!
+
 ## Encoding
 
-Encoding a value returns an array of bytes, `[UInt8]`. You can encode with `CBOR.encode(myValue)` or `myValue.encode()`. Any type that conforms to the `CBOREncodable` protocol may be decoded. You can implement the `CBOREncodable` protocol for your types and then encode as usual. 
+Encoding a value returns an array of bytes, `[UInt8]`. You can encode with `CBOR.encode(myValue)` or `myValue.encode()`. Any type that conforms to the `CBOREncodable` protocol may be encoded. You can implement the `CBOREncodable` protocol for your types and then encode as usual. 
 
 ```swift
 CBOR.encode(100)  // --> [0x18, 0x64] of type [UInt8]
@@ -50,7 +52,9 @@ CBOR.encode(byteString, asByteString: true)
 
 Due to Swift's incomplete generics system, you cannot call `someArray.encode()` or `someDictionary.encode()`, but you can simply use `CBOR.encode(someArrayOrMap)` so long as your array items or map key and value types conform to `CBOREncodable`.
 
-In some cases it may be necessary to create a `CBOR` intermediate representation before encoding. For example, if you want to encode an array or dictionary containing heterogeneous types, as is common for JSON-like objects, you can't use native Swift maps yet. You can either implement `CBOREncodable` on your type or you can build a `CBOR` value and encode that.
+In some cases it may be necessary to create a `CBOR` intermediate representation before encoding. For example, if you want to encode an array or dictionary containing heterogeneous types, as is common for JSON-like objects, you can't use native Swift maps yet. You can implement `CBOREncodable` on your type that would build a `CBOR` value and encode that, or do the `CBOR` value thing without `CBOREncodable`.
+
+The `CBOR` enum can be [expressed with literals](https://developer.apple.com/documentation/swift/initialization_with_literals), but note that variables are not literals, so you might have to call the constructors manually.
 
 ```swift
 public protocol CBOREncodable {
@@ -62,9 +66,11 @@ struct MyStruct: CBOREncodable {
     var y: String
 
     public func encode() -> [UInt8] {
-        let cborWrapper = CBOR(dictionaryLiteral:
-            ("x", CBOR(integerLiteral: self.x)),
-            ("y", CBOR(stringLiteral: self.y)))
+        let cborWrapper : CBOR = [
+            "x": CBOR(integerLiteral: self.x), // You can use the literal constructors
+            "y": CBOR.utf8String(self.y), // Or the enum variants
+            "z": 123 // Or literals
+        ]
         return cborWrapper.encode()
     }
 }
@@ -72,6 +78,10 @@ struct MyStruct: CBOREncodable {
 MyStruct(x: 42, y: "words").encode()
 // --> bytes (as hex): a2 61 79 65 77 6f 72 64 73 61 78 18 2a
 ```
+
+The `encode` function doesn't *have* to look like that. If you want to do something custom, like [preserving the order of map keys](https://github.com/myfreeweb/SwiftCBOR/issues/21), you can build the `[UInt8]` manually. Look at the [Encoder functions](https://github.com/myfreeweb/SwiftCBOR/blob/master/SwiftCBOR/CBOREncoder.swift) for inspiration.
+
+### Encoding API
 
 The current general-purpose API is listed below. When you need fine grained control over the type you are encoding, use the following.
 
