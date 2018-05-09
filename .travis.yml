@@ -6,7 +6,8 @@ matrix:
       language: generic
       install:
         - eval "$(curl -sL https://swiftenv.fuller.li/install.sh)"
-        - swiftenv install 4.1
+        - swiftenv install 4.1 || swiftenv install 4.1 || swiftenv install 4.1
+        # retry a few times, download should resume https://github.com/kylef/swiftenv/commit/33727158
       script: swift test
     - os: osx
       osx_image: xcode9.2
@@ -14,4 +15,4 @@ matrix:
       install: echo ":)" # skip default (pods)
       script:
         - xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=OS X,arch=x86_64'
-        - xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=Simulator,name=iPhone,OS=8.1'
+        - xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone X,OS=11.2'

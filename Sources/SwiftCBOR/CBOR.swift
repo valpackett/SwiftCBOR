@@ -119,6 +119,10 @@ public indirect enum CBOR : Equatable, Hashable,
         public init(rawValue: UInt64) {
             self.rawValue = rawValue
         }
+
+        public var hashValue : Int {
+            return rawValue.hashValue
+        }
     }
 }
 
