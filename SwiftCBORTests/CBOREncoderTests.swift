@@ -3,7 +3,6 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBOREncoderTests: XCTestCase {
-
     func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8]) {
         XCTAssertEqual(input.encode(), cbor)
         XCTAssertEqual(try! CBOR.decode(input.encode()), try! CBOR.decode(cbor))
@@ -90,7 +89,7 @@ class CBOREncoderTests: XCTestCase {
         let bignum: [UInt8] = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] // 2**64
         let bignumCBOR = CBOR.byteString(bignum)
         XCTAssertEqual(CBOR.encodeTagged(tag: .positiveBignum, value: bignumCBOR), [0xc2, 0x49] + bignum)
-		XCTAssertEqual(CBOR.encodeTagged(tag: .init(rawValue: UInt64.max), value: bignumCBOR), [0xdb, 255, 255, 255, 255, 255, 255, 255, 255, 0x49] + bignum)
+        XCTAssertEqual(CBOR.encodeTagged(tag: .init(rawValue: UInt64.max), value: bignumCBOR), [0xdb, 255, 255, 255, 255, 255, 255, 255, 255, 0x49] + bignum)
     }
 
     func testEncodeSimple() {

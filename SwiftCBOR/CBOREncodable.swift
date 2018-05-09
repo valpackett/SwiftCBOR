@@ -4,7 +4,6 @@ public protocol CBOREncodable {
 }
 
 extension CBOR: CBOREncodable {
-    
     /// Encodes a wrapped CBOR value. CBOR.half (Float16) is not supported and encodes as `undefined`.
     public func encode() -> [UInt8] {
         switch self {
@@ -39,7 +38,7 @@ extension Int: CBOREncodable {
 
 extension UInt: CBOREncodable {
     public func encode() -> [UInt8] {
-		return CBOR.encodeVarUInt(UInt64(self))
+        return CBOR.encodeVarUInt(UInt64(self))
     }
 }
 

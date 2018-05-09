@@ -72,6 +72,8 @@
 				37F34C021C0265AD00D36B5B /* Products */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 0;
+			indentWidth = 4;
 		};
 		37F34C021C0265AD00D36B5B /* Products */ = {
 			isa = PBXGroup;
