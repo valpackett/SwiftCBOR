@@ -1,12 +1,9 @@
 
-
 let isBigEndian = Int(bigEndian: 42) == 42
 
-/*
- Takes a value breaks it into bytes. assumes necessity to reverse for endianness if needed
- This function has only been tested with UInt_s, Floats and Doubles
- T must be a simple type. It cannot be a collection type.
- */
+/// Takes a value breaks it into bytes. assumes necessity to reverse for endianness if needed
+/// This function has only been tested with UInt_s, Floats and Doubles
+/// T must be a simple type. It cannot be a collection type.
 func rawBytes<T>(of x: T) -> [UInt8] {
     var mutable = x // create mutable copy for `withUnsafeBytes`
     let bigEndianResult = withUnsafeBytes(of: &mutable) { Array($0) }
@@ -17,11 +14,9 @@ func rawBytes<T>(of x: T) -> [UInt8] {
 /// Defines more fine-grained functions of form CBOR.encode*(_ x)
 /// for all CBOR types except Float16
 extension CBOR {
-
     public static func encode<T: CBOREncodable>(_ value: T) -> [UInt8] {
         return value.encode()
     }
-
 
     /// Encodes an array as either a CBOR array type or a CBOR bytestring type, depending on `asByteString`.
     /// NOTE: when `asByteString` is true and T = UInt8, the array is interpreted in network byte order
@@ -53,8 +48,8 @@ extension CBOR {
         return encodeMap(dict)
     }
 
-    
-    // major 0: unsigned integer
+    // MARK: - major 0: unsigned integer
+
     public static func encodeUInt8(_ x: UInt8) -> [UInt8] {
         if (x < 24) { return [x] }
         else { return [0x18, x] }
@@ -80,16 +75,18 @@ extension CBOR {
         default: return CBOR.encodeUInt64(x)
         }
     }
-    
-    // major 1: negative integer
+
+    // MARK: - major 1: negative integer
+
     public static func encodeNegativeInt(_ x: Int64) -> [UInt8] {
         assert(x < 0)
         var res = encodeVarUInt(~UInt64(bitPattern: x))
         res[0] = res[0] | 0b001_00000
         return res
     }
-    
-    // major 2: bytestring
+
+    // MARK: - major 2: bytestring
+
     public static func encodeByteString(_ bs: [UInt8]) -> [UInt8] {
         var res = bs.count.encode()
         res[0] = res[0] | 0b010_00000
@@ -97,7 +94,8 @@ extension CBOR {
         return res
     }
     
-    // major 3: UTF8 string
+    // MARK: - major 3: UTF8 string
+
     public static func encodeString(_ str: String) -> [UInt8] {
         let utf8array = Array(str.utf8)
         var res = utf8array.count.encode()
@@ -106,7 +104,8 @@ extension CBOR {
         return res
     }
     
-    // major 4: array of data items
+    // MARK: - major 4: array of data items
+
     public static func encodeArray<T: CBOREncodable>(_ arr: [T]) -> [UInt8] {
         var res = arr.count.encode()
         res[0] = res[0] | 0b100_00000
@@ -114,7 +113,8 @@ extension CBOR {
         return res
     }
     
-    // major 5: a map of pairs of data items
+    // MARK: - major 5: a map of pairs of data items
+
     public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8] {
         var res: [UInt8] = []
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
@@ -127,16 +127,17 @@ extension CBOR {
         return res
     }
     
-    // major 6: tagged values
+    // MARK: - major 6: tagged values
+
     public static func encodeTagged<T: CBOREncodable>(tag: Tag, value: T) -> [UInt8] {
         var res = encodeVarUInt(tag.rawValue)
         res[0] = res[0] | 0b110_00000
         res.append(contentsOf: value.encode())
         return res
     }
-    
-    
-    // major 7: floats, simple values, the 'break' stop code
+
+    // MARK: - major 7: floats, simple values, the 'break' stop code
+
     public static func encodeSimpleValue(_ x: UInt8) -> [UInt8] {
         if x < 24 {
             return [0b111_00000 | x]
@@ -169,9 +170,7 @@ extension CBOR {
         return x ? [0xf5] : [0xf4]
     }
 
-
-    // -----------------------
-    // Indefinite length items
+    // MARK: - Indefinite length items
 
     /// Returns a CBOR value indicating the opening of an indefinite-length data item.
     /// The user is responsible for creating and sending subsequent valid CBOR.
@@ -202,7 +201,7 @@ extension CBOR {
         return [0xff]
     }
 
-    //TODO: unify definite and indefinite code
+    // TODO: unify definite and indefinite code
     public static func encodeArrayChunk<T: CBOREncodable>(_ chunk: [T]) -> [UInt8] {
         var res: [UInt8] = []
         res.reserveCapacity(chunk.count * MemoryLayout<T>.size)
