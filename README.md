@@ -1,28 +1,29 @@
-# SwiftCBOR [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org) [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![Build Status](https://img.shields.io/travis/myfreeweb/SwiftCBOR.svg?style=flat)](https://travis-ci.org/myfreeweb/SwiftCBOR)
+[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
+[![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
+
+# SwiftCBOR
 
 A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder and encoder in Swift. Encode directly from Swift types or use a wrapper object. Decode to a CBOR value type that can be accessed with native Swift subscripting and expressed with the equivalent literal notation.
 
-- No `Foundation` dependency! Ready for the cross-platform future of Swift.
-- Configured as a [universal iOS / OS X framework](https://colemancda.github.io/programming/2015/02/11/universal-ios-osx-framework/).
+- A fully cross-platform Swift 4.x package!
+- No `Foundation` dependency (even though it turned out to be supported in the cross-platform version, ha.)
 - Negative integers are decoded as `NegativeInt(UInt)`, where the actual number is `-1 - i` (CBOR's negative integers can be larger than 64-bit signed integers).
 - Tags are decoded, but not processed. Tagged values are encoded, but not type-checked. Do it yourself :-)
 - Literal convertibles are defined for the `CBOR` type!
 - And `subscript` too. So you can access CBOR maps and arrays like this: `myDecodedObject["numbers"][1]`.
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
-- Half floats can be decoded to a Float. Encoding Float16s are not supported (they do not exist in Swift).
+- Half floats can be decoded to a Float, maybe even correctly. Encoding Float16s are not supported (they do not exist in Swift).
 - Memory efficiency of encoding needs tuning. (Encoding is not typically done in-place.)
 - Encoding indefinite-length data is supported but you need to explicitly add open and close information to your streaming data.
 - [cbor.me](http://cbor.me) is recommended for viewing your CBOR-encoded data.
 
 ## Installation
 
-Use [Carthage](https://github.com/Carthage/Carthage).
+There are many ways: Swift Package Manager, Carthage, CocoaPods, git submodule...
 
-```
-github "myfreeweb/SwiftCBOR"
-```
-
-Or add it as a Git submodule.
+The CocoaPod is [submitted by contributors](https://github.com/myfreeweb/SwiftCBOR/issues/7), updates can be delayed there.
+Carthage is the recommended dependency manager for Cocoa projects.
 
 ## Decoding
 
@@ -139,11 +140,11 @@ Finally, a technical note on encoding byte string when using the general purpose
 
 ## Contributing
 
-By participating in this project you agree to follow the [Contributor Code of Conduct](http://contributor-covenant.org/version/1/2/0/).
+By participating in this project you agree to follow the [Contributor Code of Conduct](https://contributor-covenant.org/version/1/4/).
 
 [The list of contributors is available on GitHub](https://github.com/myfreeweb/SwiftCBOR/graphs/contributors).
 
 ## License
 
 This is free and unencumbered software released into the public domain.  
-For more information, please refer to the `UNLICENSE` file or [unlicense.org](http://unlicense.org).
+For more information, please refer to the `UNLICENSE` file or [unlicense.org](https://unlicense.org).

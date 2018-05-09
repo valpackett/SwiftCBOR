@@ -1,8 +1,23 @@
-
 import XCTest
 @testable import SwiftCBOR
 
 class CBOREncoderTests: XCTestCase {
+    static var allTests = [
+        ("testEncodeInts", testEncodeInts),
+        ("testEncodeByteStrings", testEncodeByteStrings),
+        ("testEncodeUtf8Strings", testEncodeUtf8Strings),
+        ("testEncodeArrays", testEncodeArrays),
+        ("testEncodeMaps", testEncodeMaps),
+        ("testEncodeTagged", testEncodeTagged),
+        ("testEncodeSimple", testEncodeSimple),
+        ("testEncodeFloats", testEncodeFloats),
+        ("testEncodeIndefiniteArrays", testEncodeIndefiniteArrays),
+        ("testEncodeIndefiniteMaps", testEncodeIndefiniteMaps),
+        ("testEncodeIndefiniteStrings", testEncodeIndefiniteStrings),
+        ("testEncodeIndefiniteByteStrings", testEncodeIndefiniteByteStrings),
+        ("testReadmeExamples", testReadmeExamples),
+    ]
+
     func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8]) {
         XCTAssertEqual(input.encode(), cbor)
         XCTAssertEqual(try! CBOR.decode(input.encode()), try! CBOR.decode(cbor))
@@ -23,7 +38,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(Int(-1_000_000).encode(), [0x3a, 0x00, 0x0f, 0x42, 0x3f])
         XCTAssertEqual(Int(-1_000_000_000_000).encode(), [0x3b, 0x00, 0x00, 0x00, 0xe8, 0xd4, 0xa5, 0x0f, 0xff])
     }
-    
+
     func testEncodeByteStrings() {
         XCTAssertEqual(CBOR.encode([UInt8](), asByteString: true), [0x40])
         XCTAssertEqual(CBOR.encode([UInt8]([0xf0]), asByteString: true), [0x41, 0xf0])
@@ -56,24 +71,22 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual("abc\n123".encode(), [0x67, 0x61, 0x62, 0x63, 0x0a, 0x31, 0x32, 0x33])
     }
 
-
     func testEncodeArrays() {
         XCTAssertEqual(CBOR.encode(Array<Int>()), [0x80])
         XCTAssertEqual(CBOR.encode([1, 2, 3]), [0x83, 0x01, 0x02, 0x03])
 
         let arr: [[UInt64]] = [[1], [2, 3], [4, 5]]
-       
+
         let wrapped = arr.map{ inner in return CBOR.array(inner.map{ return CBOR.unsignedInt($0) })}
-        print(wrapped)
         XCTAssertEqual(CBOR.encode(wrapped), [0x83, 0x81, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05])
-        
+
         let arr25Enc: [UInt8] = [0x98,0x19,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x18,0x18,0x19]
         XCTAssertEqual(CBOR.encode(Array<Int>(1...25)), arr25Enc)
     }
 
     func testEncodeMaps() {
         XCTAssertEqual(CBOR.encode(Dictionary<Int, Int>()), [0xa0])
-        
+
         let encoded = CBOR.encode([1: 2, 3: 4])
         XCTAssert(encoded == [0xa2, 0x01, 0x02, 0x03, 0x04] || encoded == [0xa2, 0x03, 0x04, 0x01, 0x02])
 
@@ -110,7 +123,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(Float(1.0).encode(), [0xfa, 0x3f, 0x80, 0x00, 0x00])
         XCTAssertEqual(Float(1.5).encode(), [0xfa,0x3f,0xc0, 0x00,0x00])
         XCTAssertEqual(Float(65504.0).encode(), [0xfa, 0x47, 0x7f, 0xe0, 0x00])
-        
+
         // The following are seen as Float32s in the RFC
         XCTAssertEqual(Float(100000.0).encode(), [0xfa,0x47,0xc3,0x50,0x00])
         XCTAssertEqual(Float(3.4028234663852886e+38).encode(), [0xfa, 0x7f, 0x7f, 0xff, 0xff])
@@ -120,7 +133,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(Double(-4.1).encode(), [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66])
         XCTAssertEqual(CBOR.encode(1.0e+300), [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c])
         XCTAssertEqual(Double(5.960464477539063e-8).encode(), [0xfb, 0x3e, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-        
+
         // Special values
         XCTAssertEqual(Float.infinity.encode(), [0xfa, 0x7f, 0x80, 0x00, 0x00])
         XCTAssertEqual(CBOR.encode(-Float.infinity), [0xfa, 0xff, 0x80, 0x00, 0x00])
@@ -128,7 +141,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(-Double.infinity), [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
         XCTAssertEqual(Float.nan.encode(), [0xfa,0x7f, 0xc0, 0x00, 0x00])
         XCTAssertEqual(Double.nan.encode(), [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
-        
+
         // Swift's floating point literals are read as Doubles unless specifically specified. e.g.
         XCTAssertEqual(CBOR.encode(0.0), [0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
     }
@@ -192,12 +205,16 @@ class CBOREncoderTests: XCTestCase {
             var y: String
 
             public func encode() -> [UInt8] {
-                let cborWrapper = CBOR(dictionaryLiteral:
-                    ("x", CBOR(integerLiteral: self.x)),
-                                       ("y", CBOR(stringLiteral: self.y)))
+                let cborWrapper : CBOR = [
+                    "x": CBOR(integerLiteral: self.x),
+                    "y": .utf8String(self.y)
+                ]
                 return cborWrapper.encode()
             }
         }
-        XCTAssertEqual(MyStruct(x: 42, y: "words").encode(), [0xa2, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x61, 0x78, 0x18, 0x2a])
+        XCTAssert(
+            MyStruct(x: 42, y: "words").encode() == [0xa2, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x61, 0x78, 0x18, 0x2a]
+            || MyStruct(x: 42, y: "words").encode() == [0xa2, 0x61, 0x78, 0x18, 0x2a, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73]
+        )
     }
 }

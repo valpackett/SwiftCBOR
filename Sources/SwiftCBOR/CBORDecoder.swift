@@ -155,9 +155,7 @@ public class CBORDecoder {
         case 0xf8: return CBOR.simple(try istream.popByte())
 
         case 0xf9:
-            var data = try readBinaryNumber(UInt16.self)
-            let half = withUnsafePointer(to: &data) { loadFromF16($0) }
-            return CBOR.half(half)
+            return CBOR.half(Util.readFloat16(x: try readBinaryNumber(UInt16.self)))
         case 0xfa:
             return CBOR.float(try readBinaryNumber(Float32.self))
         case 0xfb:

@@ -2,6 +2,18 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBORDecoderTests: XCTestCase {
+    static var allTests = [
+        ("testDecodeNumbers", testDecodeNumbers),
+        ("testDecodeByteStrings", testDecodeByteStrings),
+        ("testDecodeUtf8Strings", testDecodeUtf8Strings),
+        ("testDecodeArrays", testDecodeArrays),
+        ("testDecodeMaps", testDecodeMaps),
+        ("testDecodeTagged", testDecodeTagged),
+        ("testDecodeSimple", testDecodeSimple),
+        ("testDecodeFloats", testDecodeFloats),
+        ("testDecodePerformance", testDecodePerformance),
+    ]
+
     func testDecodeNumbers() {
         for i in (0..<24) {
             XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.unsignedInt(UInt64(i)))

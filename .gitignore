@@ -22,5 +22,6 @@ xcuserdata
 ## Obj-C/Swift specific
 *.hmap
 *.ipa
+.build/
 
 Carthage/
