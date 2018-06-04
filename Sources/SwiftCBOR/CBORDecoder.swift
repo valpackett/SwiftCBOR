@@ -83,6 +83,9 @@ public class CBORDecoder {
     private func readPairsUntilBreak() throws -> [CBOR : CBOR] {
         var result: [CBOR: CBOR] = [:]
         var key = try decodeItem()
+        if key == CBOR.break {
+            return result
+        }
         var val = try decodeItem()
         while key != CBOR.break {
             guard let okey = key else { throw CBORError.unfinishedSequence }
