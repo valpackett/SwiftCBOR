@@ -1,4 +1,6 @@
+#if canImport(Foundation)
 import Foundation
+#endif
 
 let isBigEndian = Int(bigEndian: 42) == 42
 
@@ -251,8 +253,12 @@ extension CBOR {
             return (any as! Float).encode()
         case is Double:
             return (any as! Double).encode()
+        case is [UInt8]:
+            return CBOR.encodeByteString(any as! [UInt8])
+        #if canImport(Foundation)
         case is Data:
             return CBOR.encodeByteString((any as! Data).map { $0 })
+        #endif
         case is [Any]:
             let anyArr = any as! [Any]
             var res = anyArr.count.encode()
