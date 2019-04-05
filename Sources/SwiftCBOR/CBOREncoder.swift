@@ -130,7 +130,7 @@ extension CBOR {
         return res
     }
 
-    public static func encodeMapToAny<A: CBOREncodable>(_ map: [A: Any]) throws -> [UInt8] {
+    public static func encodeMap<A: CBOREncodable>(_ map: [A: Any]) throws -> [UInt8] {
         var res: [UInt8] = []
         res = map.count.encode()
         res[0] = res[0] | 0b101_00000
