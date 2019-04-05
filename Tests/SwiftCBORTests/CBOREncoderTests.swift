@@ -96,6 +96,13 @@ class CBOREncoderTests: XCTestCase {
         let encodedAFirst: [UInt8] = [0xa2, 0x61, 0x61, 0x81, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03]
         let encodedBFirst: [UInt8] = [0xa2, 0x61, 0x62, 0x82, 0x02, 0x03, 0x61, 0x61, 0x81, 0x01]
         XCTAssert(nestedEnc == encodedAFirst || nestedEnc == encodedBFirst)
+
+        let mapToAny: [String: Any] = [
+            "a": 1,
+            "b": [2, 3]
+        ]
+        let encodedMapToAny = try! CBOR.encodeMap(mapToAny)
+        XCTAssertEqual(encodedMapToAny, [0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03])
     }
 
     func testEncodeTagged() {
