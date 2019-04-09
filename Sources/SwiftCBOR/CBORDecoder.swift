@@ -1,3 +1,7 @@
+#if canImport(Foundation)
+import Foundation
+#endif
+
 public enum CBORError : Error {
     case unfinishedSequence
     case wrongTypeInsideSequence
@@ -27,11 +31,11 @@ public class CBORDecoder {
         istream = ArrayUInt8(array: input)
     }
 
-    private func readBinaryNumber<T>(_ type: T.Type) throws -> T {
+    func readBinaryNumber<T>(_ type: T.Type) throws -> T {
         return UnsafeRawPointer(Array(try istream.popBytes(MemoryLayout<T>.size).reversed())).load(as: T.self)
     }
 
-    private func readVarUInt(_ v: UInt8, base: UInt8) throws -> UInt64 {
+    func readVarUInt(_ v: UInt8, base: UInt8) throws -> UInt64 {
         guard v > base + 0x17 else { return UInt64(v - base) }
 
         switch VarUIntSize(rawValue: v) {
@@ -42,7 +46,7 @@ public class CBORDecoder {
         }
     }
 
-    private func readLength(_ v: UInt8, base: UInt8) throws -> Int {
+    func readLength(_ v: UInt8, base: UInt8) throws -> Int {
         let n = try readVarUInt(v, base: base)
 
         guard n <= Int.max else {
@@ -128,7 +132,7 @@ public class CBORDecoder {
             return CBOR.utf8String(try readUntilBreak().map { x -> String in
                 guard case .utf8String(let r) = x else { throw CBORError.wrongTypeInsideSequence }
                 return r
-                }.joined(separator: ""))
+            }.joined(separator: ""))
 
         // arrays
         case 0x80...0x9b:
@@ -148,6 +152,24 @@ public class CBORDecoder {
         case 0xc0...0xdb:
             let tag = try readVarUInt(b, base: 0xc0)
             guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
+            #if canImport(Foundation)
+            if tag == 1 {
+                var date: Date
+                switch item {
+                case .double(let d):
+                    date = Date(timeIntervalSince1970: TimeInterval(d))
+                case .negativeInt(let n):
+                    date = Date(timeIntervalSince1970: TimeInterval(n))
+                case .float(let f):
+                    date = Date(timeIntervalSince1970: TimeInterval(f))
+                case .unsignedInt(let u):
+                    date = Date(timeIntervalSince1970: TimeInterval(u))
+                default:
+                    throw CBORError.wrongTypeInsideSequence
+                }
+                return CBOR.date(date)
+            }
+            #endif
             return CBOR.tagged(CBOR.Tag(rawValue: tag), item)
 
         case 0xe0...0xf3: return CBOR.simple(b - 0xe0)

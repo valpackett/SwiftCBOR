@@ -1,3 +1,7 @@
+#if canImport(Foundation)
+import Foundation
+#endif
+
 public indirect enum CBOR : Equatable, Hashable,
         ExpressibleByNilLiteral, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral,
         ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral, ExpressibleByBooleanLiteral,
@@ -18,6 +22,9 @@ public indirect enum CBOR : Equatable, Hashable,
     case float(Float32)
     case double(Float64)
     case `break`
+    #if canImport(Foundation)
+    case date(Date)
+    #endif
 
     public func hash(into hasher: inout Hasher) {
         switch self {
@@ -36,6 +43,9 @@ public indirect enum CBOR : Equatable, Hashable,
         case let .half(l):        l.hash(into: &hasher)
         case let .float(l):       l.hash(into: &hasher)
         case let .double(l):      l.hash(into: &hasher)
+        #if canImport(Foundation)
+        case let .date(l):        l.hash(into: &hasher)
+        #endif
         case .break:              Int.min.hash(into: &hasher)
         }
     }
@@ -95,6 +105,9 @@ public indirect enum CBOR : Equatable, Hashable,
         case (let .half(l),        let .half(r)):        return l == r
         case (let .float(l),       let .float(r)):       return l == r
         case (let .double(l),      let .double(r)):      return l == r
+        #if canImport(Foundation)
+        case (let .date(l),        let .date(r)):        return l == r
+        #endif
         case (.break,              .break):              return true
         case (.unsignedInt, _): return false
         case (.negativeInt, _): return false
@@ -155,3 +168,7 @@ extension CBOR.Tag {
 
     public static let selfDescribeCBOR = CBOR.Tag(rawValue: 55799)
 }
+
+#if os(Linux)
+let NSEC_PER_SEC: UInt64 = 1_000_000_000
+#endif

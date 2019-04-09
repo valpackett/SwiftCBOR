@@ -201,6 +201,18 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(encoded, cbor)
     }
 
+    func testEncodeDates() {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        let dateOne = dateFormatter.date(from: "2013-03-21T20:04:00+00:00")!
+        XCTAssertEqual(CBOR.encodeDate(dateOne), [0xc1, 0x1a, 0x51, 0x4b, 0x67, 0xb0])
+
+        let dateTwo = Date(timeIntervalSince1970: 1363896240.5)
+        XCTAssertEqual(CBOR.encodeDate(dateTwo), [0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00])
+    }
+
     func testReadmeExamples() {
         XCTAssertEqual(100.encode(),     [0x18, 0x64])
         XCTAssertEqual(CBOR.encode(100), [0x18, 0x64])
