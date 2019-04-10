@@ -64,7 +64,7 @@ extension _CBOREncoder.UnkeyedContainer: CBOREncodingContainer {
     var data: Data {
         // TODO: Check that this works for all sizes of array
         var data = storage.count.encode()
-        data[0] = data[0] | 0b010_00000
+        data[0] = data[0] | 0b100_00000
         for container in storage {
             data.append(contentsOf: container.data)
         }

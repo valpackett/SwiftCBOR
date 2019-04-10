@@ -162,7 +162,6 @@ extension _CBORDecoder.UnkeyedContainer {
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x40)
         // Terminated by break
         case 0x5f:
-
             #warning("FIXME")
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling byte strings with break bytes is not supported yet")
         // UTF8 strings
@@ -179,11 +178,7 @@ extension _CBORDecoder.UnkeyedContainer {
 
             self.index = container.index
             return container
-
-//            length = try CBORDecoder(input: [0]).readLength(format, base: 0x80)
-        // Terminated by break
-//        case 0x9f:
-//            #warning("FIXME")
+        // TODO: Need to check if indefinite case is handled by above
         // Maps
         case 0xa0...0xbb:
             let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo)
@@ -191,12 +186,7 @@ extension _CBORDecoder.UnkeyedContainer {
 
             self.index = container.index
             return container
-
-//            length = try CBORDecoder(input: [0]).readLength(format, base: 0xa0)
-        // Terminated by break
-//        case 0xbf:
-//            #warning("FIXME")
-
+        // TODO: Need to check if indefinite case is handled by above
         case 0xc0...0xdb:
 //            let tag = try CBORDecoder(input: [0]).readVarUInt(format, base: 0xc0)
 //            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }

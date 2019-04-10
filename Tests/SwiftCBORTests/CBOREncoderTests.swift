@@ -15,6 +15,7 @@ class CBOREncoderTests: XCTestCase {
         ("testEncodeIndefiniteMaps", testEncodeIndefiniteMaps),
         ("testEncodeIndefiniteStrings", testEncodeIndefiniteStrings),
         ("testEncodeIndefiniteByteStrings", testEncodeIndefiniteByteStrings),
+        ("testEncodeDates", testEncodeDates),
         ("testReadmeExamples", testReadmeExamples),
     ]
 

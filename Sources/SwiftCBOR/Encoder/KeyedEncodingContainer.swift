@@ -2,7 +2,7 @@ import Foundation
 
 extension _CBOREncoder {
     final class KeyedContainer<Key: CodingKey> {
-        var storage: [String: CBOREncodingContainer] = [:]
+        var storage: [AnyCodingKey: CBOREncodingContainer] = [:]
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
@@ -34,16 +34,16 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             codingPath: self.nestedCodingPath(forKey: key),
             userInfo: self.userInfo
         )
-        self.storage[key.stringValue] = container
+        self.storage[AnyCodingKey(key)] = container
         return container
     }
-    
+
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
         let container = _CBOREncoder.UnkeyedContainer(
             codingPath: self.nestedCodingPath(forKey: key),
             userInfo: self.userInfo
         )
-        self.storage[key.stringValue] = container
+        self.storage[AnyCodingKey(key)] = container
         return container
     }
     
@@ -52,7 +52,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             codingPath: self.nestedCodingPath(forKey: key),
             userInfo: self.userInfo
         )
-        self.storage[key.stringValue] = container
+        self.storage[AnyCodingKey(key)] = container
         return KeyedEncodingContainer(container)
     }
     
@@ -80,5 +80,4 @@ extension _CBOREncoder.KeyedContainer: CBOREncodingContainer {
 
         return Data(data)
     }
-
 }

@@ -16,7 +16,6 @@ extension CBOR {
 }
 
 public class CBORDecoder {
-
     private var istream : CBORInputStream
 
     public init(stream: CBORInputStream) {

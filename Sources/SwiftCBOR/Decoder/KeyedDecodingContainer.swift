@@ -2,33 +2,26 @@ import Foundation
 
 extension _CBORDecoder {
     final class KeyedContainer<Key: CodingKey> {
-        lazy var nestedContainers: [String: CBORDecodingContainer] = {
+        lazy var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = {
             guard let count = self.count else {
                 return [:]
             }
 
-            var nestedContainers: [String: CBORDecodingContainer] = [:]
+            var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = [:]
 
             let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo)
             unkeyedContainer.count = count * 2
 
-            do {
-                var iterator = unkeyedContainer.nestedContainers.makeIterator()
+            var iterator = unkeyedContainer.nestedContainers.makeIterator()
 
-                
-                for _ in 0..<count {
-                    guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
-                        let container = iterator.next() else {
-                            fatalError() // FIXME
-                    }
-
-                    // TODO: Allow non-String keys
-                    let key = try keyContainer.decode(String.self)
-                    container.codingPath += [AnyCodingKey(stringValue: key)!]
-                    nestedContainers[key] = container
+            for _ in 0..<count {
+                guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
+                    let container = iterator.next() else {
+                        fatalError() // FIXME
                 }
-            } catch {
-                fatalError("\(error)") // FIXME
+
+                let keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                nestedContainers[keyVal] = container
             }
 
             self.index = unkeyedContainer.index
@@ -84,17 +77,17 @@ extension _CBORDecoder {
 
 extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     var allKeys: [Key] {
-        return self.nestedContainers.keys.map{ Key(stringValue: $0)! }
+        return self.nestedContainers.keys.map { $0.key() }
     }
     
     func contains(_ key: Key) -> Bool {
-        return self.nestedContainers.keys.contains(key.stringValue)
+        return self.nestedContainers.keys.contains(AnyCodingKey(key))
     }
     
     func decodeNil(forKey key: Key) throws -> Bool {
         try checkCanDecodeValue(forKey: key)
 
-        guard let singleValueContainer = self.nestedContainers[key.stringValue] as? _CBORDecoder.SingleValueContainer else {
+        guard let singleValueContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.SingleValueContainer else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "cannot decode nil for key: \(key)")
             throw DecodingError.typeMismatch(Any?.self, context)
         }
@@ -105,7 +98,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
-        let container = self.nestedContainers[key.stringValue]!
+        let container = self.nestedContainers[AnyCodingKey(key)]!
         let decoder = CodableCBORDecoder()
         let value = try decoder.decode(T.self, from: container.data)
 
@@ -115,7 +108,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
         try checkCanDecodeValue(forKey: key)
 
-        guard let unkeyedContainer = self.nestedContainers[key.stringValue] as? _CBORDecoder.UnkeyedContainer else {
+        guard let unkeyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.UnkeyedContainer else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
 
@@ -125,7 +118,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue(forKey: key)
 
-        guard let keyedContainer = self.nestedContainers[key.stringValue] as? _CBORDecoder.KeyedContainer<NestedKey> else {
+        guard let keyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.KeyedContainer<NestedKey> else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
 
