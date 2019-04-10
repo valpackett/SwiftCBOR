@@ -1,7 +1,7 @@
 import Foundation
 
 public class CodableCBOREncoder {
-    func encode(_ value: Encodable) throws -> Data {
+    public func encode(_ value: Encodable) throws -> Data {
         let encoder = _CBOREncoder()
         try value.encode(to: encoder)
         return encoder.data

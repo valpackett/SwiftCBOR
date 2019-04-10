@@ -8,7 +8,7 @@ final public class CodableCBORDecoder {
 
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
-    func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let decoder = _CBORDecoder(data: data)
         decoder.userInfo = self.userInfo
         return try T(from: decoder)
