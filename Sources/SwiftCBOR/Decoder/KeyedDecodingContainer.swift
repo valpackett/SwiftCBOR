@@ -25,7 +25,6 @@ extension _CBORDecoder {
             }
 
             self.index = unkeyedContainer.index
-
             return nestedContainers
         }()
 

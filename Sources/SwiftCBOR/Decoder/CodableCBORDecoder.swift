@@ -29,13 +29,7 @@ final class _CBORDecoder {
 }
 
 extension _CBORDecoder: Decoder {
-    fileprivate func assertCanCreateContainer() {
-        precondition(self.container == nil)
-    }
-        
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> {
-        assertCanCreateContainer()
-
         let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
 
@@ -43,8 +37,6 @@ extension _CBORDecoder: Decoder {
     }
 
     func unkeyedContainer() -> UnkeyedDecodingContainer {
-        assertCanCreateContainer()
-        
         let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
 
@@ -52,8 +44,6 @@ extension _CBORDecoder: Decoder {
     }
     
     func singleValueContainer() -> SingleValueDecodingContainer {
-        assertCanCreateContainer()
-        
         let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
         

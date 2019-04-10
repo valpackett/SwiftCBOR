@@ -193,4 +193,46 @@ class CBORCodableRoundtripTests: XCTestCase {
         let oneTwoThreeFourDecoded = try! CodableCBORDecoder().decode([Int: Int].self, from: oneTwoThreeFour)
         XCTAssertEqual(oneTwoThreeFourDecoded, [1: 2, 3: 4])
     }
+
+    func testWrappedStruct() {
+        struct Wrapped<T: Codable>: Decodable {
+            let _id: String
+            let value: T
+
+            private enum CodingKeys: String, CodingKey {
+                case _id
+            }
+
+            init(from decoder: Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+
+                _id = try container.decode(String.self, forKey: ._id)
+                value = try T(from: decoder)
+            }
+        }
+
+        struct BasicCar: Codable {
+            let color: String
+            let age: Int
+        }
+
+        struct Car: Codable {
+            let _id: String
+            let color: String
+            let age: Int
+        }
+
+        let car = Car(
+            _id: "5cae",
+            color: "Red",
+            age: 56
+        )
+
+        let encodedCar = try! CodableCBOREncoder().encode(car)
+        let decoded = try! CodableCBORDecoder().decode(Wrapped<BasicCar>.self, from: encodedCar)
+
+        XCTAssertEqual(decoded._id, car._id)
+        XCTAssertEqual(decoded.value.color, car.color)
+        XCTAssertEqual(decoded.value.age, car.age)
+    }
 }
