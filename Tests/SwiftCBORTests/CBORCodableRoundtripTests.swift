@@ -13,7 +13,8 @@ class CBORCodableRoundtripTests: XCTestCase {
         ("testNegativeInts", testNegativeInts),
         ("testStrings", testStrings),
         ("testArrays", testArrays),
-        ("testMaps", testMaps)
+        ("testMaps", testMaps),
+        ("testWrappedStruct", testWrappedStruct),
     ]
 
     struct MyStruct: Codable, Equatable, Hashable {
@@ -223,7 +224,7 @@ class CBORCodableRoundtripTests: XCTestCase {
         }
 
         let car = Car(
-            _id: "5cae",
+            _id: "5caf23633337661721236cfa",
             color: "Red",
             age: 56
         )

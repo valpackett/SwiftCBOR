@@ -158,15 +158,39 @@ extension _CBORDecoder.UnkeyedContainer {
         case 0x1b, 0x3b:
             length = 8
         // Byte strings
-        case 0x40...0x5b:
+        case 0x40...0x57:
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x40)
+        case 0x58:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 1
+        case 0x59:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 2
+        case 0x5a:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 4
+        case 0x5b:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 8
         // Terminated by break
         case 0x5f:
             #warning("FIXME")
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling byte strings with break bytes is not supported yet")
         // UTF8 strings
-        case 0x60...0x7b:
+        case 0x60...0x77:
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x60)
+        case 0x78:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 1
+        case 0x79:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 2
+        case 0x7a:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 4
+        case 0x7b:
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 8
         // Terminated by break
         case 0x7f:
             #warning("FIXME")
