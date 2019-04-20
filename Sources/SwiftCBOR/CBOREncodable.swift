@@ -2,7 +2,7 @@
 import Foundation
 #endif
 
-public protocol CBOREncodable {
+public protocol CBOREncodable: Hashable {
     func encode() -> [UInt8]
 }
 
@@ -92,7 +92,6 @@ extension Double: CBOREncodable {
     }
 }
 
-
 extension Bool: CBOREncodable {
     public func encode() -> [UInt8] {
         return CBOR.encodeBool(self)
@@ -103,6 +102,12 @@ extension Bool: CBOREncodable {
 extension Date: CBOREncodable {
     public func encode() -> [UInt8] {
         return CBOR.encodeDate(self)
+    }
+}
+
+extension Data: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeByteString(self.map{ $0 })
     }
 }
 #endif
