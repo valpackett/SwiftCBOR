@@ -5,6 +5,7 @@ class CBOREncoderTests: XCTestCase {
     static var allTests = [
         ("testEncodeInts", testEncodeInts),
         ("testEncodeByteStrings", testEncodeByteStrings),
+        ("testEncodeData", testEncodeData),
         ("testEncodeUtf8Strings", testEncodeUtf8Strings),
         ("testEncodeArrays", testEncodeArrays),
         ("testEncodeMaps", testEncodeMaps),
@@ -53,6 +54,20 @@ class CBOREncoderTests: XCTestCase {
         // non-UInt8, raw bytes (reversed).
         XCTAssertEqual(CBOR.encode([UInt16]([240]), asByteString: true), [0x41, 0x00, 0xf0])
     }
+    
+    func testEncodeData() {
+        XCTAssertEqual(CBOR.encode(Data()), [0x40])
+        XCTAssertEqual(CBOR.encode(Data([0xf0])), [0x41, 0xf0])
+        XCTAssertEqual(CBOR.encode(Data([0x01, 0x02, 0x03, 0x04])), [0x44, 0x01, 0x02, 0x03, 0x04])
+        let bs23 = Data([0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xaa])
+        assert(bs23.count == 23)
+        XCTAssertEqual(CBOR.encode(bs23), [0x57] + bs23)
+        let bs24 = Data(bs23 + [0xaa])
+        XCTAssertEqual(CBOR.encode(bs24), [0x58, 24] + bs24)
+        
+        // non-UInt8, raw bytes (reversed).
+        XCTAssertEqual(CBOR.encode([UInt16]([240]), asByteString: true), [0x41, 0x00, 0xf0])
+    }
 
 
     func testEncodeUtf8Strings() {
@@ -74,10 +89,13 @@ class CBOREncoderTests: XCTestCase {
 
     func testEncodeArrays() {
         XCTAssertEqual(CBOR.encode(Array<Int>()), [0x80])
+        XCTAssertEqual(Array<Int>().encode(), [0x80])
+        
         XCTAssertEqual(CBOR.encode([1, 2, 3]), [0x83, 0x01, 0x02, 0x03])
+        XCTAssertEqual([1, 2, 3].encode(), [0x83, 0x01, 0x02, 0x03])
 
         let arr: [[UInt64]] = [[1], [2, 3], [4, 5]]
-
+        
         let wrapped = arr.map{ inner in return CBOR.array(inner.map{ return CBOR.unsignedInt($0) })}
         XCTAssertEqual(CBOR.encode(wrapped), [0x83, 0x81, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05])
 
