@@ -95,6 +95,12 @@ extension Bool: CBOREncodable {
     }
 }
 
+extension Array where Element: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeArray(self)
+    }
+}
+
 #if canImport(Foundation)
 extension Data: CBOREncodable {
     public func encode() -> [UInt8] {
