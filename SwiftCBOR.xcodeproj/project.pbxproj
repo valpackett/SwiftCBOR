@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		2DCC59AA226E674B00FE3DF6 /* CBORTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCC59A9226E674B00FE3DF6 /* CBORTests.swift */; };
 		OBJ_27 /* CBOR.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_9 /* CBOR.swift */; };
 		OBJ_28 /* CBORDecoder.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_10 /* CBORDecoder.swift */; };
 		OBJ_29 /* CBOREncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_11 /* CBOREncodable.swift */; };
@@ -51,6 +52,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		2DCC59A9226E674B00FE3DF6 /* CBORTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBORTests.swift; sourceTree = "<group>"; };
 		OBJ_10 /* CBORDecoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBORDecoder.swift; sourceTree = "<group>"; };
 		OBJ_11 /* CBOREncodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBOREncodable.swift; sourceTree = "<group>"; };
 		OBJ_12 /* CBOREncoder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CBOREncoder.swift; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 			children = (
 				OBJ_17 /* CBORDecoderTests.swift */,
 				OBJ_18 /* CBOREncoderTests.swift */,
+				2DCC59A9226E674B00FE3DF6 /* CBORTests.swift */,
 			);
 			name = SwiftCBORTests;
 			path = Tests/SwiftCBORTests;
@@ -257,6 +260,7 @@
 			files = (
 				OBJ_50 /* CBORDecoderTests.swift in Sources */,
 				OBJ_51 /* CBOREncoderTests.swift in Sources */,
+				2DCC59AA226E674B00FE3DF6 /* CBORTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
