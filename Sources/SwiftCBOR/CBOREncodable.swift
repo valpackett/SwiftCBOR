@@ -1,3 +1,6 @@
+#if canImport(Foundation)
+import Foundation
+#endif
 
 public protocol CBOREncodable {
     func encode() -> [UInt8]
@@ -13,6 +16,9 @@ extension CBOR: CBOREncodable {
         case let .utf8String(str): return str.encode()
         case let .array(a): return CBOR.encodeArray(a)
         case let .map(m): return CBOR.encodeMap(m)
+        #if canImport(Foundation)
+        case let .date(d): return CBOR.encodeDate(d)
+        #endif
         case let .tagged(t, l): return CBOR.encodeTagged(tag: t, value: l)
         case let .simple(s): return CBOR.encodeSimpleValue(s)
         case let .boolean(b): return b.encode()
@@ -92,3 +98,11 @@ extension Bool: CBOREncodable {
         return CBOR.encodeBool(self)
     }
 }
+
+#if canImport(Foundation)
+extension Date: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeDate(self)
+    }
+}
+#endif

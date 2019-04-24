@@ -231,6 +231,29 @@ extension CBOR {
         return res
     }
 
+    #if canImport(Foundation)
+    public static func encodeDate(_ date: Date) -> [UInt8] {
+        let timeInterval = date.timeIntervalSince1970
+        let (integral, fractional) = modf(timeInterval)
+
+        let seconds = Int64(integral)
+        let nanoseconds = UInt32(fractional * Double(NSEC_PER_SEC))
+
+        var res: [UInt8] = [0b110_00001] // Epoch timestamp tag is 1
+        if seconds < 0 {
+            res.append(contentsOf: CBOR.encodeNegativeInt(Int64(timeInterval)))
+        } else if seconds > UInt32.max {
+            res.append(contentsOf: CBOR.encodeDouble(timeInterval))
+        } else if nanoseconds > 0 {
+            res.append(contentsOf: CBOR.encodeDouble(timeInterval))
+        } else {
+            res.append(contentsOf: CBOR.encode(Int(seconds)))
+        }
+
+        return res
+    }
+    #endif
+
     private static func encodeAny(_ any: Any) throws -> [UInt8] {
         switch any {
         case is Bool:
@@ -258,6 +281,8 @@ extension CBOR {
         #if canImport(Foundation)
         case is Data:
             return CBOR.encodeByteString((any as! Data).map { $0 })
+        case is Date:
+            return CBOR.encodeDate((any as! Date))
         #endif
         case is [Any]:
             let anyArr = any as! [Any]
