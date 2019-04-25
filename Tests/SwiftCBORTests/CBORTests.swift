@@ -9,6 +9,11 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBORTests: XCTestCase {
+    static var allTests = [
+        ("testSubscriptSetter", testSubscriptSetter),
+        ("testNestedSubscriptSetter", testNestedSubscriptSetter),
+        ("testNestedSubscriptSetterWithNewMap", testNestedSubscriptSetterWithNewMap)
+    ]
 
     func testSubscriptSetter() {
         let dictionary: [String: Any] = [
