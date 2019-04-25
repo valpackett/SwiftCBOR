@@ -7,4 +7,5 @@ XCTMain([
     testCase(CodableCBOREncoderTests.allTests),
     testCase(CodableCBORDecoderTests.allTests),
     testCase(CBORCodableRoundtripTests.allTests),
+    testCase(CBORTests.allTests),
 ])

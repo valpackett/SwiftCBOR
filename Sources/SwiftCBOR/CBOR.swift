@@ -60,8 +60,12 @@ public indirect enum CBOR : Equatable, Hashable,
         }
         set(x) {
             switch (self, position) {
-            case (var .array(l), let .unsignedInt(i)): l[Int(i)] = x!
-            case (var .map(l), let i): l[i] = x!
+            case (var .array(l), let .unsignedInt(i)):
+                l[Int(i)] = x!
+                self = .array(l)
+            case (var .map(l), let i):
+                l[i] = x!
+                self = .map(l)
             default: break
             }
         }
