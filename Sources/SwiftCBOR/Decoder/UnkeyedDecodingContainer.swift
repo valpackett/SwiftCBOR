@@ -46,6 +46,14 @@ extension _CBORDecoder {
                     }
                     return nil
                 case 0x5f:
+                    // FIXME: This is ridiculous but it seems to work. When trying to decode an indefinite
+                    // byte string into `Data` it seems to treat it as an unkeyed container of `UInt8`s. When
+                    // working with an indefinite byte string you really have a collection of byte strings, so
+                    // you can think of it as nested array of `UInt8`s, i.e. `[[UInt8]]`. We want this to be
+                    // flattened into a single `Data` type and so this decodes using the standard
+                    // `CBORDecoder`, flattens the resulting list of byte strings, and then encodes that and
+                    // sets the result of that to be the `data` property for `Codable` to work with. There is
+                    // a better, sane way of doing this, I'm sure, but this does seem to work.
                     let remainingData = self.data.suffix(from: self.data.startIndex.advanced(by: 1))
 
                     guard let list = try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak() else {
