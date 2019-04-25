@@ -43,8 +43,14 @@ extension _CBORDecoder {
                 case 0xbb:
                     return Int(try read(UInt64.self))
                 case 0xbf:
-                    // TODO: Data items follow, terminated by break
-                    return nil
+                    // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
+                    // nestedContainers code so that if we're working with a map that has a break at the end
+                    // it creates the containers as it goes, rather than first calculating the count (which
+                    // involves going through all the bytes) and then going back through the data and decoding
+                    // each key-value pair in the map.
+                    let nextIndex = self.data.startIndex.advanced(by: 1)
+                    let remainingData = self.data.suffix(from: nextIndex)
+                    return try? CBORDecoder(input: remainingData.map { $0 }).readPairsUntilBreak().keys.count
                 default:
                     return nil
                 }
@@ -78,11 +84,11 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     var allKeys: [Key] {
         return self.nestedContainers.keys.map { $0.key() }
     }
-    
+
     func contains(_ key: Key) -> Bool {
         return self.nestedContainers.keys.contains(AnyCodingKey(key))
     }
-    
+
     func decodeNil(forKey key: Key) throws -> Bool {
         try checkCanDecodeValue(forKey: key)
 
@@ -93,7 +99,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
 
         return singleValueContainer.decodeNil()
     }
-    
+
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
@@ -103,7 +109,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
 
         return value
     }
- 
+
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
         try checkCanDecodeValue(forKey: key)
 
@@ -113,7 +119,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
 
         return unkeyedContainer
     }
-    
+
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue(forKey: key)
 
@@ -123,11 +129,11 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
 
         return KeyedDecodingContainer(keyedContainer)
     }
-    
+
     func superDecoder() throws -> Decoder {
         return _CBORDecoder(data: self.data)
     }
-    
+
     func superDecoder(forKey key: Key) throws -> Decoder {
         let decoder = _CBORDecoder(data: self.data)
         decoder.codingPath = [key]

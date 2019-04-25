@@ -62,7 +62,7 @@ public class CBORDecoder {
         }
     }
 
-    private func readUntilBreak() throws -> [CBOR] {
+    func readUntilBreak() throws -> [CBOR] {
         var result: [CBOR] = []
         var cur = try decodeItem()
         while cur != CBOR.break {
@@ -83,7 +83,7 @@ public class CBORDecoder {
         return result
     }
 
-    private func readPairsUntilBreak() throws -> [CBOR : CBOR] {
+    func readPairsUntilBreak() throws -> [CBOR : CBOR] {
         var result: [CBOR: CBOR] = [:]
         var key = try decodeItem()
         if key == CBOR.break {
@@ -121,7 +121,7 @@ public class CBORDecoder {
             return CBOR.byteString(try readUntilBreak().flatMap { x -> [UInt8] in
                 guard case .byteString(let r) = x else { throw CBORError.wrongTypeInsideSequence }
                 return r
-                })
+            })
 
         // utf-8 strings
         case 0x60...0x7b:

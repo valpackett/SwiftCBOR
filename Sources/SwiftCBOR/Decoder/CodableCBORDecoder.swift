@@ -1,7 +1,7 @@
 import Foundation
 
 /**
- 
+
  */
 final public class CodableCBORDecoder {
     public init() {}
@@ -17,12 +17,12 @@ final public class CodableCBORDecoder {
 
 final class _CBORDecoder {
     var codingPath: [CodingKey] = []
-    
+
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    
+
     var container: CBORDecodingContainer?
     fileprivate var data: Data
-    
+
     init(data: Data) {
         self.data = data
     }
@@ -42,11 +42,11 @@ extension _CBORDecoder: Decoder {
 
         return container
     }
-    
+
     func singleValueContainer() -> SingleValueDecodingContainer {
         let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
-        
+
         return container
     }
 }
