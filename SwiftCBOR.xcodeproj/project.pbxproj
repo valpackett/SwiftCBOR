@@ -242,8 +242,8 @@
       "OBJ_37" = {
          isa = "PBXGroup";
          children = (
-            "SwiftCBOR::SwiftCBORTests::Product",
-            "SwiftCBOR::SwiftCBOR::Product"
+            "SwiftCBOR::SwiftCBOR::Product",
+            "SwiftCBOR::SwiftCBORTests::Product"
          );
          name = "Products";
          path = "";
