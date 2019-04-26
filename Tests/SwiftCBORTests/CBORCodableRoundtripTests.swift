@@ -226,9 +226,8 @@ class CBORCodableRoundtripTests: XCTestCase {
         }
 
         // Generate some random Data
-        let length = 4
-        let bytes = [UInt32](repeating: 0, count: length).map { _ in arc4random() }
-        let data = Data(bytes: bytes, count: length)
+        let randomBytes = (1...4).map { _ in UInt8.random(in: 0...UInt8.max) }
+        let data = Data(randomBytes)
 
         let car = Car(
             _id: "5caf23633337661721236cfa",
