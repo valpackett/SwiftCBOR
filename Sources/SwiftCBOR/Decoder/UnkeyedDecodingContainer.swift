@@ -54,6 +54,9 @@ extension _CBORDecoder {
                     // `CBORDecoder`, flattens the resulting list of byte strings, and then encodes that and
                     // sets the result of that to be the `data` property for `Codable` to work with. There is
                     // a better, sane way of doing this, I'm sure, but this does seem to work.
+                    //
+                    // See here for `Foundation.Data`'s `Codable` conformance (at time of writing):
+                    // https://github.com/apple/swift-corelibs-foundation/blob/eecb4bae1259860d25987770d3836b306b19555c/Foundation/Data.swift#L2821-L2851
                     let remainingData = self.data.suffix(from: self.data.startIndex.advanced(by: 1))
 
                     guard let list = try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak() else {
