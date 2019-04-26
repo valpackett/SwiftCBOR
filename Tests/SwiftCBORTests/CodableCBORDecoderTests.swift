@@ -8,8 +8,10 @@ class CodableCBORDecoderTests: XCTestCase {
         ("testDecodeInts", testDecodeInts),
         ("testDecodeNegativeInts", testDecodeNegativeInts),
         ("testDecodeStrings", testDecodeStrings),
+        ("testDecodeByteStrings", testDecodeByteStrings),
         ("testDecodeArrays", testDecodeArrays),
-        ("testDecodeMaps", testDecodeMaps)
+        ("testDecodeMaps", testDecodeMaps),
+        ("testDecodeDates", testDecodeDates)
     ]
 
     func testDecodeNull() {
@@ -71,7 +73,6 @@ class CodableCBORDecoderTests: XCTestCase {
         let minusThousand = try! CodableCBORDecoder().decode(Int.self, from: Data([0x39, 0x03, 0xe7]))
         XCTAssertEqual(minusThousand, -1_000)
 
-
         // TODO: Tagged byte strings for big numbers
 //        let bigNum = try! CodableCBORDecoder().decode(Int.self, from: Data([0x1b, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff]))
 //        XCTAssertEqual(bigNum, 18_446_744_073_709_551_615)
@@ -90,6 +91,14 @@ class CodableCBORDecoderTests: XCTestCase {
         XCTAssertEqual(quoteSlash, "\"\\")
         let littleUWithDiaeresis = try! CodableCBORDecoder().decode(String.self, from: Data([0x62, 0xc3, 0xbc]))
         XCTAssertEqual(littleUWithDiaeresis, "\u{00FC}")
+
+    }
+
+    func testDecodeByteStrings() {
+        let fourByteByteString = try! CodableCBORDecoder().decode(Data.self, from: Data([0x44, 0x01, 0x02, 0x03, 0x04]))
+        XCTAssertEqual(fourByteByteString, Data([0x01, 0x02, 0x03, 0x04]))
+        let indefiniteByteSting = try! CodableCBORDecoder().decode(Data.self, from: Data([0x5f, 0x42, 0x01, 0x02, 0x43, 0x03, 0x04, 0x05, 0xff]))
+        XCTAssertEqual(indefiniteByteSting, Data([0x01, 0x02, 0x03, 0x04, 0x05]))
     }
 
     func testDecodeArrays() {
@@ -101,6 +110,10 @@ class CodableCBORDecoderTests: XCTestCase {
         XCTAssertEqual(lotsOfInts, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25])
         let nestedSimple = try! CodableCBORDecoder().decode([[Int]].self, from: Data([0x83, 0x81, 0x01, 0x82, 0x02, 0x03, 0x82, 0x04, 0x05]))
         XCTAssertEqual(nestedSimple, [[1], [2, 3], [4, 5]])
+        let indefiniteArray = try! CodableCBORDecoder().decode([Int].self, from: Data([0x9f, 0x04, 0x05, 0xff]))
+        XCTAssertEqual(indefiniteArray, [4, 5])
+        let nestedIndefiniteArrays = try! CodableCBORDecoder().decode([[Int]].self, from: Data([0x9f, 0x81, 0x01, 0x82, 0x02, 0x03, 0x9f, 0x04, 0x05, 0xff, 0xff]))
+        XCTAssertEqual(nestedIndefiniteArrays, [[1], [2, 3], [4, 5]])
     }
 
     func testDecodeMaps() {
@@ -110,5 +123,18 @@ class CodableCBORDecoderTests: XCTestCase {
         XCTAssertEqual(stringToString, ["a": "A", "b": "B", "c": "C", "d": "D", "e": "E"])
         let oneTwoThreeFour = try! CodableCBORDecoder().decode([Int: Int].self, from: Data([0xa2, 0x01, 0x02, 0x03, 0x04]))
         XCTAssertEqual(oneTwoThreeFour, [1: 2, 3: 4])
+        let indefiniteMap = try! CodableCBORDecoder().decode([String: String].self, from: Data([0xbf, 0x63, 0x46, 0x75, 0x6e, 0x61, 0x62, 0x63, 0x41, 0x6d, 0x74, 0x61, 0x63, 0xff]))
+        XCTAssertEqual(indefiniteMap, ["Fun": "b", "Amt": "c"])
+        let nestedIndefiniteMap = try! CodableCBORDecoder().decode([String: [String: String]].self, from: Data([0xbf, 0x63, 0x46, 0x75, 0x6e, 0xa1, 0x61, 0x62, 0x61, 0x42, 0x63, 0x41, 0x6d, 0x74, 0xbf, 0x61, 0x63, 0x61, 0x43, 0xff, 0xff]))
+        XCTAssertEqual(nestedIndefiniteMap, ["Fun": ["b": "B"], "Amt": ["c": "C"]])
+    }
+
+    func testDecodeDates() {
+        let expectedDateOne = Date(timeIntervalSince1970: 1363896240)
+        let dateOne = try! CodableCBORDecoder().decode(Date.self, from: Data([0xc1, 0x1a, 0x51, 0x4b, 0x67, 0xb0]))
+        XCTAssertEqual(dateOne, expectedDateOne)
+        let expectedDateTwo = Date(timeIntervalSince1970: 1363896240.5)
+        let dateTwo = try! CodableCBORDecoder().decode(Date.self, from: Data([0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00]))
+        XCTAssertEqual(dateTwo, expectedDateTwo)
     }
 }

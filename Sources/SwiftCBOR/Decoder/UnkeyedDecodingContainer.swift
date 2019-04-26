@@ -16,6 +16,7 @@ extension _CBORDecoder {
         lazy var count: Int? = {
             do {
                 let format = try self.readByte()
+
                 switch format {
                 case 0x80...0x97 :
                     return Int(format & 0x1F)
@@ -28,8 +29,14 @@ extension _CBORDecoder {
                 case 0x9b:
                     return Int(try read(UInt64.self))
                 case 0x9f:
-                    // TODO: Data items follow, terminated by break
-                    return nil
+                    // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
+                    // nestedContainers code so that if we're working with an array that has a break at the
+                    // end it creates the containers as it goes, rather than first calculating the count
+                    // (which involves going through all the bytes) and then going back through the data and
+                    // decoding each item in the array.
+                    let nextIndex = self.data.startIndex.advanced(by: 1)
+                    let remainingData = self.data.suffix(from: nextIndex)
+                    return try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak().count
                 default:
                     return nil
                 }
@@ -60,7 +67,7 @@ extension _CBORDecoder {
 
             return nestedContainers
         }()
-       
+
         init(data: Data, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
             self.userInfo = userInfo
@@ -95,7 +102,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
 
         return value
     }
-    
+
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
@@ -106,7 +113,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
 
         return value
     }
-    
+
     func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
@@ -115,7 +122,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
 
         return container
     }
-    
+
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
@@ -174,7 +181,7 @@ extension _CBORDecoder.UnkeyedContainer {
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 8
         // Terminated by break
         case 0x5f:
-            #warning("FIXME")
+            // TODO: Is this ever going to get hit?
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling byte strings with break bytes is not supported yet")
         // UTF8 strings
         case 0x60...0x77:
@@ -202,15 +209,13 @@ extension _CBORDecoder.UnkeyedContainer {
 
             self.index = container.index
             return container
-        // TODO: Need to check if indefinite case is handled by above
         // Maps
-        case 0xa0...0xbb:
+        case 0xa0...0xbf:
             let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo)
             _ = container.nestedContainers // FIXME
 
             self.index = container.index
             return container
-        // TODO: Need to check if indefinite case is handled by above
         case 0xc0...0xdb:
 //            let tag = try CBORDecoder(input: [0]).readVarUInt(format, base: 0xc0)
 //            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }

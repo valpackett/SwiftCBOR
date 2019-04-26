@@ -8,6 +8,7 @@ class CodableCBOREncoderTests: XCTestCase {
         ("testEncodeInts", testEncodeInts),
         ("testEncodeNegativeInts", testEncodeNegativeInts),
         ("testEncodeStrings", testEncodeStrings),
+        ("testEncodeByteStrings", testEncodeByteStrings),
         ("testEncodeArrays", testEncodeArrays),
         ("testEncodeMaps", testEncodeMaps),
         ("testEncodeSimpleStructs", testEncodeSimpleStructs)
@@ -90,6 +91,11 @@ class CodableCBOREncoderTests: XCTestCase {
         XCTAssertEqual(quoteSlash, Data([0x62, 0x22, 0x5c]))
         let littleUWithDiaeresis = try! CodableCBOREncoder().encode("\u{00FC}")
         XCTAssertEqual(littleUWithDiaeresis, Data([0x62, 0xc3, 0xbc]))
+    }
+
+    func testEncodeByteStrings() {
+        let fourByteByteString = try! CodableCBOREncoder().encode(Data([0x01, 0x02, 0x03, 0x04]))
+        XCTAssertEqual(fourByteByteString, Data([0x44, 0x01, 0x02, 0x03, 0x04]))
     }
 
     func testEncodeArrays() {

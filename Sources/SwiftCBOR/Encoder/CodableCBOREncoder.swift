@@ -5,6 +5,11 @@ public class CodableCBOREncoder {
 
     public func encode(_ value: Encodable) throws -> Data {
         let encoder = _CBOREncoder()
+        if let dateVal = value as? Date {
+            return Data(CBOR.encodeDate(dateVal))
+        } else if let dataVal = value as? Data {
+            return Data(CBOR.encodeData(dataVal))
+        }
         try value.encode(to: encoder)
         return encoder.data
     }
