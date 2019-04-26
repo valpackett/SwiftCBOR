@@ -139,7 +139,7 @@ extension _CBOREncoder.SingleValueContainer: SingleValueEncodingContainer {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value.map { $0 }))
+        self.storage.append(contentsOf: CBOR.encodeData(value))
     }
 
     func encode<T: Encodable>(_ value: T) throws {

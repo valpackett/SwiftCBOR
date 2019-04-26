@@ -215,18 +215,26 @@ class CBORCodableRoundtripTests: XCTestCase {
         struct BasicCar: Codable {
             let color: String
             let age: Int
+            let data: Data
         }
 
         struct Car: Codable {
             let _id: String
             let color: String
             let age: Int
+            let data: Data
         }
+
+        // Generate some random Data
+        let length = 4
+        let bytes = [UInt32](repeating: 0, count: length).map { _ in arc4random() }
+        let data = Data(bytes: bytes, count: length)
 
         let car = Car(
             _id: "5caf23633337661721236cfa",
             color: "Red",
-            age: 56
+            age: 56,
+            data: data
         )
 
         let encodedCar = try! CodableCBOREncoder().encode(car)
@@ -235,5 +243,6 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decoded._id, car._id)
         XCTAssertEqual(decoded.value.color, car.color)
         XCTAssertEqual(decoded.value.age, car.age)
+        XCTAssertEqual(decoded.value.data, data)
     }
 }

@@ -16,7 +16,6 @@ extension _CBORDecoder {
         lazy var count: Int? = {
             do {
                 let format = try self.readByte()
-
                 switch format {
                 case 0x80...0x97 :
                     return Int(format & 0x1F)
