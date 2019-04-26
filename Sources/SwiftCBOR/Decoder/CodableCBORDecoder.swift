@@ -11,6 +11,23 @@ final public class CodableCBORDecoder {
     public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
         let decoder = _CBORDecoder(data: data)
         decoder.userInfo = self.userInfo
+        if type == Date.self {
+            guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
+                case .date(let date) = cbor
+                else {
+                    let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Date")
+                    throw DecodingError.dataCorrupted(context)
+            }
+            return date as! T
+        } else if type == Data.self {
+            guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
+                case .byteString(let data) = cbor
+                else {
+                    let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Data")
+                    throw DecodingError.dataCorrupted(context)
+            }
+            return Data(data) as! T
+        }
         return try T(from: decoder)
     }
 }

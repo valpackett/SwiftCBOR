@@ -37,43 +37,6 @@ extension _CBORDecoder {
                     let nextIndex = self.data.startIndex.advanced(by: 1)
                     let remainingData = self.data.suffix(from: nextIndex)
                     return try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak().count
-                case 0x40...0x5e:
-                    guard let cbor = try? CBORDecoder(input: self.data.map { $0 }).decodeItem() else {
-                        return nil
-                    }
-                    if case .byteString(let byteData) = cbor {
-                        return byteData.count
-                    }
-                    return nil
-                case 0x5f:
-                    // FIXME: This is ridiculous but it seems to work. When trying to decode an indefinite
-                    // byte string into `Data` it seems to treat it as an unkeyed container of `UInt8`s. When
-                    // working with an indefinite byte string you really have a collection of byte strings, so
-                    // you can think of it as nested array of `UInt8`s, i.e. `[[UInt8]]`. We want this to be
-                    // flattened into a single `Data` type and so this decodes using the standard
-                    // `CBORDecoder`, flattens the resulting list of byte strings, and then encodes that and
-                    // sets the result of that to be the `data` property for `Codable` to work with. There is
-                    // a better, sane way of doing this, I'm sure, but this does seem to work.
-                    //
-                    // See here for `Foundation.Data`'s `Codable` conformance (at time of writing):
-                    // https://github.com/apple/swift-corelibs-foundation/blob/eecb4bae1259860d25987770d3836b306b19555c/Foundation/Data.swift#L2821-L2851
-                    let remainingData = self.data.suffix(from: self.data.startIndex.advanced(by: 1))
-
-                    guard let list = try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak() else {
-                        return nil
-                    }
-
-                    let combinedBytes = list.reduce([UInt8]()) { res, val in
-                        guard case .byteString(let bytes) = val else {
-                            return res
-                        }
-                        return res + bytes
-                    }
-
-                    let encodedCombinedBytes = CBOR.encode(combinedBytes)
-                    self.data = Data(encodedCombinedBytes)
-
-                    return combinedBytes.count
                 default:
                     return nil
                 }
