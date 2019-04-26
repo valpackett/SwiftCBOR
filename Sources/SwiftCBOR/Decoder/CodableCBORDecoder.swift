@@ -14,17 +14,17 @@ final public class CodableCBORDecoder {
         if type == Date.self {
             guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
                 case .date(let date) = cbor
-                else {
-                    let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Date")
-                    throw DecodingError.dataCorrupted(context)
+            else {
+                let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Date")
+                throw DecodingError.dataCorrupted(context)
             }
             return date as! T
         } else if type == Data.self {
             guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
                 case .byteString(let data) = cbor
-                else {
-                    let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Data")
-                    throw DecodingError.dataCorrupted(context)
+            else {
+                let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Data")
+                throw DecodingError.dataCorrupted(context)
             }
             return Data(data) as! T
         }
