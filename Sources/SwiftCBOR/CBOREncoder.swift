@@ -136,7 +136,7 @@ extension CBOR {
         return res
     }
 
-    public static func encodeMap<A: CBOREncodable>(_ map: [A: Any]) throws -> [UInt8] {
+    public static func encodeMap<A: CBOREncodable>(_ map: [A: Any?]) throws -> [UInt8] {
         var res: [UInt8] = []
         res = map.count.encode()
         res[0] = res[0] | 0b101_00000
@@ -260,7 +260,7 @@ extension CBOR {
     }
     #endif
 
-    private static func encodeAny(_ any: Any) throws -> [UInt8] {
+    private static func encodeAny(_ any: Any?) throws -> [UInt8] {
         switch any {
         case is Bool:
             return (any as! Bool).encode()
@@ -289,6 +289,8 @@ extension CBOR {
             return CBOR.encodeByteString((any as! Data).map { $0 })
         case is Date:
             return CBOR.encodeDate((any as! Date))
+        case is NSNull:
+            return CBOR.encodeNull()
         #endif
         case is [Any]:
             let anyArr = any as! [Any]
@@ -314,7 +316,7 @@ extension CBOR {
         }
     }
 
-    private static func encodeMap<A: CBOREncodable>(_ map: [A: Any], into res: inout [UInt8]) throws {
+    private static func encodeMap<A: CBOREncodable>(_ map: [A: Any?], into res: inout [UInt8]) throws {
         let sortedKeysWithEncodedKeys = map.keys.map {
             (encoded: $0.encode(), key: $0)
         }.sorted(by: {
