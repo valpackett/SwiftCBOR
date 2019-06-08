@@ -1,0 +1,37 @@
+{
+  "configurations" : [
+    {
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftCBOR.xcodeproj",
+        "identifier" : "AA18F73E22B09CC6009E5808",
+        "name" : "SwiftCBOR-macOSTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftCBOR.xcodeproj",
+        "identifier" : "AADFBA9C22B088EA004EB856",
+        "name" : "SwiftCBOR-iOSTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:SwiftCBOR.xcodeproj",
+        "identifier" : "AADFBAB822B0893F004EB856",
+        "name" : "SwiftCBOR-tvOSTests"
+      }
+    }
+  ],
+  "version" : 1
+}

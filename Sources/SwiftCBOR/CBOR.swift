@@ -1,15 +1,22 @@
-#if canImport(Foundation)
 import Foundation
-#endif
 
-public indirect enum CBOR : Equatable, Hashable,
-        ExpressibleByNilLiteral, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral,
-        ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral, ExpressibleByBooleanLiteral,
-        ExpressibleByFloatLiteral {
+public indirect enum CBOR: Equatable, Hashable {
+
+    public struct Tag: RawRepresentable, Equatable, Hashable {
+        public let rawValue: UInt64
+
+        public init(rawValue: UInt64) {
+            self.rawValue = rawValue
+        }
+
+        public var hashValue : Int {
+            return rawValue.hashValue
+        }
+    }
 
     case unsignedInt(UInt64)
     case negativeInt(UInt64)
-    case byteString([UInt8])
+    case byteString(Data)
     case utf8String(String)
     case array([CBOR])
     case map([CBOR : CBOR])
@@ -18,36 +25,120 @@ public indirect enum CBOR : Equatable, Hashable,
     case boolean(Bool)
     case null
     case undefined
-    case half(Float32)
+    case half(Float16)
     case float(Float32)
     case double(Float64)
-    case `break`
-    #if canImport(Foundation)
-    case date(Date)
-    #endif
 
-    public func hash(into hasher: inout Hasher) {
-        switch self {
-        case let .unsignedInt(l): l.hash(into: &hasher)
-        case let .negativeInt(l): l.hash(into: &hasher)
-        case let .byteString(l):  Util.djb2Hash(l.map { Int($0) }).hash(into: &hasher)
-        case let .utf8String(l):  l.hash(into: &hasher)
-        case let .array(l):       Util.djb2Hash(l.map { $0.hashValue }).hash(into: &hasher)
-        case let .map(l):         Util.djb2Hash(l.map { $0.hashValue &+ $1.hashValue }).hash(into: &hasher)
-        case let .tagged(t, l):   t.hash(into: &hasher)
-                                  l.hash(into: &hasher)
-        case let .simple(l):      l.hash(into: &hasher)
-        case let .boolean(l):     l.hash(into: &hasher)
-        case .null:               (-1).hash(into: &hasher)
-        case .undefined:          (-2).hash(into: &hasher)
-        case let .half(l):        l.hash(into: &hasher)
-        case let .float(l):       l.hash(into: &hasher)
-        case let .double(l):      l.hash(into: &hasher)
-        #if canImport(Foundation)
-        case let .date(l):        l.hash(into: &hasher)
-        #endif
-        case .break:              Int.min.hash(into: &hasher)
+    public var isNull: Bool {
+        if case .null = self { return true }
+        return false
+    }
+
+    public var booleanValue: Bool? {
+        guard case let .boolean(bool) = self.untagged else { return nil }
+        return bool
+    }
+
+    public var bytesStringValue: Data? {
+        guard case let .byteString(data) = self.untagged else { return nil }
+        return data
+    }
+
+    public var utf8StringValue: String? {
+        guard case let .utf8String(string) = self.untagged else { return nil }
+        return string
+    }
+
+    public var arrayValue: [CBOR]? {
+        guard case let .array(array) = self.untagged else { return nil }
+        return array
+    }
+
+    public var mapValue: [CBOR: CBOR]? {
+        guard case let .map(map) = self.untagged else { return nil }
+        return map
+    }
+
+    public var halfValue: Float16? {
+        guard case let .half(half) = self.untagged else { return nil }
+        return half
+    }
+
+    public var floatValue: Float32? {
+        guard case let .float(float) = self.untagged else { return nil }
+        return float
+    }
+
+    public var doubleValue: Float64? {
+        guard case let .double(double) = self.untagged else { return nil }
+        return double
+    }
+
+    public var simpleValue: UInt8? {
+        guard case let .simple(simple) = self.untagged else { return nil }
+        return simple
+    }
+
+    public var isNumber: Bool {
+        switch self.untagged {
+        case .unsignedInt, .negativeInt, .half, .float, .double: return true
+        default: return false
         }
+    }
+
+    public var numberValue: Double? {
+        switch self.untagged {
+        case .unsignedInt(let uint): return Double(exactly: uint)
+        case .negativeInt(let uint): return Double(exactly: uint).map { -1 - $0 }
+        case .half(let half): return Double(half.floatValue)
+        case .float(let float): return Double(float)
+        case .double(let double): return double
+        default: return nil
+        }
+    }
+
+    public init(_ value: Bool) {
+        self = .boolean(value)
+    }
+
+    public init(_ value: String) {
+        self = .utf8String(value)
+    }
+
+    public init(_ value: Data) {
+        self = .byteString(value)
+    }
+
+    public init( _ value: Int) {
+        self.init(Int64(value))
+    }
+
+    public init(_ value: Int64) {
+        if value < 0 {
+            self = .negativeInt(~UInt64(bitPattern: Int64(value)))
+        } else {
+            self = .unsignedInt(UInt64(value))
+        }
+    }
+
+    public init(_ value: UInt) {
+        self.init(UInt64(value))
+    }
+
+    public init(_ value: UInt64) {
+        self = .unsignedInt(value)
+    }
+
+    public init(_ value: Half) {
+        self = .half(value)
+    }
+
+    public init(_ value: Float) {
+        self = .float(value)
+    }
+
+    public init(_ value: Double) {
+        self = .double(value)
     }
 
     public subscript(position: CBOR) -> CBOR? {
@@ -71,18 +162,43 @@ public indirect enum CBOR : Equatable, Hashable,
         }
     }
 
-    public init(nilLiteral: ()) { self = .null }
-    public init(integerLiteral value: Int) {
-        if value < 0 {
-            self = .negativeInt(~UInt64(bitPattern: Int64(value)))
-        } else {
-            self = .unsignedInt(UInt64(value))
+    public var untagged: CBOR {
+        guard case let .tagged(_, value) = self else {
+            return self
         }
+        return value.untagged
     }
-    public init(extendedGraphemeClusterLiteral value: String) { self = .utf8String(value) }
-    public init(unicodeScalarLiteral value: String) { self = .utf8String(value) }
-    public init(stringLiteral value: String) { self = .utf8String(value) }
-    public init(arrayLiteral elements: CBOR...) { self = .array(elements) }
+
+}
+
+extension CBOR : ExpressibleByNilLiteral, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral,
+                 ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral, ExpressibleByBooleanLiteral,
+                 ExpressibleByFloatLiteral {
+
+    public init(nilLiteral: ()) {
+        self = .null
+    }
+
+    public init(integerLiteral value: Int) {
+        self.init(value)
+    }
+
+    public init(extendedGraphemeClusterLiteral value: String) {
+        self = .utf8String(value)
+    }
+
+    public init(unicodeScalarLiteral value: String) {
+        self = .utf8String(value)
+    }
+
+    public init(stringLiteral value: String) {
+        self = .utf8String(value)
+    }
+
+    public init(arrayLiteral elements: CBOR...) {
+        self = .array(elements)
+    }
+
     public init(dictionaryLiteral elements: (CBOR, CBOR)...) {
         var result = [CBOR : CBOR]()
         for (key, value) in elements {
@@ -90,63 +206,20 @@ public indirect enum CBOR : Equatable, Hashable,
         }
         self = .map(result)
     }
-    public init(booleanLiteral value: Bool) { self = .boolean(value) }
-    public init(floatLiteral value: Float32) { self = .float(value) }
 
-    public static func ==(lhs: CBOR, rhs: CBOR) -> Bool {
-        switch (lhs, rhs) {
-        case (let .unsignedInt(l), let .unsignedInt(r)): return l == r
-        case (let .negativeInt(l), let .negativeInt(r)): return l == r
-        case (let .byteString(l),  let .byteString(r)):  return l == r
-        case (let .utf8String(l),  let .utf8String(r)):  return l == r
-        case (let .array(l),       let .array(r)):       return l == r
-        case (let .map(l),         let .map(r)):         return l == r
-        case (let .tagged(tl, l),  let .tagged(tr, r)):  return tl == tr && l == r
-        case (let .simple(l),      let .simple(r)):      return l == r
-        case (let .boolean(l),     let .boolean(r)):     return l == r
-        case (.null,               .null):               return true
-        case (.undefined,          .undefined):          return true
-        case (let .half(l),        let .half(r)):        return l == r
-        case (let .float(l),       let .float(r)):       return l == r
-        case (let .double(l),      let .double(r)):      return l == r
-        #if canImport(Foundation)
-        case (let .date(l),        let .date(r)):        return l == r
-        #endif
-        case (.break,              .break):              return true
-        case (.unsignedInt, _): return false
-        case (.negativeInt, _): return false
-        case (.byteString,  _): return false
-        case (.utf8String,  _): return false
-        case (.array,       _): return false
-        case (.map,         _): return false
-        case (.tagged,      _): return false
-        case (.simple,      _): return false
-        case (.boolean,     _): return false
-        case (.null,        _): return false
-        case (.undefined,   _): return false
-        case (.half,        _): return false
-        case (.float,       _): return false
-        case (.double,      _): return false
-        case (.break,       _): return false
-        }
+    public init(booleanLiteral value: Bool) {
+        self = .boolean(value)
     }
 
-    public struct Tag: RawRepresentable, Equatable, Hashable {
-        public let rawValue: UInt64
-
-        public init(rawValue: UInt64) {
-            self.rawValue = rawValue
-        }
-
-        public var hashValue : Int {
-            return rawValue.hashValue
-        }
+    public init(floatLiteral value: Double) {
+        self = .double(value)
     }
+
 }
 
 extension CBOR.Tag {
-    public static let standardDateTimeString = CBOR.Tag(rawValue: 0)
-    public static let epochBasedDateTime = CBOR.Tag(rawValue: 1)
+    public static let iso8601DateTime = CBOR.Tag(rawValue: 0)
+    public static let epochDateTime = CBOR.Tag(rawValue: 1)
     public static let positiveBignum = CBOR.Tag(rawValue: 2)
     public static let negativeBignum = CBOR.Tag(rawValue: 3)
     public static let decimalFraction = CBOR.Tag(rawValue: 4)
@@ -172,7 +245,3 @@ extension CBOR.Tag {
 
     public static let selfDescribeCBOR = CBOR.Tag(rawValue: 55799)
 }
-
-#if os(Linux)
-let NSEC_PER_SEC: UInt64 = 1_000_000_000
-#endif

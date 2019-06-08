@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "9999"
+   LastUpgradeVersion = "1100"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SwiftCBOR::SwiftCBOR"
+               BlueprintIdentifier = "AADFBA9422B088EA004EB856"
                BuildableName = "SwiftCBOR.framework"
-               BlueprintName = "SwiftCBOR"
+               BlueprintName = "SwiftCBOR-iOS"
                ReferencedContainer = "container:SwiftCBOR.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,15 +32,13 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "SwiftCBOR::SwiftCBORTests"
-               BuildableName = "SwiftCBORTests.xctest"
-               BlueprintName = "SwiftCBORTests"
+               BlueprintIdentifier = "AADFBA9C22B088EA004EB856"
+               BuildableName = "SwiftCBOR-iOSTests.xctest"
+               BlueprintName = "SwiftCBOR-iOSTests"
                ReferencedContainer = "container:SwiftCBOR.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -52,17 +50,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "SwiftCBOR::SwiftCBOR"
-            BuildableName = "SwiftCBOR.framework"
-            BlueprintName = "SwiftCBOR"
-            ReferencedContainer = "container:SwiftCBOR.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <AdditionalOptions>
-      </AdditionalOptions>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -70,6 +57,15 @@
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "AADFBA9422B088EA004EB856"
+            BuildableName = "SwiftCBOR.framework"
+            BlueprintName = "SwiftCBOR-iOS"
+            ReferencedContainer = "container:SwiftCBOR.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

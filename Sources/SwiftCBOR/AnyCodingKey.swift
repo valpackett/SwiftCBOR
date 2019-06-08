@@ -1,4 +1,5 @@
-struct AnyCodingKey: CodingKey, Equatable {
+
+struct AnyCodingKey: CodingKey, Equatable, Hashable {
     var stringValue: String
     var intValue: Int?
 
@@ -7,14 +8,24 @@ struct AnyCodingKey: CodingKey, Equatable {
         self.intValue = nil
     }
 
-    init?(intValue: Int) {
+    init(intValue: Int) {
         self.stringValue = "\(intValue)"
         self.intValue = intValue
     }
 
+    init(stringValue: String, intValue: Int?) {
+        self.stringValue = stringValue
+        self.intValue = intValue
+    }
+
+    init(index: Int) {
+        self.stringValue = "Index \(index)"
+        self.intValue = index
+    }
+
     init<Key: CodingKey>(_ base: Key) {
-        if let intValue = base.intValue {
-            self.init(intValue: intValue)!
+        if let index = base.intValue {
+            self.init(intValue: index)
         } else {
             self.init(stringValue: base.stringValue)!
         }
@@ -27,12 +38,9 @@ struct AnyCodingKey: CodingKey, Equatable {
             return K(stringValue: self.stringValue)!
         }
     }
-}
 
-extension AnyCodingKey: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        self.intValue?.hash(into: &hasher) ?? self.stringValue.hash(into: &hasher)
-    }
+    internal static let `super` = AnyCodingKey(stringValue: "super")!
+
 }
 
 extension AnyCodingKey: Encodable {
