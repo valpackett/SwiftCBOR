@@ -128,6 +128,7 @@ public indirect enum CBOR : Equatable, Hashable,
         case (.float,       _): return false
         case (.double,      _): return false
         case (.break,       _): return false
+        default:                return false
         }
     }
 
