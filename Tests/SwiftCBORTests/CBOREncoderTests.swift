@@ -123,6 +123,12 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(encodedMapToAny, [0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03])
     }
 
+    func testCanonicallyEncodeMaps() {
+        XCTAssertEqual(CBOR.encode(Dictionary<Int, Int>()), [0xa0])
+        let encoded = CBOR.encodeMapCanonical([1: 2, 3: 4])
+        XCTAssert(encoded == [0xa2, 0x01, 0x02, 0x03, 0x04])
+    }
+
     func testEncodeTagged() {
         let bignum: [UInt8] = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] // 2**64
         let bignumCBOR = CBOR.byteString(bignum)
