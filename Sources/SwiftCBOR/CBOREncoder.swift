@@ -260,7 +260,7 @@ extension CBOR {
     }
     #endif
 
-    private static func encodeAny(_ any: Any?) throws -> [UInt8] {
+    public static func encodeAny(_ any: Any?) throws -> [UInt8] {
         switch any {
         case is Bool:
             return (any as! Bool).encode()
