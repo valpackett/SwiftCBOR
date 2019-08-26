@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  linux:
+    name: Linux Swift ${{ matrix.swift }}
+    runs-on: ubuntu-latest
+    container:
+      image: swift:${{ matrix.swift }}
+    strategy:
+      matrix:
+        swift: [4, latest]
+    steps:
+    - uses: actions/checkout@v1
+    - name: Test
+      run: swift test
+
+  macos:
+    name: macOS Xcode
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Test macOS
+      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=OS X,arch=x86_64'
+    - name: Test iOS
+      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone X,OS=12.2'
