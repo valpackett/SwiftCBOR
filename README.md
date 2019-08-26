@@ -1,4 +1,3 @@
-[![Build Status](https://img.shields.io/travis/myfreeweb/SwiftCBOR.svg?style=flat)](https://travis-ci.org/myfreeweb/SwiftCBOR)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
 
