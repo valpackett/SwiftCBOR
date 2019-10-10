@@ -262,8 +262,6 @@ extension CBOR {
 
     private static func encodeAny(_ any: Any) throws -> [UInt8] {
         switch any {
-        case is Bool:
-            return (any as! Bool).encode()
         case is Int:
             return (any as! Int).encode()
         case is UInt:
@@ -282,6 +280,8 @@ extension CBOR {
             return (any as! Float).encode()
         case is Double:
             return (any as! Double).encode()
+        case is Bool:
+            return (any as! Bool).encode()
         case is [UInt8]:
             return CBOR.encodeByteString(any as! [UInt8])
         #if canImport(Foundation)
