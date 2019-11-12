@@ -27,4 +27,4 @@ jobs:
     - name: Test macOS
       run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=OS X,arch=x86_64'
     - name: Test iOS
-      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone X,OS=12.2'
+      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone 11,OS=13.1'
