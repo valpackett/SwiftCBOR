@@ -14,7 +14,7 @@ extension _CBOREncoder {
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
-        
+
         init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
             self.userInfo = userInfo
@@ -29,98 +29,98 @@ extension _CBOREncoder.SingleValueContainer: SingleValueEncodingContainer {
 
         self.storage.append(contentsOf: CBOR.encodeNull())
     }
-    
+
     func encode(_ value: Bool) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encodeBool(value))
     }
-    
+
     func encode(_ value: String) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encodeString(value))
     }
-    
+
     func encode(_ value: Double) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encodeDouble(value))
     }
-    
+
     func encode(_ value: Float) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encodeFloat(value))
     }
-    
+
     func encode(_ value: Int) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(value))
     }
-    
+
     func encode(_ value: Int8) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(Int(value)))
     }
-    
+
     func encode(_ value: Int16) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(Int(value)))
     }
-    
+
     func encode(_ value: Int32) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(Int(value)))
     }
-    
+
     func encode(_ value: Int64) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(Int(value)))
     }
-    
+
     func encode(_ value: UInt) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(value))
     }
-    
+
     func encode(_ value: UInt8) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(value))
     }
-    
+
     func encode(_ value: UInt16) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(value))
     }
-    
+
     func encode(_ value: UInt32) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
         self.storage.append(contentsOf: CBOR.encode(value))
     }
-    
+
     func encode(_ value: UInt64) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }

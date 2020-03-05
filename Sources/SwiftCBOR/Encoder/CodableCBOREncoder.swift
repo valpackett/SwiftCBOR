@@ -17,9 +17,9 @@ public class CodableCBOREncoder {
 
 final class _CBOREncoder {
     var codingPath: [CodingKey] = []
-    
+
     var userInfo: [CodingUserInfoKey : Any] = [:]
-    
+
     fileprivate var container: CBOREncodingContainer? {
         willSet {
             precondition(self.container == nil)
@@ -35,31 +35,31 @@ extension _CBOREncoder: Encoder {
     fileprivate func assertCanCreateContainer() {
         precondition(self.container == nil)
     }
-    
+
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
         assertCanCreateContainer()
-        
+
         let container = KeyedContainer<Key>(codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
-        
+
         return KeyedEncodingContainer(container)
     }
-    
+
     func unkeyedContainer() -> UnkeyedEncodingContainer {
         assertCanCreateContainer()
-        
+
         let container = UnkeyedContainer(codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
-        
+
         return container
     }
-    
+
     func singleValueContainer() -> SingleValueEncodingContainer {
         assertCanCreateContainer()
-        
+
         let container = SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
-        
+
         return container
     }
 }

@@ -96,7 +96,7 @@ extension CBOR {
         res.append(contentsOf: bs)
         return res
     }
-    
+
     #if canImport(Foundation)
     public static func encodeData(_ data: Data) -> [UInt8] {
         return encodeByteString([UInt8](data))

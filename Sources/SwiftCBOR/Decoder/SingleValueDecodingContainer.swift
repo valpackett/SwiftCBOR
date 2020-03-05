@@ -38,7 +38,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         default: return false
         }
     }
-    
+
     func decode(_ type: Bool.Type) throws -> Bool {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -51,7 +51,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: String.Type) throws -> String {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -64,7 +64,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: Double.Type) throws -> Double {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -77,7 +77,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: Float.Type) throws -> Float {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -90,7 +90,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: Int.Type) throws -> Int {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -160,7 +160,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: UInt.Type) throws -> UInt {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -173,7 +173,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: UInt8.Type) throws -> UInt8 {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -186,7 +186,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: UInt16.Type) throws -> UInt16 {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -199,7 +199,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: UInt32.Type) throws -> UInt32 {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -212,7 +212,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-    
+
     func decode(_ type: UInt64.Type) throws -> UInt64 {
         guard let cbor = try? CBOR.decode(self.data.map { $0 }) else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
@@ -238,7 +238,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
             throw DecodingError.typeMismatch(Double.self, context)
         }
     }
-  
+
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
         switch type {
         case is Data.Type:

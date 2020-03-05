@@ -6,7 +6,7 @@ extension _CBOREncoder {
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
-        
+
         init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
             self.userInfo = userInfo
@@ -19,7 +19,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         var container = self.nestedSingleValueContainer(forKey: key)
         try container.encodeNil()
     }
-    
+
     func encode<T: Encodable>(_ value: T, forKey key: Key) throws {
         var container = self.nestedSingleValueContainer(forKey: key)
         try container.encode(value)
@@ -46,7 +46,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         self.storage[AnyCodingKey(key)] = container
         return container
     }
-    
+
     func nestedContainer<NestedKey: CodingKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> {
         let container = _CBOREncoder.KeyedContainer<NestedKey>(
             codingPath: self.nestedCodingPath(forKey: key),
@@ -55,7 +55,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         self.storage[AnyCodingKey(key)] = container
         return KeyedEncodingContainer(container)
     }
-    
+
     func superEncoder() -> Encoder {
         fatalError("Unimplemented") // FIXME
     }
