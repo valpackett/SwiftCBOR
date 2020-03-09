@@ -199,7 +199,7 @@ extension _CBORDecoder.UnkeyedContainer {
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 8
         // Terminated by break
         case 0x7f:
-            #warning("FIXME")
+            // FIXME
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling UTF8 strings with break bytes is not supported yet")
         // Arrays
         case 0x80...0x9f:
@@ -219,7 +219,7 @@ extension _CBORDecoder.UnkeyedContainer {
 //            let tag = try CBORDecoder(input: [0]).readVarUInt(format, base: 0xc0)
 //            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
 //            return CBOR.tagged(CBOR.Tag(rawValue: tag), item)
-            #warning("FIXME")
+            // FIXME
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling tags is not supported yet")
         case 0xe0...0xf3:
             length = 0
