@@ -31,7 +31,9 @@ public class CBORDecoder {
     }
 
     func readBinaryNumber<T>(_ type: T.Type) throws -> T {
-        return UnsafeRawPointer(Array(try istream.popBytes(MemoryLayout<T>.size).reversed())).load(as: T.self)
+        Array(try self.istream.popBytes(MemoryLayout<T>.size).reversed()).withUnsafeBytes { ptr in
+            return ptr.load(as: T.self)
+        }
     }
 
     func readVarUInt(_ v: UInt8, base: UInt8) throws -> UInt64 {
