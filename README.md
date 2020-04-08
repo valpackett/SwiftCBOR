@@ -137,6 +137,14 @@ func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8
 
 Finally, a technical note on encoding byte string when using the general purpose array encoder, `CBOR.encode(..)`. If the function parameter `asByteString` is true, then arrays of ALL types EXCEPT UInt8 will be have the raw bytes of each item reversed (but not the order of the items together) if the computer is little endian (CBOR uses big endian or network byte order). Arrays of UInt8, are considered to be already in network byte order.
 
+## Building
+
+To ensure that you get the correct configuration for the project when generating a new Xcode project you must run:
+
+```
+swift package generate-xcodeproj --xcconfig-overrides Package.xcconfig
+```
+
 ## Contributing
 
 By participating in this project you agree to follow the [Contributor Code of Conduct](https://contributor-covenant.org/version/1/4/).
