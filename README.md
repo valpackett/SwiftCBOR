@@ -5,8 +5,8 @@
 
 A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder and encoder in Swift. Encode directly from Swift types or use a wrapper object. Decode to a CBOR value type that can be accessed with native Swift subscripting and expressed with the equivalent literal notation.
 
-- A fully cross-platform Swift 4.x package!
-- No `Foundation` dependency (even though it turned out to be supported in the cross-platform version, ha.)
+- A fully cross-platform Swift 5.x package!
+- `Codable` support!
 - Negative integers are decoded as `NegativeInt(UInt)`, where the actual number is `-1 - i` (CBOR's negative integers can be larger than 64-bit signed integers).
 - Tags are decoded, but not processed. Tagged values are encoded, but not type-checked. Do it yourself :-)
 - Literal convertibles are defined for the `CBOR` type!
@@ -38,7 +38,7 @@ To unwrap the decoded `CBOR` values, use [PATTERN MATCHING](https://alisoftware.
 
 ## Encoding
 
-Encoding a value returns an array of bytes, `[UInt8]`. You can encode with `CBOR.encode(myValue)` or `myValue.encode()`. Any type that conforms to the `CBOREncodable` protocol may be encoded. You can implement the `CBOREncodable` protocol for your types and then encode as usual. 
+Encoding a value returns an array of bytes, `[UInt8]`. You can encode with `CBOR.encode(myValue)` or `myValue.encode()`. Any type that conforms to the `CBOREncodable` protocol may be encoded. You can implement the `CBOREncodable` protocol for your types and then encode as usual.
 
 ```swift
 CBOR.encode(100)  // --> [0x18, 0x64] of type [UInt8]
@@ -137,6 +137,14 @@ func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8
 
 Finally, a technical note on encoding byte string when using the general purpose array encoder, `CBOR.encode(..)`. If the function parameter `asByteString` is true, then arrays of ALL types EXCEPT UInt8 will be have the raw bytes of each item reversed (but not the order of the items together) if the computer is little endian (CBOR uses big endian or network byte order). Arrays of UInt8, are considered to be already in network byte order.
 
+## Building
+
+To ensure that you get the correct configuration for the project when generating a new Xcode project you must run:
+
+```
+swift package generate-xcodeproj --xcconfig-overrides Package.xcconfig
+```
+
 ## Contributing
 
 By participating in this project you agree to follow the [Contributor Code of Conduct](https://contributor-covenant.org/version/1/4/).
@@ -145,5 +153,5 @@ By participating in this project you agree to follow the [Contributor Code of Co
 
 ## License
 
-This is free and unencumbered software released into the public domain.  
+This is free and unencumbered software released into the public domain.
 For more information, please refer to the `UNLICENSE` file or [unlicense.org](https://unlicense.org).

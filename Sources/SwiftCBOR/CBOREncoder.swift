@@ -34,13 +34,17 @@ extension CBOR {
             res.reserveCapacity(res.count + bytelength)
 
             let noReversalNeeded = isBigEndian || T.self == UInt8.self
-            UnsafePointer<T>(array).withMemoryRebound(to: UInt8.self, capacity: bytelength, { ptr in
+
+            array.withUnsafeBytes { bufferPtr in
+                guard let ptr = bufferPtr.baseAddress?.bindMemory(to: UInt8.self, capacity: bytelength) else {
+                    fatalError("Invalid pointer")
+                }
                 var j = 0
                 for i in 0..<bytelength {
                     j = noReversalNeeded ? i : bytelength - 1 - i
                     res.append((ptr + j).pointee)
                 }
-            })
+            }
             return res
         } else {
             return encodeArray(array)
