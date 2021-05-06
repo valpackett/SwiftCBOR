@@ -2,7 +2,7 @@
 import Foundation
 #endif
 
-public protocol CBOREncodable: Hashable {
+public protocol CBOREncodable {
     func encode() -> [UInt8]
 }
 
@@ -42,6 +42,46 @@ extension Int: CBOREncodable {
     }
 }
 
+extension Int8: CBOREncodable {
+    public func encode() -> [UInt8] {
+        if (self < 0) {
+            return CBOR.encodeNegativeInt(Int64(self))
+        } else {
+            return CBOR.encodeUInt8(UInt8(self))
+        }
+    }
+}
+
+extension Int16: CBOREncodable {
+    public func encode() -> [UInt8] {
+        if (self < 0) {
+            return CBOR.encodeNegativeInt(Int64(self))
+        } else {
+            return CBOR.encodeUInt16(UInt16(self))
+        }
+    }
+}
+
+extension Int32: CBOREncodable {
+    public func encode() -> [UInt8] {
+        if (self < 0) {
+            return CBOR.encodeNegativeInt(Int64(self))
+        } else {
+            return CBOR.encodeUInt32(UInt32(self))
+        }
+    }
+}
+
+extension Int64: CBOREncodable {
+    public func encode() -> [UInt8] {
+        if (self < 0) {
+            return CBOR.encodeNegativeInt(self)
+        } else {
+            return CBOR.encodeUInt64(UInt64(self))
+        }
+    }
+}
+
 extension UInt: CBOREncodable {
     public func encode() -> [UInt8] {
         return CBOR.encodeVarUInt(UInt64(self))
@@ -61,16 +101,15 @@ extension UInt16: CBOREncodable {
     }
 }
 
+extension UInt32: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeUInt32(self)
+    }
+}
 
 extension UInt64: CBOREncodable {
     public func encode() -> [UInt8] {
         return CBOR.encodeUInt64(self)
-    }
-}
-
-extension UInt32: CBOREncodable {
-    public func encode() -> [UInt8] {
-        return CBOR.encodeUInt32(self)
     }
 }
 
@@ -101,6 +140,27 @@ extension Bool: CBOREncodable {
 extension Array where Element: CBOREncodable {
     public func encode() -> [UInt8] {
         return CBOR.encodeArray(self)
+    }
+}
+
+extension Dictionary where Key: CBOREncodable, Value: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeMap(self)
+    }
+}
+
+extension Optional where Wrapped: CBOREncodable {
+    public func encode() -> [UInt8] {
+        switch self {
+        case .some(let wrapped): return wrapped.encode()
+        case .none: return CBOR.encodeNull()
+        }
+    }
+}
+
+extension NSNull: CBOREncodable {
+    public func encode() -> [UInt8] {
+        return CBOR.encodeNull()
     }
 }
 

@@ -316,6 +316,9 @@ extension CBOR {
         case nil:
             return CBOR.encodeNull()
         default:
+            if let encodable = any as? CBOREncodable {
+                return encodable.encode()
+            }
             throw CBOREncoderError.invalidType
         }
     }
