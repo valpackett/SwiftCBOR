@@ -296,8 +296,8 @@ extension CBOR {
         case is NSNull:
             return CBOR.encodeNull()
         #endif
-        case is [Any]:
-            let anyArr = any as! [Any]
+        case is [Any?]:
+            let anyArr = any as! [Any?]
             var res = anyArr.count.encode()
             res[0] = res[0] | 0b100_00000
             let encodedInners = try anyArr.reduce(into: []) { acc, next in
@@ -305,8 +305,8 @@ extension CBOR {
             }
             res.append(contentsOf: encodedInners)
             return res
-        case is [String: Any]:
-            let anyMap = any as! [String: Any]
+        case is [String: Any?]:
+            let anyMap = any as! [String: Any?]
             var res: [UInt8] = anyMap.count.encode()
             res[0] = res[0] | 0b101_00000
             try CBOR.encodeMap(anyMap, into: &res)
