@@ -170,6 +170,9 @@ public class CBORDecoder {
                 }
                 return CBOR.date(date)
             }
+            if tag == 0 {
+              return item
+            }
             #endif
             return CBOR.tagged(CBOR.Tag(rawValue: tag), item)
 
