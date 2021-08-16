@@ -46,26 +46,30 @@ extension _CBORDecoder {
 
         var currentIndex: Int = 0
 
-        lazy var nestedContainers: [CBORDecodingContainer] = {
+
+        private var cachedNestedContainers: [CBORDecodingContainer]?
+        func getNestedContainers() throws -> [CBORDecodingContainer] {
+            if let cachedNestedContainers = cachedNestedContainers {
+                return cachedNestedContainers
+            }
+
             guard let count = self.count else {
                 return []
             }
 
             var nestedContainers: [CBORDecodingContainer] = []
 
-            do {
-                for _ in 0..<count {
-                    let container = try self.decodeContainer()
-                    nestedContainers.append(container)
-                }
-            } catch {
-                fatalError("\(error)") // FIXME
+            for _ in 0..<count {
+                let container = try self.decodeContainer()
+                nestedContainers.append(container)
             }
 
             self.currentIndex = 0
 
+            cachedNestedContainers = nestedContainers
+
             return nestedContainers
-        }()
+        }
 
         init(data: Data, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
@@ -96,7 +100,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex] as! _CBORDecoder.SingleValueContainer
+        let container = try self.getNestedContainers()[self.currentIndex] as! _CBORDecoder.SingleValueContainer
         let value = container.decodeNil()
 
         return value
@@ -106,7 +110,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex]
+        let container = try self.getNestedContainers()[self.currentIndex]
         let decoder = CodableCBORDecoder()
         let value = try decoder.decode(T.self, from: container.data)
 
@@ -117,7 +121,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex] as! _CBORDecoder.UnkeyedContainer
+        let container = try self.getNestedContainers()[self.currentIndex] as! _CBORDecoder.UnkeyedContainer
 
         return container
     }
@@ -126,7 +130,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex] as! _CBORDecoder.KeyedContainer<NestedKey>
+        let container = try self.getNestedContainers()[self.currentIndex] as! _CBORDecoder.KeyedContainer<NestedKey>
 
         return KeyedDecodingContainer(container)
     }
@@ -204,14 +208,14 @@ extension _CBORDecoder.UnkeyedContainer {
         // Arrays
         case 0x80...0x9f:
             let container = _CBORDecoder.UnkeyedContainer(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo)
-            _ = container.nestedContainers
+            _ = try container.getNestedContainers()
 
             self.index = container.index
             return container
         // Maps
         case 0xa0...0xbf:
             let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo)
-            _ = container.nestedContainers // FIXME
+            _ = try container.getNestedContainers() // FIXME
 
             self.index = container.index
             return container
