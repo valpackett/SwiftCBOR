@@ -27,7 +27,7 @@ public class CBORDecoder {
     }
 
     public init(input: [UInt8]) {
-        istream = ArrayUInt8(array: input)
+        istream = ArrayUInt8(array: ArraySlice(input))
     }
 
     func readBinaryNumber<T>(_ type: T.Type) throws -> T {
