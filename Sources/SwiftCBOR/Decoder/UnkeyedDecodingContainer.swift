@@ -35,7 +35,7 @@ extension _CBORDecoder {
                     // decoding each item in the array.
                     let nextIndex = self.data.startIndex.advanced(by: 1)
                     let remainingData = self.data.suffix(from: nextIndex)
-                    return try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak().count
+                    return try? CBORDecoder(input: remainingData).readUntilBreak().count
                 default:
                     return nil
                 }
@@ -168,16 +168,16 @@ extension _CBORDecoder.UnkeyedContainer {
         case 0x40...0x57:
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x40)
         case 0x58:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 1
         case 0x59:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 2
         case 0x5a:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 4
         case 0x5b:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 8
         // Terminated by break
         case 0x5f:
