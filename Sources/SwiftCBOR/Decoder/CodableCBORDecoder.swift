@@ -9,6 +9,10 @@ final public class CodableCBORDecoder {
     public var userInfo: [CodingUserInfoKey : Any] = [:]
 
     public func decode<T: Decodable>(_ type: T.Type, from data: Data) throws -> T {
+        return try decode(type, from: ArraySlice([UInt8](data)))
+    }
+
+    public func decode<T: Decodable>(_ type: T.Type, from data: ArraySlice<UInt8>) throws -> T {
         let decoder = _CBORDecoder(data: data)
         decoder.userInfo = self.userInfo
         if type == Date.self {
@@ -38,15 +42,16 @@ final class _CBORDecoder {
     var userInfo: [CodingUserInfoKey : Any] = [:]
 
     var container: CBORDecodingContainer?
-    fileprivate var data: Data
+    fileprivate var data: ArraySlice<UInt8>
 
-    init(data: Data) {
+    init(data: ArraySlice<UInt8>) {
         self.data = data
     }
 }
 
 extension _CBORDecoder: Decoder {
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> {
+        
         let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
         self.container = container
 
@@ -73,7 +78,7 @@ protocol CBORDecodingContainer: class {
 
     var userInfo: [CodingUserInfoKey : Any] { get }
 
-    var data: Data { get set }
+    var data: ArraySlice<UInt8> { get set }
     var index: Data.Index { get set }
 }
 
@@ -90,7 +95,7 @@ extension CBORDecodingContainer {
         }
         defer { self.index = nextIndex }
 
-        return self.data.subdata(in: self.index..<nextIndex)
+        return Data(Array(self.data[self.index..<(nextIndex)]))
     }
 
     func read<T: FixedWidthInteger>(_ type: T.Type) throws -> T {
