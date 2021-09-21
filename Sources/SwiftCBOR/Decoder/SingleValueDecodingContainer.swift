@@ -72,6 +72,8 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         }
         switch cbor {
         case .double(let dbl): return dbl
+        case .float(let flt): return Double(flt)
+        case .half(let flt): return Double(flt)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.typeMismatch(Double.self, context)
@@ -85,6 +87,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         }
         switch cbor {
         case .float(let flt): return flt
+        case .half(let flt): return Float(flt)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.typeMismatch(Double.self, context)

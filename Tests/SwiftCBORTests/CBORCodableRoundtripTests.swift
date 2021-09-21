@@ -244,4 +244,25 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decoded.value.age, car.age)
         XCTAssertEqual(decoded.value.data, data)
     }
+
+    func testStructWithFloat() {
+        struct MenuItemWithFloatOrdinal: Codable  {
+            var _id: String
+            var category: String
+            var ordinal: Float
+        }
+
+        let menuItem = MenuItemWithFloatOrdinal(
+            _id: "aaa",
+            category: "cake",
+            ordinal: 12
+        )
+
+        let encoded = try! CodableCBOREncoder().encode(menuItem)
+        let decoded = try! CodableCBORDecoder().decode(MenuItemWithFloatOrdinal.self, from: encoded)
+
+        XCTAssertEqual(decoded._id, menuItem._id)
+        XCTAssertEqual(decoded.category, menuItem.category)
+        XCTAssertEqual(decoded.ordinal, menuItem.ordinal)
+    }
 }
