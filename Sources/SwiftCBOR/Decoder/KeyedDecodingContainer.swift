@@ -59,12 +59,12 @@ extension _CBORDecoder {
             }
         }()
 
-        var data: Data
+        var data: ArraySlice<UInt8>
         var index: Data.Index
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
 
-        init(data: Data, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data

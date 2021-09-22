@@ -10,7 +10,7 @@ extension _CBORDecoder {
 
         var userInfo: [CodingUserInfoKey: Any]
 
-        var data: Data
+        var data: ArraySlice<UInt8>
         var index: Data.Index
 
         lazy var count: Int? = {
@@ -35,7 +35,7 @@ extension _CBORDecoder {
                     // decoding each item in the array.
                     let nextIndex = self.data.startIndex.advanced(by: 1)
                     let remainingData = self.data.suffix(from: nextIndex)
-                    return try? CBORDecoder(input: remainingData.map { $0 }).readUntilBreak().count
+                    return try? CBORDecoder(input: remainingData).readUntilBreak().count
                 default:
                     return nil
                 }
@@ -67,7 +67,7 @@ extension _CBORDecoder {
             return nestedContainers
         }()
 
-        init(data: Data, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data
@@ -92,6 +92,7 @@ extension _CBORDecoder {
 }
 
 extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
+   
     func decodeNil() throws -> Bool {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
@@ -167,16 +168,16 @@ extension _CBORDecoder.UnkeyedContainer {
         case 0x40...0x57:
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x40)
         case 0x58:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 1
         case 0x59:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 2
         case 0x5a:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 4
         case 0x5b:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 8
         // Terminated by break
         case 0x5f:
@@ -186,16 +187,16 @@ extension _CBORDecoder.UnkeyedContainer {
         case 0x60...0x77:
             length = try CBORDecoder(input: [0]).readLength(format, base: 0x60)
         case 0x78:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 1
         case 0x79:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 2
         case 0x7a:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 4
         case 0x7b:
-            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1)).map { $0 }
+            let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             length = try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 8
         // Terminated by break
         case 0x7f:
@@ -240,7 +241,7 @@ extension _CBORDecoder.UnkeyedContainer {
         let range: Range<Data.Index> = startIndex..<self.index.advanced(by: length)
         self.index = range.upperBound
 
-        let container = _CBORDecoder.SingleValueContainer(data: self.data.subdata(in: range), codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = _CBORDecoder.SingleValueContainer(data: self.data[range.startIndex..<(range.endIndex)], codingPath: self.codingPath, userInfo: self.userInfo)
 
         return container
     }
