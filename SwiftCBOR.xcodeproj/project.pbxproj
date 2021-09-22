@@ -187,14 +187,9 @@
             PRODUCT_NAME = "$(TARGET_NAME)";
             SDKROOT = "macosx";
             SUPPORTED_PLATFORMS = (
-               "macosx",
-               "iphoneos",
-               "iphonesimulator",
-               "appletvos",
-               "appletvsimulator",
-               "watchos",
-               "watchsimulator"
+               "$(AVAILABLE_PLATFORMS)"
             );
+            SUPPORTS_MACCATALYST = "YES";
             SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
                "$(inherited)",
                "SWIFT_PACKAGE",
@@ -295,14 +290,9 @@
             PRODUCT_NAME = "$(TARGET_NAME)";
             SDKROOT = "macosx";
             SUPPORTED_PLATFORMS = (
-               "macosx",
-               "iphoneos",
-               "iphonesimulator",
-               "appletvos",
-               "appletvsimulator",
-               "watchos",
-               "watchsimulator"
+               "$(AVAILABLE_PLATFORMS)"
             );
+            SUPPORTS_MACCATALYST = "YES";
             SWIFT_ACTIVE_COMPILATION_CONDITIONS = (
                "$(inherited)",
                "SWIFT_PACKAGE"
@@ -350,7 +340,7 @@
          isa = "XCBuildConfiguration";
          baseConfigurationReference = "OBJ_8";
          buildSettings = {
-            APPLICATION_EXTENSION_API_ONLY = YES;
+            CURRENT_PROJECT_VERSION = "1";
             ENABLE_TESTABILITY = "YES";
             FRAMEWORK_SEARCH_PATHS = (
                "$(inherited)",
@@ -360,11 +350,10 @@
                "$(inherited)"
             );
             INFOPLIST_FILE = "SwiftCBOR.xcodeproj/SwiftCBOR_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            IPHONEOS_DEPLOYMENT_TARGET = "9.0";
             LD_RUNPATH_SEARCH_PATHS = (
                "$(inherited)",
-               "@executable_path/../Frameworks",
-               "@loader_path/Frameworks"
+               "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
             MACOSX_DEPLOYMENT_TARGET = "10.10";
             OTHER_CFLAGS = (
@@ -411,7 +400,7 @@
          isa = "XCBuildConfiguration";
          baseConfigurationReference = "OBJ_8";
          buildSettings = {
-            APPLICATION_EXTENSION_API_ONLY = YES;
+            CURRENT_PROJECT_VERSION = "1";
             ENABLE_TESTABILITY = "YES";
             FRAMEWORK_SEARCH_PATHS = (
                "$(inherited)",
@@ -421,11 +410,10 @@
                "$(inherited)"
             );
             INFOPLIST_FILE = "SwiftCBOR.xcodeproj/SwiftCBOR_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            IPHONEOS_DEPLOYMENT_TARGET = "9.0";
             LD_RUNPATH_SEARCH_PATHS = (
                "$(inherited)",
-               "@executable_path/../Frameworks",
-               "@loader_path/Frameworks"
+               "$(TOOLCHAIN_DIR)/usr/lib/swift/macosx"
             );
             MACOSX_DEPLOYMENT_TARGET = "10.10";
             OTHER_CFLAGS = (
@@ -574,10 +562,8 @@
                "5",
                "-I",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2",
-               "-target",
-               "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk",
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk",
                "-package-description-version",
                "5.1.0"
             );
@@ -594,10 +580,8 @@
                "5",
                "-I",
                "$(TOOLCHAIN_DIR)/usr/lib/swift/pm/4_2",
-               "-target",
-               "x86_64-apple-macosx10.10",
                "-sdk",
-               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk",
+               "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.3.sdk",
                "-package-description-version",
                "5.1.0"
             );
@@ -659,6 +643,7 @@
          baseConfigurationReference = "OBJ_8";
          buildSettings = {
             CLANG_ENABLE_MODULES = "YES";
+            CURRENT_PROJECT_VERSION = "1";
             EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
             FRAMEWORK_SEARCH_PATHS = (
                "$(inherited)",
@@ -668,13 +653,13 @@
                "$(inherited)"
             );
             INFOPLIST_FILE = "SwiftCBOR.xcodeproj/SwiftCBORTests_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            IPHONEOS_DEPLOYMENT_TARGET = "14.0";
             LD_RUNPATH_SEARCH_PATHS = (
                "$(inherited)",
                "@loader_path/../Frameworks",
                "@loader_path/Frameworks"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.10";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -690,7 +675,7 @@
             SWIFT_VERSION = "5.0";
             TARGET_NAME = "SwiftCBORTests";
             TVOS_DEPLOYMENT_TARGET = "9.0";
-            WATCHOS_DEPLOYMENT_TARGET = "2.0";
+            WATCHOS_DEPLOYMENT_TARGET = "7.0";
          };
          name = "Debug";
       };
@@ -699,6 +684,7 @@
          baseConfigurationReference = "OBJ_8";
          buildSettings = {
             CLANG_ENABLE_MODULES = "YES";
+            CURRENT_PROJECT_VERSION = "1";
             EMBEDDED_CONTENT_CONTAINS_SWIFT = "YES";
             FRAMEWORK_SEARCH_PATHS = (
                "$(inherited)",
@@ -708,13 +694,13 @@
                "$(inherited)"
             );
             INFOPLIST_FILE = "SwiftCBOR.xcodeproj/SwiftCBORTests_Info.plist";
-            IPHONEOS_DEPLOYMENT_TARGET = "8.0";
+            IPHONEOS_DEPLOYMENT_TARGET = "14.0";
             LD_RUNPATH_SEARCH_PATHS = (
                "$(inherited)",
                "@loader_path/../Frameworks",
                "@loader_path/Frameworks"
             );
-            MACOSX_DEPLOYMENT_TARGET = "10.10";
+            MACOSX_DEPLOYMENT_TARGET = "10.15";
             OTHER_CFLAGS = (
                "$(inherited)"
             );
@@ -730,7 +716,7 @@
             SWIFT_VERSION = "5.0";
             TARGET_NAME = "SwiftCBORTests";
             TVOS_DEPLOYMENT_TARGET = "9.0";
-            WATCHOS_DEPLOYMENT_TARGET = "2.0";
+            WATCHOS_DEPLOYMENT_TARGET = "7.0";
          };
          name = "Release";
       };
