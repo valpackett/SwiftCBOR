@@ -318,6 +318,8 @@ extension CBOR {
         default:
             if let encodable = any as? CBOREncodable {
                 return encodable.encode()
+            } else if let encodable = any as? Codable {
+                return try [UInt8](CodableCBOREncoder().encode(encodable))
             }
             throw CBOREncoderError.invalidType
         }

@@ -18,6 +18,7 @@ class CBOREncoderTests: XCTestCase {
         ("testEncodeIndefiniteByteStrings", testEncodeIndefiniteByteStrings),
         ("testEncodeDates", testEncodeDates),
         ("testReadmeExamples", testReadmeExamples),
+        ("testEncodeAny", testEncodeAny),
     ]
 
     func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8]) {
@@ -255,5 +256,26 @@ class CBOREncoderTests: XCTestCase {
             encoded == [0xa2, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73, 0x61, 0x78, 0x18, 0x2a]
             || encoded == [0xa2, 0x61, 0x78, 0x18, 0x2a, 0x61, 0x79, 0x65, 0x77, 0x6f, 0x72, 0x64, 0x73]
         )
+    }
+
+    func testEncodeAny() {
+        struct MyCodableThing: Codable, Equatable {
+            var zipcode: String
+            var locationId: Int
+
+            static func random() -> MyCodableThing {
+                 let formatter = NumberFormatter()
+                 formatter.minimumIntegerDigits = 5
+                 let randomInt = Int.random(in: 0..<99999)
+                 let zip = formatter.string(from: NSNumber(integerLiteral: randomInt))!
+                 return MyCodableThing(zipcode: zip, locationId: Int.random(in: 0..<1000))
+             }
+        }
+
+        let myCodableThing = MyCodableThing.random()
+
+        let encoded = try! CBOR.encodeAny(myCodableThing)
+        let decoded = try! CodableCBORDecoder().decode(MyCodableThing.self, from: Data(encoded))
+        XCTAssertEqual(decoded, myCodableThing)
     }
 }
