@@ -127,17 +127,53 @@ extension CBOR {
     }
 
     // MARK: - major 5: a map of pairs of data items
-
     public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8] {
         var res: [UInt8] = []
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
         res = map.count.encode()
         res[0] = res[0] | 0b101_00000
+
         for (k, v) in map {
             res.append(contentsOf: k.encode())
             res.append(contentsOf: v.encode())
         }
         return res
+    }
+
+    // MARK: - major 5: a map of pairs of data items sorted canonically see: https://tools.ietf.org/html/rfc7049#section-3.9
+    public static func encodeMapCanonical<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8] {
+        var res: [UInt8] = []
+        res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
+        res = map.count.encode()
+        res[0] = res[0] | 0b101_00000
+
+        let canonicalSortedEntries = map
+            .map { k, v in (k.encode(), v.encode()) }
+            .sorted { a, b in canonicalKeyOrder(a: a.0, b: b.0) }
+
+        for (k, v) in canonicalSortedEntries {
+            res.append(contentsOf: k)
+            res.append(contentsOf: v)
+        }
+        return res
+    }
+
+
+    // MARK: sort keys canonically, see: https://tools.ietf.org/html/rfc7049#section-3.9
+    private static func canonicalKeyOrder(a: [UInt8], b: [UInt8]) -> Bool {
+        if a.count == b.count {
+            for (index, byteA) in a.enumerated() {
+                let byteB = b[index]
+                if byteA == byteB {
+                    continue
+                } else {
+                    return byteA < byteB
+                }
+            }
+            return false
+        } else {
+            return a.count < b.count
+        }
     }
 
     public static func encodeMap<A: CBOREncodable>(_ map: [A: Any?]) throws -> [UInt8] {
