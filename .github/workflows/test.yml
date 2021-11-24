@@ -20,11 +20,11 @@ jobs:
       run: swift test
 
   macos:
-    name: macOS Xcode
-    runs-on: macOS-latest
+    name: macOS & iOS (Xcode)
+    runs-on: macos-11
     steps:
     - uses: actions/checkout@v1
     - name: Test macOS
       run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=OS X,arch=x86_64'
     - name: Test iOS
-      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone 11 Pro,OS=14.4'
+      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=latest'
