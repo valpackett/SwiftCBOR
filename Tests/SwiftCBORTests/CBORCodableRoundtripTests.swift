@@ -265,4 +265,22 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decoded.category, menuItem.category)
         XCTAssertEqual(decoded.ordinal, menuItem.ordinal)
     }
+
+
+
+    func testStructContainingEnum() {
+        enum Status: Codable {
+             case done, underway, open
+        }
+
+        struct Order: Codable {
+            var status: Status  = .done
+        }
+
+        let order = Order()
+        let cborOrder = try! CodableCBOREncoder().encode(order)
+        let decodedCBOROrder = try! CodableCBORDecoder().decode(Order.self, from: cborOrder)
+
+        XCTAssertEqual(decodedCBOROrder.status, order.status)
+    }
 }

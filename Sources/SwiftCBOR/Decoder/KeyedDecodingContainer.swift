@@ -123,11 +123,12 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue(forKey: key)
 
-        guard let keyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.KeyedContainer<NestedKey> else {
+        guard let keyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
 
-        return KeyedDecodingContainer(keyedContainer)
+        let container = _CBORDecoder.KeyedContainer<NestedKey>(data: keyedContainer.data, codingPath: keyedContainer.codingPath, userInfo: keyedContainer.userInfo)
+        return KeyedDecodingContainer(container)
     }
 
     func superDecoder() throws -> Decoder {
