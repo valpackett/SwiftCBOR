@@ -7,9 +7,12 @@ extension _CBOREncoder {
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
 
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        let options: CodableCBOREncoder._Options
+
+        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBOREncoder._Options) {
             self.codingPath = codingPath
             self.userInfo = userInfo
+            self.options = options
         }
     }
 }
@@ -32,28 +35,35 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
     private func nestedSingleValueContainer(forKey key: Key) -> SingleValueEncodingContainer {
         let container = _CBOREncoder.SingleValueContainer(
             codingPath: self.nestedCodingPath(forKey: key),
-            userInfo: self.userInfo
+            userInfo: self.userInfo,
+            options: self.options
         )
-        self.storage[AnyCodingKey(key)] = container
+        self.storage[anyCodingKeyForKey(key)] = container
         return container
     }
 
     func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
         let container = _CBOREncoder.UnkeyedContainer(
             codingPath: self.nestedCodingPath(forKey: key),
-            userInfo: self.userInfo
+            userInfo: self.userInfo,
+            options: self.options
         )
-        self.storage[AnyCodingKey(key)] = container
+        self.storage[anyCodingKeyForKey(key)] = container
         return container
     }
 
     func nestedContainer<NestedKey: CodingKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey> {
         let container = _CBOREncoder.KeyedContainer<NestedKey>(
             codingPath: self.nestedCodingPath(forKey: key),
-            userInfo: self.userInfo
+            userInfo: self.userInfo,
+            options: self.options
         )
-        self.storage[AnyCodingKey(key)] = container
+        self.storage[anyCodingKeyForKey(key)] = container
         return KeyedEncodingContainer(container)
+    }
+
+    fileprivate func anyCodingKeyForKey(_ key: Key) -> AnyCodingKey {
+        return AnyCodingKey(key, useStringKey: self.options.useStringKeys)
     }
 
     func superEncoder() -> Encoder {
@@ -72,7 +82,7 @@ extension _CBOREncoder.KeyedContainer: CBOREncodingContainer {
         data = storage.count.encode()
         data[0] = data[0] | 0b101_00000
         for (key, container) in self.storage {
-            let keyContainer = _CBOREncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo)
+            let keyContainer = _CBOREncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
             try! keyContainer.encode(key)
             data.append(contentsOf: keyContainer.data)
             data.append(contentsOf: container.data)

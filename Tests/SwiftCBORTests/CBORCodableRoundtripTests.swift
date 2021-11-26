@@ -15,6 +15,7 @@ class CBORCodableRoundtripTests: XCTestCase {
         ("testArrays", testArrays),
         ("testMaps", testMaps),
         ("testWrappedStruct", testWrappedStruct),
+        ("testStructContainingEnum", testStructContainingEnum)
     ]
 
     struct MyStruct: Codable, Equatable, Hashable {
@@ -266,8 +267,6 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decoded.ordinal, menuItem.ordinal)
     }
 
-
-
     func testStructContainingEnum() {
         enum Status: Codable {
              case done, underway, open
@@ -282,5 +281,94 @@ class CBORCodableRoundtripTests: XCTestCase {
         let decodedCBOROrder = try! CodableCBORDecoder().decode(Order.self, from: cborOrder)
 
         XCTAssertEqual(decodedCBOROrder.status, order.status)
+    }
+
+    func testFoundationHeavyType() {
+        struct FoundationLaden: Codable, Equatable {
+            let date: Date
+            let dateComponents: DateComponents
+            let calendar: Calendar
+            let locale: Locale
+            let url: URL
+            let urlComponents: URLComponents
+            let measurement: Measurement<UnitMass>
+            let uuid: UUID
+            let personNameComponents: PersonNameComponents
+            let timeZone: TimeZone
+            let decimal: Decimal
+            let dateInterval: DateInterval
+            let characterSet: CharacterSet
+            let affineTransform: AffineTransform
+            let indexPath: IndexPath
+            let indexSet: IndexSet
+            let range: Range<Int>
+            let point: NSPoint
+            let size: NSSize
+            let data: Data
+        }
+
+        var personNameComponents = PersonNameComponents()
+        personNameComponents.givenName = "Bridget"
+        personNameComponents.familyName = "Christie"
+        personNameComponents.middleName = "Louise"
+        personNameComponents.namePrefix = "Dame"
+        personNameComponents.nickname = "Bridge"
+        personNameComponents.nameSuffix = "Esq."
+
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        let dateComponents: Set<Calendar.Component> = [
+            .era,
+            .year,
+            .month,
+            .day,
+            .hour,
+            .minute,
+            .second,
+            .weekday,
+            .weekdayOrdinal,
+            .weekOfMonth,
+            .weekOfYear,
+            .yearForWeekOfYear,
+            .timeZone,
+            .calendar,
+            .nanosecond,
+            .quarter,
+        ]
+
+        let foundationLadenObj = FoundationLaden(
+            date: Date(timeIntervalSince1970: 1501283774),
+            dateComponents: calendar.dateComponents(dateComponents, from: Date(timeIntervalSince1970: 1501283775)),
+            calendar: calendar,
+            locale: Locale(identifier: "UTC"),
+            url: URL(string: "https://www.cars.com/cool/big?color=yellow")!,
+            urlComponents: URLComponents(string: "https://subdomain.domain.com/some/path?and_a_query=string")!,
+            measurement: Measurement(value: 67.4, unit: UnitMass.grams),
+            uuid: UUID(),
+            personNameComponents: personNameComponents,
+            timeZone: TimeZone(identifier: "PST")!,
+            decimal: Decimal(sign: .plus, exponent: -10, significand: 31415926536),
+            dateInterval: DateInterval(start: Date(timeIntervalSince1970: 1501283772), duration: 86400),
+            characterSet: CharacterSet.illegalCharacters,
+            affineTransform: AffineTransform(translationByX: 12.34, byY: -56.78),
+            indexPath: IndexPath(item: 12, section: 3),
+            indexSet: IndexSet(arrayLiteral: 1, 2, 3, 9, 123, 1247890123),
+            range: Range(NSRange(location: 12, length: 366))!,
+            point: NSPoint(x: -99.123, y: 2.04),
+            size: NSSize(width: 77.77, height: 88.88),
+            data: Data([163, 99, 95, 105, 100, 99, 97, 97, 97, 104, 99, 97, 116, 101, 103, 111, 114, 121, 100, 99, 97, 107, 101, 103, 111, 114, 100, 105, 110, 97, 108, 250, 65, 64, 0, 0])
+        )
+
+        let encoder = CodableCBOREncoder()
+        encoder.useStringKeys = true
+        let encodedWithStringKeys = try! encoder.encode(foundationLadenObj)
+        let decoder = CodableCBORDecoder()
+        decoder.useStringKeys = true
+        let decodedFromStringKeys = try! decoder.decode(FoundationLaden.self, from: encodedWithStringKeys)
+        XCTAssertEqual(decodedFromStringKeys, foundationLadenObj)
+
+        let encoded = try! CodableCBOREncoder().encode(foundationLadenObj)
+        let decoded = try! CodableCBORDecoder().decode(FoundationLaden.self, from: encoded)
+        XCTAssertEqual(decoded, foundationLadenObj)
     }
 }

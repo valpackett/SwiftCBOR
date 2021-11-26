@@ -9,7 +9,7 @@ extension _CBORDecoder {
 
             var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = [:]
 
-            let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo)
+            let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
             unkeyedContainer.count = count * 2
 
             var iterator = unkeyedContainer.nestedContainers.makeIterator()
@@ -20,7 +20,13 @@ extension _CBORDecoder {
                         fatalError() // FIXME
                 }
 
-                let keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                let keyVal: AnyCodingKey
+                if self.options.useStringKeys {
+                    let stringKey = try! keyContainer.decode(String.self)
+                    keyVal = AnyCodingKey(stringValue: stringKey)
+                } else {
+                    keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                }
                 nestedContainers[keyVal] = container
             }
 
@@ -63,12 +69,14 @@ extension _CBORDecoder {
         var index: Data.Index
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
+        let options: CodableCBORDecoder._Options
 
-        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data
             self.index = self.data.startIndex
+            self.options = options
         }
 
         func checkCanDecodeValue(forKey key: Key) throws {
@@ -86,34 +94,39 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     }
 
     func contains(_ key: Key) -> Bool {
-        return self.nestedContainers.keys.contains(AnyCodingKey(key))
+        return self.nestedContainers.keys.contains(anyCodingKeyForKey(key))
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
-        try checkCanDecodeValue(forKey: key)
-
-        guard let singleValueContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.SingleValueContainer else {
+        let container = self.nestedContainers[anyCodingKeyForKey(key)]
+        switch container {
+        case is _CBORDecoder.SingleValueContainer:
+            return (container as! _CBORDecoder.SingleValueContainer).decodeNil()
+        case is _CBORDecoder.UnkeyedContainer:
+            return try (container as! _CBORDecoder.UnkeyedContainer).decodeNil()
+        case is _CBORDecoder.KeyedContainer<AnyCodingKey>:
+            return try (container as! _CBORDecoder.KeyedContainer<AnyCodingKey>).decodeNil(forKey: anyCodingKeyForKey(key))
+        case nil:
+            return false
+        default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "cannot decode nil for key: \(key)")
             throw DecodingError.typeMismatch(Any?.self, context)
         }
-
-        return singleValueContainer.decodeNil()
     }
 
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
-        let container = self.nestedContainers[AnyCodingKey(key)]!
+        let container = self.nestedContainers[anyCodingKeyForKey(key)]!
         let decoder = CodableCBORDecoder()
-        let value = try decoder.decode(T.self, from: container.data)
-
-        return value
+        decoder.setOptions(self.options)
+        return try decoder.decode(T.self, from: container.data)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
         try checkCanDecodeValue(forKey: key)
 
-        guard let unkeyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.UnkeyedContainer else {
+        guard let unkeyedContainer = self.nestedContainers[anyCodingKeyForKey(key)] as? _CBORDecoder.UnkeyedContainer else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
 
@@ -123,23 +136,31 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue(forKey: key)
 
-        guard let keyedContainer = self.nestedContainers[AnyCodingKey(key)] as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
+        guard let anyCodingKeyedContainer = self.nestedContainers[anyCodingKeyForKey(key)] as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
-
-        let container = _CBORDecoder.KeyedContainer<NestedKey>(data: keyedContainer.data, codingPath: keyedContainer.codingPath, userInfo: keyedContainer.userInfo)
+        let container = _CBORDecoder.KeyedContainer<NestedKey>(
+            data: anyCodingKeyedContainer.data,
+            codingPath: anyCodingKeyedContainer.codingPath,
+            userInfo: anyCodingKeyedContainer.userInfo,
+            options: anyCodingKeyedContainer.options
+        )
         return KeyedDecodingContainer(container)
     }
 
     func superDecoder() throws -> Decoder {
-        return _CBORDecoder(data: self.data)
+        return _CBORDecoder(data: self.data, options: self.options)
     }
 
     func superDecoder(forKey key: Key) throws -> Decoder {
-        let decoder = _CBORDecoder(data: self.data)
+        let decoder = _CBORDecoder(data: self.data, options: self.options)
         decoder.codingPath = [key]
 
         return decoder
+    }
+
+    fileprivate func anyCodingKeyForKey(_ key: Key) -> AnyCodingKey {
+        return AnyCodingKey(key, useStringKey: self.options.useStringKeys)
     }
 }
 

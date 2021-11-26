@@ -11,14 +11,17 @@ extension _CBOREncoder {
         var codingPath: [CodingKey]
 
         var nestedCodingPath: [CodingKey] {
-            return self.codingPath + [AnyCodingKey(intValue: self.count)!]
+            return self.codingPath + [AnyCodingKey(intValue: self.count)]
         }
 
         var userInfo: [CodingUserInfoKey: Any]
 
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        let options: CodableCBOREncoder._Options
+
+        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBOREncoder._Options) {
             self.codingPath = codingPath
             self.userInfo = userInfo
+            self.options = options
         }
     }
 }
@@ -35,21 +38,21 @@ extension _CBOREncoder.UnkeyedContainer: UnkeyedEncodingContainer {
     }
 
     private func nestedSingleValueContainer() -> SingleValueEncodingContainer {
-        let container = _CBOREncoder.SingleValueContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo)
+        let container = _CBOREncoder.SingleValueContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
         self.storage.append(container)
 
         return container
     }
 
     func nestedContainer<NestedKey: CodingKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey> {
-        let container = _CBOREncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath, userInfo: self.userInfo)
+        let container = _CBOREncoder.KeyedContainer<NestedKey>(codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
         self.storage.append(container)
 
         return KeyedEncodingContainer(container)
     }
 
     func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = _CBOREncoder.UnkeyedContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo)
+        let container = _CBOREncoder.UnkeyedContainer(codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
         self.storage.append(container)
 
         return container
