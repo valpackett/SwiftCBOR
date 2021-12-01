@@ -27,6 +27,10 @@ public class CodableCBOREncoder {
         try value.encode(to: encoder)
         return encoder.data
     }
+
+    func setOptions(_ newOptions: _Options) {
+        self.useStringKeys = newOptions.useStringKeys
+    }
 }
 
 final class _CBOREncoder {

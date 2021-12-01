@@ -15,7 +15,9 @@ class CBORCodableRoundtripTests: XCTestCase {
         ("testArrays", testArrays),
         ("testMaps", testMaps),
         ("testWrappedStruct", testWrappedStruct),
+        ("testStructWithFloat", testStructWithFloat),
         ("testStructContainingEnum", testStructContainingEnum)
+        ("testFoundationHeavyType", testFoundationHeavyType)
     ]
 
     struct MyStruct: Codable, Equatable, Hashable {

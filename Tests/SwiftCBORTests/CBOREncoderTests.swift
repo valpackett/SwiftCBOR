@@ -21,9 +21,9 @@ class CBOREncoderTests: XCTestCase {
         ("testEncodeAny", testEncodeAny),
     ]
 
-    func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8]) {
-        XCTAssertEqual(input.encode(), cbor)
-        XCTAssertEqual(try! CBOR.decode(input.encode()), try! CBOR.decode(cbor))
+    func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8], options: CBOROptions = CBOROptions()) {
+        XCTAssertEqual(input.encode(options: options), cbor)
+        XCTAssertEqual(try! CBOR.decode(input.encode(options: options)), try! CBOR.decode(cbor))
     }
 
     func testEncodeInts() {
@@ -242,12 +242,12 @@ class CBOREncoderTests: XCTestCase {
             var x: Int
             var y: String
 
-            public func encode() -> [UInt8] {
-                let cborWrapper : CBOR = [
+            public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
+                let cborWrapper: CBOR = [
                     "x": CBOR(integerLiteral: self.x),
                     "y": .utf8String(self.y)
                 ]
-                return cborWrapper.encode()
+                return cborWrapper.encode(options: options)
             }
         }
 
