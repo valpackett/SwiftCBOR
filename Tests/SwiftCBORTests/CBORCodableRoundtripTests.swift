@@ -16,7 +16,7 @@ class CBORCodableRoundtripTests: XCTestCase {
         ("testMaps", testMaps),
         ("testWrappedStruct", testWrappedStruct),
         ("testStructWithFloat", testStructWithFloat),
-        ("testStructContainingEnum", testStructContainingEnum)
+        ("testStructContainingEnum", testStructContainingEnum),
         ("testFoundationHeavyType", testFoundationHeavyType)
     ]
 
