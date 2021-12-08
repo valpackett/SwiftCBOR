@@ -301,12 +301,9 @@ class CBORCodableRoundtripTests: XCTestCase {
             let decimal: Decimal
             let dateInterval: DateInterval
             let characterSet: CharacterSet
-            let affineTransform: AffineTransform
             let indexPath: IndexPath
             let indexSet: IndexSet
             let range: Range<Int>
-            let point: NSPoint
-            let size: NSSize
             let data: Data
         }
 
@@ -353,12 +350,9 @@ class CBORCodableRoundtripTests: XCTestCase {
             decimal: Decimal(sign: .plus, exponent: -10, significand: 31415926536),
             dateInterval: DateInterval(start: Date(timeIntervalSince1970: 1501283772), duration: 86400),
             characterSet: CharacterSet.illegalCharacters,
-            affineTransform: AffineTransform(translationByX: 12.34, byY: -56.78),
-            indexPath: IndexPath(item: 12, section: 3),
+            indexPath: IndexPath(indexes: [12, 3]),
             indexSet: IndexSet(arrayLiteral: 1, 2, 3, 9, 123, 1247890123),
             range: Range(NSRange(location: 12, length: 366))!,
-            point: NSPoint(x: -99.123, y: 2.04),
-            size: NSSize(width: 77.77, height: 88.88),
             data: Data([163, 99, 95, 105, 100, 99, 97, 97, 97, 104, 99, 97, 116, 101, 103, 111, 114, 121, 100, 99, 97, 107, 101, 103, 111, 114, 100, 105, 110, 97, 108, 250, 65, 64, 0, 0])
         )
 
@@ -374,4 +368,32 @@ class CBORCodableRoundtripTests: XCTestCase {
         let decoded = try! CodableCBORDecoder().decode(FoundationLaden.self, from: encoded)
         XCTAssertEqual(decoded, foundationLadenObj)
     }
+
+#if os(macOS)
+    func testMacOSOnlyTypes() {
+        struct MacOSOnlyTypes: Codable, Equatable {
+            let affineTransform: AffineTransform
+            let point: NSPoint
+            let size: NSSize
+        }
+
+        let macOSOnlyObj = MacOSOnlyTypes(
+            affineTransform: AffineTransform(translationByX: 12.34, byY: -56.78),
+            point: NSPoint(x: -99.123, y: 2.04),
+            size: NSSize(width: 77.77, height: 88.88)
+        )
+
+        let encoder = CodableCBOREncoder()
+        encoder.useStringKeys = true
+        let encodedWithStringKeys = try! encoder.encode(macOSOnlyObj)
+        let decoder = CodableCBORDecoder()
+        decoder.useStringKeys = true
+        let decodedFromStringKeys = try! decoder.decode(MacOSOnlyTypes.self, from: encodedWithStringKeys)
+        XCTAssertEqual(decodedFromStringKeys, macOSOnlyObj)
+
+        let encoded = try! CodableCBOREncoder().encode(macOSOnlyObj)
+        let decoded = try! CodableCBORDecoder().decode(MacOSOnlyTypes.self, from: encoded)
+        XCTAssertEqual(decoded, macOSOnlyObj)
+    }
+#endif
 }
