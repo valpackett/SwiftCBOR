@@ -2,20 +2,6 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBORDecoderTests: XCTestCase {
-    static var allTests = [
-        ("testDecodeNumbers", testDecodeNumbers),
-        ("testDecodeByteStrings", testDecodeByteStrings),
-        ("testDecodeUtf8Strings", testDecodeUtf8Strings),
-        ("testDecodeArrays", testDecodeArrays),
-        ("testDecodeMaps", testDecodeMaps),
-        ("testDecodeTagged", testDecodeTagged),
-        ("testDecodeSimple", testDecodeSimple),
-        ("testDecodeFloats", testDecodeFloats),
-        ("testDecodeDates", testDecodeDates),
-        ("testDecodePerformance", testDecodePerformance),
-        ("testDecodeMapFromIssue29", testDecodeMapFromIssue29),
-    ]
-
     func testDecodeNumbers() {
         for i in (0..<24) {
             XCTAssertEqual(try! CBORDecoder(input: [UInt8(i)]).decodeItem(), CBOR.unsignedInt(UInt64(i)))
@@ -51,7 +37,7 @@ class CBORDecoderTests: XCTestCase {
         XCTAssertEqual(try! CBORDecoder(input: [0x5b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 3, 0xc0, 0xff, 0xee]).decodeItem(), CBOR.byteString([0xc0, 0xff, 0xee]))
         XCTAssertEqual(try! CBORDecoder(input: [0x5f, 0x58, 3, 0xc0, 0xff, 0xee, 0x43, 0xc0, 0xff, 0xee, 0xff]).decodeItem(), CBOR.byteString([0xc0, 0xff, 0xee, 0xc0, 0xff, 0xee]))
     }
-    
+
     func testDecodeData() {
         XCTAssertEqual(try! CBORDecoder(input: [0x40]).decodeItem(), CBOR.byteString([]))
         XCTAssertEqual(try! CBORDecoder(input: [0x41, 0xf0]).decodeItem(), CBOR.byteString([0xf0]))

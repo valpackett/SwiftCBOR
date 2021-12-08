@@ -3,24 +3,6 @@ import Foundation
 @testable import SwiftCBOR
 
 class CBORCodableRoundtripTests: XCTestCase {
-    static var allTests = [
-        ("testSimpleStruct", testSimpleStruct),
-        ("testSimpleStructsInArray", testSimpleStructsInArray),
-        ("testSimpleStructsAsValuesInMap", testSimpleStructsAsValuesInMap),
-        ("testSimpleStructsAsKeysInMap", testSimpleStructsAsKeysInMap),
-        ("testNil", testNil),
-        ("testBools", testBools),
-        ("testInts", testInts),
-        ("testNegativeInts", testNegativeInts),
-        ("testStrings", testStrings),
-        ("testArrays", testArrays),
-        ("testMaps", testMaps),
-        ("testWrappedStruct", testWrappedStruct),
-        ("testStructWithFloat", testStructWithFloat),
-        ("testStructContainingEnum", testStructContainingEnum),
-        ("testFoundationHeavyType", testFoundationHeavyType)
-    ]
-
     struct MyStruct: Codable, Equatable, Hashable {
         let age: Int
         let name: String

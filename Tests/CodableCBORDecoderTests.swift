@@ -2,18 +2,6 @@ import XCTest
 @testable import SwiftCBOR
 
 class CodableCBORDecoderTests: XCTestCase {
-    static var allTests = [
-        ("testDecodeNull", testDecodeNull),
-        ("testDecodeBools", testDecodeBools),
-        ("testDecodeInts", testDecodeInts),
-        ("testDecodeNegativeInts", testDecodeNegativeInts),
-        ("testDecodeStrings", testDecodeStrings),
-        ("testDecodeByteStrings", testDecodeByteStrings),
-        ("testDecodeArrays", testDecodeArrays),
-        ("testDecodeMaps", testDecodeMaps),
-        ("testDecodeDates", testDecodeDates)
-    ]
-
     func testDecodeNull() {
         let decoded = try! CodableCBORDecoder().decode(Optional<String>.self, from: Data([0xf6]))
         XCTAssertNil(decoded)

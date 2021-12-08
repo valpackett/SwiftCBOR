@@ -2,18 +2,6 @@ import XCTest
 @testable import SwiftCBOR
 
 class CodableCBOREncoderTests: XCTestCase {
-    static var allTests = [
-        ("testEncodeNull", testEncodeNull),
-        ("testEncodeBools", testEncodeBools),
-        ("testEncodeInts", testEncodeInts),
-        ("testEncodeNegativeInts", testEncodeNegativeInts),
-        ("testEncodeStrings", testEncodeStrings),
-        ("testEncodeByteStrings", testEncodeByteStrings),
-        ("testEncodeArrays", testEncodeArrays),
-        ("testEncodeMaps", testEncodeMaps),
-        ("testEncodeSimpleStructs", testEncodeSimpleStructs)
-    ]
-
     func testEncodeNull() {
         let encoded = try! CodableCBOREncoder().encode(Optional<String>(nil))
         XCTAssertEqual(encoded, Data([0xf6]))
