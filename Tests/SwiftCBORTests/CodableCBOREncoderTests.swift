@@ -122,6 +122,11 @@ class CodableCBOREncoderTests: XCTestCase {
             oneTwoThreeFour == Data([0xa2, 0x01, 0x02, 0x03, 0x04])
             || oneTwoThreeFour == Data([0xa2, 0x03, 0x04, 0x01, 0x02])
         )
+
+        let encoder = CodableCBOREncoder()
+        encoder.useStringKeys = true
+        let encodedWithStringKeys = try! encoder.encode([1: 2, 3: 4])
+        XCTAssert(encodedWithStringKeys == Data([0xa2, 0x61, 0x31, 0x02, 0x61, 0x33, 0x04]) || encodedWithStringKeys == Data([0xa2, 0x61, 0x33, 0x04, 0x61, 0x31, 0x02]))
     }
 
     func testEncodeSimpleStructs() {

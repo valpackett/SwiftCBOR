@@ -2,17 +2,24 @@ import Foundation
 
 final public class CodableCBORDecoder {
     public var useStringKeys: Bool = false
+    public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
 
     struct _Options {
         let useStringKeys: Bool
+        let dateStrategy: DateStrategy
 
-        init(useStringKeys: Bool = false) {
+        init(useStringKeys: Bool = false, dateStrategy: DateStrategy = .taggedAsEpochTimestamp) {
             self.useStringKeys = useStringKeys
+            self.dateStrategy = dateStrategy
+        }
+
+        func toCBOROptions() -> CBOROptions {
+            return CBOROptions(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
         }
     }
 
     var options: _Options {
-        return _Options(useStringKeys: self.useStringKeys)
+        return _Options(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
     }
 
     public init() {}
@@ -27,7 +34,7 @@ final public class CodableCBORDecoder {
         let decoder = _CBORDecoder(data: data, options: self.options)
         decoder.userInfo = self.userInfo
         if type == Date.self {
-            guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
+            guard let cbor = try? CBORDecoder(input: [UInt8](data), options: self.options.toCBOROptions()).decodeItem(),
                 case .date(let date) = cbor
             else {
                 let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Date")
@@ -35,7 +42,7 @@ final public class CodableCBORDecoder {
             }
             return date as! T
         } else if type == Data.self {
-            guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
+            guard let cbor = try? CBORDecoder(input: [UInt8](data), options: self.options.toCBOROptions()).decodeItem(),
                 case .byteString(let data) = cbor
             else {
                 let context = DecodingError.Context(codingPath: [], debugDescription: "Unable to decode data for Data")
@@ -48,6 +55,7 @@ final public class CodableCBORDecoder {
 
     func setOptions(_ newOptions: _Options) {
         self.useStringKeys = newOptions.useStringKeys
+        self.dateStrategy = newOptions.dateStrategy
     }
 }
 

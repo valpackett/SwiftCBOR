@@ -2,17 +2,24 @@ import Foundation
 
 public class CodableCBOREncoder {
     public var useStringKeys: Bool = false
+    public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
 
     struct _Options {
         let useStringKeys: Bool
+        let dateStrategy: DateStrategy
 
-        init(useStringKeys: Bool = false) {
+        init(useStringKeys: Bool = false, dateStrategy: DateStrategy = .taggedAsEpochTimestamp) {
             self.useStringKeys = useStringKeys
+            self.dateStrategy = dateStrategy
+        }
+
+        func toCBOROptions() -> CBOROptions {
+            return CBOROptions(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
         }
     }
 
     var options: _Options {
-        return _Options(useStringKeys: self.useStringKeys)
+        return _Options(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
     }
 
     public init() {}
@@ -20,9 +27,9 @@ public class CodableCBOREncoder {
     public func encode(_ value: Encodable) throws -> Data {
         let encoder = _CBOREncoder(options: self.options)
         if let dateVal = value as? Date {
-            return Data(CBOR.encodeDate(dateVal))
+            return Data(CBOR.encodeDate(dateVal, options: self.options.toCBOROptions()))
         } else if let dataVal = value as? Data {
-            return Data(CBOR.encodeData(dataVal))
+            return Data(CBOR.encodeData(dataVal, options: self.options.toCBOROptions()))
         }
         try value.encode(to: encoder)
         return encoder.data
@@ -30,6 +37,7 @@ public class CodableCBOREncoder {
 
     func setOptions(_ newOptions: _Options) {
         self.useStringKeys = newOptions.useStringKeys
+        self.dateStrategy = newOptions.dateStrategy
     }
 }
 
