@@ -10,24 +10,28 @@ public enum CBORError : Error {
 }
 
 extension CBOR {
-    static public func decode(_ input: [UInt8]) throws -> CBOR? {
-        return try CBORDecoder(input: input).decodeItem()
+    static public func decode(_ input: [UInt8], options: CBOROptions = CBOROptions()) throws -> CBOR? {
+        return try CBORDecoder(input: input, options: options).decodeItem()
     }
 }
 
 public class CBORDecoder {
     private var istream : CBORInputStream
+    public var options: CBOROptions
 
-    public init(stream: CBORInputStream) {
-        istream = stream
+    public init(stream: CBORInputStream, options: CBOROptions = CBOROptions()) {
+        self.istream = stream
+        self.options = options
     }
 
-    public init(input: ArraySlice<UInt8>) {
-        istream = ArraySliceUInt8(slice: input)
+    public init(input: ArraySlice<UInt8>, options: CBOROptions = CBOROptions()) {
+        self.istream = ArraySliceUInt8(slice: input)
+        self.options = options
     }
 
-    public init(input: [UInt8]) {
-        istream = ArrayUInt8(array: ArraySlice(input))
+    public init(input: [UInt8], options: CBOROptions = CBOROptions()) {
+        self.istream = ArrayUInt8(array: ArraySlice(input))
+        self.options = options
     }
 
     func readBinaryNumber<T>(_ type: T.Type) throws -> T {
@@ -145,7 +149,17 @@ public class CBORDecoder {
         // pairs
         case 0xa0...0xbb:
             let numBytes = try readLength(b, base: 0xa0)
-            return CBOR.map(try readNPairs(numBytes))
+            let pairs = try readNPairs(numBytes)
+            if self.options.dateStrategy == .annotatedMap {
+                if let annotatedType = pairs[CBOR.utf8String(AnnotatedMapDateStrategy.typeKey)],
+                   annotatedType == CBOR.utf8String(AnnotatedMapDateStrategy.typeValue),
+                   let dateEpochTimestampCBOR = pairs[CBOR.utf8String(AnnotatedMapDateStrategy.valueKey)],
+                   let date = try? getDateFromTimestamp(dateEpochTimestampCBOR)
+                {
+                    return CBOR.date(date)
+                }
+            }
+            return CBOR.map(pairs)
         case 0xbf:
             return CBOR.map(try readPairsUntilBreak())
 
@@ -155,19 +169,7 @@ public class CBORDecoder {
             guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
             #if canImport(Foundation)
             if tag == 1 {
-                var date: Date
-                switch item {
-                case .double(let d):
-                    date = Date(timeIntervalSince1970: TimeInterval(d))
-                case .negativeInt(let n):
-                    date = Date(timeIntervalSince1970: TimeInterval(n))
-                case .float(let f):
-                    date = Date(timeIntervalSince1970: TimeInterval(f))
-                case .unsignedInt(let u):
-                    date = Date(timeIntervalSince1970: TimeInterval(u))
-                default:
-                    throw CBORError.wrongTypeInsideSequence
-                }
+                let date = try getDateFromTimestamp(item)
                 return CBOR.date(date)
             }
             #endif
@@ -191,7 +193,21 @@ public class CBORDecoder {
         default: return nil
         }
     }
+}
 
+func getDateFromTimestamp(_ item: CBOR) throws -> Date {
+    switch item {
+    case .double(let d):
+        return Date(timeIntervalSince1970: TimeInterval(d))
+    case .negativeInt(let n):
+        return Date(timeIntervalSince1970: TimeInterval(-1 - Double(n)))
+    case .float(let f):
+        return Date(timeIntervalSince1970: TimeInterval(f))
+    case .unsignedInt(let u):
+        return Date(timeIntervalSince1970: TimeInterval(u))
+    default:
+        throw CBORError.wrongTypeInsideSequence
+    }
 }
 
 private enum VarUIntSize: UInt8 {

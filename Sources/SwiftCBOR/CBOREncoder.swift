@@ -247,20 +247,40 @@ extension CBOR {
         let (integral, fractional) = modf(timeInterval)
 
         let seconds = Int64(integral)
-        let nanoseconds = UInt32(fractional * Double(NSEC_PER_SEC))
+        let nanoseconds = Int32(fractional * Double(NSEC_PER_SEC))
 
-        var res: [UInt8] = [0b110_00001] // Epoch timestamp tag is 1
-        if seconds < 0 {
-            res.append(contentsOf: CBOR.encodeNegativeInt(Int64(timeInterval)))
-        } else if seconds > UInt32.max {
-            res.append(contentsOf: CBOR.encodeDouble(timeInterval))
-        } else if nanoseconds > 0 {
-            res.append(contentsOf: CBOR.encodeDouble(timeInterval))
-        } else {
-            res.append(contentsOf: CBOR.encode(Int(seconds), options: options))
+        switch options.dateStrategy {
+        case .annotatedMap:
+            var dateCBOR: CBOR
+            if seconds < 0 && nanoseconds == 0 {
+                dateCBOR = CBOR.negativeInt(UInt64(-Double(timeInterval + 1)))
+            } else if seconds > UInt32.max {
+                dateCBOR = CBOR.double(timeInterval)
+            } else if nanoseconds != 0 {
+                dateCBOR = CBOR.double(timeInterval)
+            } else {
+                dateCBOR = CBOR.unsignedInt(UInt64(seconds))
+            }
+
+            let map: [String: Any] = [
+                AnnotatedMapDateStrategy.typeKey: AnnotatedMapDateStrategy.typeValue,
+                AnnotatedMapDateStrategy.valueKey: dateCBOR
+            ]
+            return try! CBOR.encodeMap(map, options: options)
+        case .taggedAsEpochTimestamp:
+            var res: [UInt8] = [0b110_00001] // Epoch timestamp tag is 1
+            if seconds < 0 && nanoseconds == 0 {
+                res.append(contentsOf: CBOR.encodeNegativeInt(Int64(timeInterval)))
+            } else if seconds > UInt32.max {
+                res.append(contentsOf: CBOR.encodeDouble(timeInterval))
+            } else if nanoseconds != 0 {
+                res.append(contentsOf: CBOR.encodeDouble(timeInterval))
+            } else {
+                res.append(contentsOf: CBOR.encode(Int(seconds), options: options))
+            }
+
+            return res
         }
-
-        return res
     }
     #endif
 
@@ -320,7 +340,7 @@ extension CBOR {
                 return encodable.encode(options: options)
             } else if let encodable = any as? Codable {
                 let encoder = CodableCBOREncoder()
-                encoder.setOptions(options.toEncoderOptions())
+                encoder.setOptions(options.toCodableEncoderOptions())
                 return try [UInt8](encoder.encode(encodable))
             }
             throw CBOREncoderError.invalidType

@@ -289,6 +289,7 @@ class CBORCodableRoundtripTests: XCTestCase {
     func testFoundationHeavyType() {
         struct FoundationLaden: Codable, Equatable {
             let date: Date
+            let oldDate: Date
             let dateComponents: DateComponents
             let calendar: Calendar
             let locale: Locale
@@ -338,6 +339,7 @@ class CBORCodableRoundtripTests: XCTestCase {
 
         let foundationLadenObj = FoundationLaden(
             date: Date(timeIntervalSince1970: 1501283774),
+            oldDate: Date(timeIntervalSince1970: -65672354),
             dateComponents: calendar.dateComponents(dateComponents, from: Date(timeIntervalSince1970: 1501283775)),
             calendar: calendar,
             locale: Locale(identifier: "UTC"),
@@ -364,9 +366,20 @@ class CBORCodableRoundtripTests: XCTestCase {
         let decodedFromStringKeys = try! decoder.decode(FoundationLaden.self, from: encodedWithStringKeys)
         XCTAssertEqual(decodedFromStringKeys, foundationLadenObj)
 
+        encoder.dateStrategy = .annotatedMap
+        let encodedWithStringKeysAndAnnotatedMapDate = try! encoder.encode(foundationLadenObj)
+        decoder.dateStrategy = .annotatedMap
+        let decodedFromStringKeysAndAnnotatedMapDate = try! decoder.decode(FoundationLaden.self, from: encodedWithStringKeysAndAnnotatedMapDate)
+        XCTAssertEqual(decodedFromStringKeysAndAnnotatedMapDate, foundationLadenObj)
+
+        XCTAssertNotEqual(encodedWithStringKeys, encodedWithStringKeysAndAnnotatedMapDate)
+
         let encoded = try! CodableCBOREncoder().encode(foundationLadenObj)
         let decoded = try! CodableCBORDecoder().decode(FoundationLaden.self, from: encoded)
         XCTAssertEqual(decoded, foundationLadenObj)
+
+        XCTAssertNotEqual(encoded, encodedWithStringKeys)
+        XCTAssertNotEqual(encoded, encodedWithStringKeysAndAnnotatedMapDate)
     }
 
 #if os(macOS)

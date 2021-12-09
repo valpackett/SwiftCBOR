@@ -94,7 +94,6 @@ extension UInt8: CBOREncodable {
     }
 }
 
-
 extension UInt16: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
         return CBOR.encodeUInt16(self)
@@ -115,7 +114,7 @@ extension UInt64: CBOREncodable {
 
 extension String: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeString(self)
+        return CBOR.encodeString(self, options: options)
     }
 }
 
@@ -167,13 +166,13 @@ extension NSNull: CBOREncodable {
 #if canImport(Foundation)
 extension Date: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeDate(self)
+        return CBOR.encodeDate(self, options: options)
     }
 }
 
 extension Data: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeByteString(self.map{ $0 })
+        return CBOR.encodeByteString(self.map{ $0 }, options: options)
     }
 }
 #endif
