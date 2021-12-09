@@ -15,9 +15,12 @@ extension _CBOREncoder {
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
 
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        let options: CodableCBOREncoder._Options
+
+        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBOREncoder._Options) {
             self.codingPath = codingPath
             self.userInfo = userInfo
+            self.options = options
         }
     }
 }
@@ -152,7 +155,7 @@ extension _CBOREncoder.SingleValueContainer: SingleValueEncodingContainer {
         case let date as Date:
             try self.encode(date)
         default:
-            let encoder = _CBOREncoder()
+            let encoder = _CBOREncoder(options: self.options)
             try value.encode(to: encoder)
             self.storage.append(encoder.data)
         }

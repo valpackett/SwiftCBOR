@@ -1,9 +1,20 @@
 import Foundation
 
-/**
-
- */
 final public class CodableCBORDecoder {
+    public var useStringKeys: Bool = false
+
+    struct _Options {
+        let useStringKeys: Bool
+
+        init(useStringKeys: Bool = false) {
+            self.useStringKeys = useStringKeys
+        }
+    }
+
+    var options: _Options {
+        return _Options(useStringKeys: self.useStringKeys)
+    }
+
     public init() {}
 
     public var userInfo: [CodingUserInfoKey : Any] = [:]
@@ -13,7 +24,7 @@ final public class CodableCBORDecoder {
     }
 
     public func decode<T: Decodable>(_ type: T.Type, from data: ArraySlice<UInt8>) throws -> T {
-        let decoder = _CBORDecoder(data: data)
+        let decoder = _CBORDecoder(data: data, options: self.options)
         decoder.userInfo = self.userInfo
         if type == Date.self {
             guard let cbor = try? CBORDecoder(input: [UInt8](data)).decodeItem(),
@@ -34,6 +45,10 @@ final public class CodableCBORDecoder {
         }
         return try T(from: decoder)
     }
+
+    func setOptions(_ newOptions: _Options) {
+        self.useStringKeys = newOptions.useStringKeys
+    }
 }
 
 final class _CBORDecoder {
@@ -44,29 +59,31 @@ final class _CBORDecoder {
     var container: CBORDecodingContainer?
     fileprivate var data: ArraySlice<UInt8>
 
-    init(data: ArraySlice<UInt8>) {
+    let options: CodableCBORDecoder._Options
+
+    init(data: ArraySlice<UInt8>, options: CodableCBORDecoder._Options) {
         self.data = data
+        self.options = options
     }
 }
 
 extension _CBORDecoder: Decoder {
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> {
-        
-        let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return KeyedDecodingContainer(container)
     }
 
     func unkeyedContainer() -> UnkeyedDecodingContainer {
-        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return container
     }
 
     func singleValueContainer() -> SingleValueDecodingContainer {
-        let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo)
+        let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return container
@@ -96,6 +113,20 @@ extension CBORDecodingContainer {
         defer { self.index = nextIndex }
 
         return Data(Array(self.data[self.index..<(nextIndex)]))
+    }
+
+    func peekByte() throws -> UInt8 {
+        return try peek(1).first!
+    }
+
+    func peek(_ length: Int) throws -> ArraySlice<UInt8> {
+        let nextIndex = self.index.advanced(by: length)
+        guard nextIndex <= self.data.endIndex else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
+            throw DecodingError.dataCorrupted(context)
+        }
+
+        return self.data[self.index..<(nextIndex)]
     }
 
     func read<T: FixedWidthInteger>(_ type: T.Type) throws -> T {

@@ -6,12 +6,14 @@ extension _CBORDecoder {
         var userInfo: [CodingUserInfoKey: Any]
         var data: ArraySlice<UInt8>
         var index: Data.Index
+        let options: CodableCBORDecoder._Options
 
-        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any]) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data
             self.index = self.data.startIndex
+            self.options = options
         }
 
         func checkCanDecode<T>(_ type: T.Type, format: UInt8) throws {
@@ -244,12 +246,13 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
 
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
         switch type {
+        // TODO: These seem unnecessary/wrong?!
         case is Data.Type:
             return try decode(Data.self) as! T
         case is Date.Type:
             return try decode(Date.self) as! T
         default:
-            let decoder = _CBORDecoder(data: self.data)
+            let decoder = _CBORDecoder(data: self.data, options: self.options)
             let value = try T(from: decoder)
             if let nextIndex = decoder.container?.index {
                 self.index = nextIndex
