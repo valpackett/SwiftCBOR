@@ -3,23 +3,38 @@ import Foundation
 public class CodableCBOREncoder {
     public var useStringKeys: Bool = false
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
+    public var forbidNonStringMapKeys: Bool = false
 
     struct _Options {
         let useStringKeys: Bool
         let dateStrategy: DateStrategy
+        let forbidNonStringMapKeys: Bool
 
-        init(useStringKeys: Bool = false, dateStrategy: DateStrategy = .taggedAsEpochTimestamp) {
+        init(
+            useStringKeys: Bool = false,
+            dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
+            forbidNonStringMapKeys: Bool = false
+        ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
+            self.forbidNonStringMapKeys = forbidNonStringMapKeys
         }
 
         func toCBOROptions() -> CBOROptions {
-            return CBOROptions(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
+            return CBOROptions(
+                useStringKeys: self.useStringKeys,
+                dateStrategy: self.dateStrategy,
+                forbidNonStringMapKeys: self.forbidNonStringMapKeys
+            )
         }
     }
 
     var options: _Options {
-        return _Options(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
+        return _Options(
+            useStringKeys: self.useStringKeys,
+            dateStrategy: self.dateStrategy,
+            forbidNonStringMapKeys: self.forbidNonStringMapKeys
+        )
     }
 
     public init() {}
@@ -31,6 +46,14 @@ public class CodableCBOREncoder {
         } else if let dataVal = value as? Data {
             return Data(CBOR.encodeData(dataVal, options: self.options.toCBOROptions()))
         }
+        if options.forbidNonStringMapKeys {
+            if let dict = value as? Dictionary<AnyHashable, Any?> {
+                guard let _ = dict as? Dictionary<String, Any?> else {
+                    throw CBOREncoderError.nonStringKeyInMap
+                }
+            }
+        }
+
         try value.encode(to: encoder)
         return encoder.data
     }
@@ -38,6 +61,7 @@ public class CodableCBOREncoder {
     func setOptions(_ newOptions: _Options) {
         self.useStringKeys = newOptions.useStringKeys
         self.dateStrategy = newOptions.dateStrategy
+        self.forbidNonStringMapKeys = newOptions.forbidNonStringMapKeys
     }
 }
 

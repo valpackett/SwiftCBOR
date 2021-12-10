@@ -1,16 +1,23 @@
 public struct CBOROptions {
     let useStringKeys: Bool
     let dateStrategy: DateStrategy
+    let forbidNonStringMapKeys: Bool
 
-    public init(useStringKeys: Bool = false, dateStrategy: DateStrategy = .taggedAsEpochTimestamp) {
+    public init(
+        useStringKeys: Bool = false,
+        dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
+        forbidNonStringMapKeys: Bool = false
+    ) {
         self.useStringKeys = useStringKeys
         self.dateStrategy = dateStrategy
+        self.forbidNonStringMapKeys = forbidNonStringMapKeys
     }
 
     func toCodableEncoderOptions() -> CodableCBOREncoder._Options {
         return CodableCBOREncoder._Options(
             useStringKeys: self.useStringKeys,
-            dateStrategy: self.dateStrategy
+            dateStrategy: self.dateStrategy,
+            forbidNonStringMapKeys: self.forbidNonStringMapKeys
         )
     }
 
@@ -32,3 +39,7 @@ struct AnnotatedMapDateStrategy {
     static let typeValue = "date_epoch_timestamp"
     static let valueKey = "__value"
 }
+
+protocol SwiftCBORStringKey {}
+
+extension String: SwiftCBORStringKey {}
