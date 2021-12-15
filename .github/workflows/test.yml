@@ -25,6 +25,6 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: Test macOS
-      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=macOS,arch=x86_64'
+      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=OS X,arch=x86_64'
     - name: Test iOS
-      run: xcodebuild test -project SwiftCBOR.xcodeproj -scheme SwiftCBOR-Package -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=latest'
+      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=iOS Simulator,name=iPhone 13 Pro,OS=latest'

@@ -1,20 +1,7 @@
-//
-//  CBORTests.swift
-//  SwiftCBORTests
-//
-//  Created by Maximilian Alexander on 4/22/19.
-//
-
 import XCTest
 @testable import SwiftCBOR
 
 class CBORTests: XCTestCase {
-    static var allTests = [
-        ("testSubscriptSetter", testSubscriptSetter),
-        ("testNestedSubscriptSetter", testNestedSubscriptSetter),
-        ("testNestedSubscriptSetterWithNewMap", testNestedSubscriptSetterWithNewMap)
-    ]
-
     func testSubscriptSetter() {
         let dictionary: [String: Any] = [
             "foo": 1,

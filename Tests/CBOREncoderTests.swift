@@ -2,25 +2,6 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBOREncoderTests: XCTestCase {
-    static var allTests = [
-        ("testEncodeInts", testEncodeInts),
-        ("testEncodeByteStrings", testEncodeByteStrings),
-        ("testEncodeData", testEncodeData),
-        ("testEncodeUtf8Strings", testEncodeUtf8Strings),
-        ("testEncodeArrays", testEncodeArrays),
-        ("testEncodeMaps", testEncodeMaps),
-        ("testEncodeTagged", testEncodeTagged),
-        ("testEncodeSimple", testEncodeSimple),
-        ("testEncodeFloats", testEncodeFloats),
-        ("testEncodeIndefiniteArrays", testEncodeIndefiniteArrays),
-        ("testEncodeIndefiniteMaps", testEncodeIndefiniteMaps),
-        ("testEncodeIndefiniteStrings", testEncodeIndefiniteStrings),
-        ("testEncodeIndefiniteByteStrings", testEncodeIndefiniteByteStrings),
-        ("testEncodeDates", testEncodeDates),
-        ("testReadmeExamples", testReadmeExamples),
-        ("testEncodeAny", testEncodeAny),
-    ]
-
     func assertEquivalent<T: CBOREncodable>(_ input: T, _ cbor: [UInt8], options: CBOROptions = CBOROptions()) {
         XCTAssertEqual(input.encode(options: options), cbor)
         XCTAssertEqual(try! CBOR.decode(input.encode(options: options)), try! CBOR.decode(cbor))
