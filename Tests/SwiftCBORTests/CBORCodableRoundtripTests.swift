@@ -194,9 +194,16 @@ class CBORCodableRoundtripTests: XCTestCase {
         let stringToString = try! CodableCBOREncoder().encode(["a": "A", "b": "B", "c": "C", "d": "D", "e": "E"])
         let stringToStringDecoded = try! CodableCBORDecoder().decode([String: String].self, from: stringToString)
         XCTAssertEqual(stringToStringDecoded, ["a": "A", "b": "B", "c": "C", "d": "D", "e": "E"])
-        let oneTwoThreeFour = try! CodableCBOREncoder().encode([1: 2, 3: 4])
+        let intKeyedMap = [1: 2, 3: 4]
+        let oneTwoThreeFour = try! CodableCBOREncoder().encode(intKeyedMap)
         let oneTwoThreeFourDecoded = try! CodableCBORDecoder().decode([Int: Int].self, from: oneTwoThreeFour)
-        XCTAssertEqual(oneTwoThreeFourDecoded, [1: 2, 3: 4])
+        XCTAssertEqual(oneTwoThreeFourDecoded, intKeyedMap)
+
+        let encoder = CodableCBOREncoder()
+        encoder.forbidNonStringMapKeys = true
+        XCTAssertThrowsError(try encoder.encode(intKeyedMap)) { err in
+            XCTAssertEqual(err as! CBOREncoderError, CBOREncoderError.nonStringKeyInMap)
+        }
     }
 
     func testWrappedStruct() {

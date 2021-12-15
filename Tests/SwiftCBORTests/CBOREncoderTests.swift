@@ -122,6 +122,14 @@ class CBOREncoderTests: XCTestCase {
         ]
         let encodedMapToAny = try! CBOR.encodeMap(mapToAny)
         XCTAssertEqual(encodedMapToAny, [0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03])
+
+        let mapToAnyWithIntKeys: [Int: Any] = [
+            12: 1,
+            51: "testing"
+        ]
+        XCTAssertThrowsError(try CBOR.encodeMap(mapToAnyWithIntKeys, options: CBOROptions(forbidNonStringMapKeys: true))) { err in
+            XCTAssertEqual(err as! CBOREncoderError, CBOREncoderError.nonStringKeyInMap)
+        }
     }
 
     func testEncodeTagged() {

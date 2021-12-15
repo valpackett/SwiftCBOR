@@ -129,6 +129,9 @@ extension CBOR {
     // MARK: - major 5: a map of pairs of data items
 
     public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
+        if options.forbidNonStringMapKeys {
+            try! ensureStringKey(A.self)
+        }
         var res: [UInt8] = []
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
         res = map.count.encode(options: options)
@@ -141,6 +144,9 @@ extension CBOR {
     }
 
     public static func encodeMap<A: CBOREncodable>(_ map: [A: Any?], options: CBOROptions = CBOROptions()) throws -> [UInt8] {
+        if options.forbidNonStringMapKeys {
+            try ensureStringKey(A.self)
+        }
         var res: [UInt8] = []
         res = map.count.encode(options: options)
         res[0] = res[0] | 0b101_00000
@@ -231,6 +237,9 @@ extension CBOR {
     }
 
     public static func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
+        if options.forbidNonStringMapKeys {
+            try! ensureStringKey(A.self)
+        }
         var res: [UInt8] = []
         let count = map.count
         res.reserveCapacity(count * MemoryLayout<A>.size + count * MemoryLayout<B>.size)
@@ -262,7 +271,7 @@ extension CBOR {
                 dateCBOR = CBOR.unsignedInt(UInt64(seconds))
             }
 
-            let map: [String: Any] = [
+            let map: [String: CBOREncodable] = [
                 AnnotatedMapDateStrategy.typeKey: AnnotatedMapDateStrategy.typeValue,
                 AnnotatedMapDateStrategy.valueKey: dateCBOR
             ]
@@ -348,6 +357,9 @@ extension CBOR {
     }
 
     private static func encodeMap<A: CBOREncodable>(_ map: [A: Any?], into res: inout [UInt8], options: CBOROptions = CBOROptions()) throws {
+        if options.forbidNonStringMapKeys {
+            try ensureStringKey(A.self)
+        }
         let sortedKeysWithEncodedKeys = map.keys.map {
             (encoded: $0.encode(options: options), key: $0)
         }.sorted(by: {
@@ -364,4 +376,11 @@ extension CBOR {
 
 public enum CBOREncoderError: Error {
     case invalidType
+    case nonStringKeyInMap
+}
+
+func ensureStringKey<T>(_ keyType: T.Type) throws where T: CBOREncodable {
+    guard T.self is SwiftCBORStringKey.Type else {
+        throw CBOREncoderError.nonStringKeyInMap
+    }
 }
