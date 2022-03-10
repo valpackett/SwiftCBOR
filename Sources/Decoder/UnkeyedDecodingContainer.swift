@@ -85,6 +85,13 @@ extension _CBORDecoder {
             return currentIndex >= count
         }
 
+        var isEmpty: Bool {
+            if let count = self.count, count == 0 {
+                return true
+            }
+            return false
+        }
+
         func checkCanDecodeValue() throws {
             guard !self.isAtEnd else {
                 throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
@@ -97,6 +104,9 @@ extension _CBORDecoder {
 extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
    
     func decodeNil() throws -> Bool {
+        if self.isEmpty {
+            return false
+        }
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
