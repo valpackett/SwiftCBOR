@@ -275,6 +275,70 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decodedCBOROrder.status, order.status)
     }
 
+    func testStructWithArray() {
+        struct StructWithArray: Codable, Equatable {
+            let arr: [Int]
+        }
+
+        let arraysToTest = [[], [1], [2, 3]]
+
+        for arr in arraysToTest {
+            let structWithArray = StructWithArray(arr: arr)
+
+            let encoded = try! CodableCBOREncoder().encode(structWithArray)
+            let decoded = try! CodableCBORDecoder().decode(StructWithArray.self, from: encoded)
+
+            XCTAssertEqual(structWithArray, decoded)
+        }
+    }
+
+    func testMultiTypeStruct() {
+        struct MultiTypeStruct: Codable, Equatable {
+            let stringVal: String
+            let bytesVal: Data
+            let integer: Int
+            let booleanVal: Bool
+            let doubleVal: Double
+            let arrayVal: [Int]?
+        }
+
+        let arraysToTest: [[Int]?] = [[], nil]
+
+        for arr in arraysToTest {
+            let multiTypeStruct = MultiTypeStruct(
+                stringVal: "s",
+                bytesVal: Data(hex: "aabbcc")!,
+                integer: 4711,
+                booleanVal: true,
+                doubleVal: 3.14,
+                arrayVal: arr
+            )
+
+            let encoded = try! CodableCBOREncoder().encode(multiTypeStruct)
+            let decoded = try! CodableCBORDecoder().decode(MultiTypeStruct.self, from: encoded)
+
+            XCTAssertEqual(multiTypeStruct, decoded)
+        }
+
+        let hexToRoundtrip = [
+            // Definite map without an arrayVal key-value pair
+            "a56a626f6f6c65616e56616cf569737472696e6756616c63666f6f69646f75626c6556616cfb40091eb851eb851f67696e746567657219126768627974657356616c43aabbcc",
+
+            // Indefinite map without an arrayVal key-value pair
+            "bf6a626f6f6c65616e56616cf569737472696e6756616c63666f6f69646f75626c6556616cfb40091eb851eb851f67696e746567657219126768627974657356616c43aabbccff",
+
+            // Definite map with an arrayVal key-value pair
+            "a669737472696e6756616c63666f6f6a626f6f6c65616e56616cf567696e746567657219126769646f75626c6556616cfb40091eb851eb851f68627974657356616c43aabbcc68617272617956616c84010222191267",
+
+            // Indefinite map with an arrayVal key-value pair
+            "bf69737472696e6756616c63666f6f6a626f6f6c65616e56616cf567696e746567657219126769646f75626c6556616cfb40091eb851eb851f68627974657356616c43aabbcc68617272617956616c84010222191267ff"
+        ]
+
+        for hex in hexToRoundtrip {
+            let _ = try! CodableCBORDecoder().decode(MultiTypeStruct.self, from: Data(hex: hex)!)
+        }
+    }
+
     func testFoundationHeavyType() {
         struct FoundationLaden: Codable, Equatable {
             let date: Date
