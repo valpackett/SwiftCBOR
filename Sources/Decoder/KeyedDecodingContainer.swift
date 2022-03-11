@@ -2,8 +2,40 @@ import Foundation
 
 extension _CBORDecoder {
     final class KeyedContainer<Key: CodingKey> {
-        lazy var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = {
-            guard let count = self.count else {
+
+        // This is non-nil once nestedContainers() has been called once, and if the data is valid
+        var _nestedContainers: [AnyCodingKey: CBORDecodingContainer]? = nil
+
+        // This is non-nil once count() has been called once, and if the data is valid
+        var _count: Int?
+
+        var data: ArraySlice<UInt8>
+        var index: Data.Index
+        var codingPath: [CodingKey]
+        var userInfo: [CodingUserInfoKey: Any]
+        let options: CodableCBORDecoder._Options
+
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
+            self.codingPath = codingPath
+            self.userInfo = userInfo
+            self.data = data
+            self.index = self.data.startIndex
+            self.options = options
+        }
+
+        func checkCanDecodeValue(forKey key: Key) throws {
+            guard self.contains(key) else {
+                let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
+                throw DecodingError.keyNotFound(key, context)
+            }
+        }
+
+        func nestedContainers() throws -> [AnyCodingKey: CBORDecodingContainer] {
+            if let nestedContainers = self._nestedContainers {
+                return nestedContainers
+            }
+
+            guard let count = try count() else {
                 return [:]
             }
 
@@ -31,74 +63,64 @@ extension _CBORDecoder {
             }
 
             self.index = unkeyedContainer.index
+            self._nestedContainers = nestedContainers
             return nestedContainers
-        }()
-
-        lazy var count: Int? = {
-            do {
-                let format = try self.readByte()
-                switch format {
-                case 0xa0...0xb7 :
-                    return Int(format & 0x1F)
-                case 0xb8:
-                    return Int(try read(UInt8.self))
-                case 0xb9:
-                    return Int(try read(UInt16.self))
-                case 0xba:
-                    return Int(try read(UInt32.self))
-                case 0xbb:
-                    return Int(try read(UInt64.self))
-                case 0xbf:
-                    // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
-                    // nestedContainers code so that if we're working with a map that has a break at the end
-                    // it creates the containers as it goes, rather than first calculating the count (which
-                    // involves going through all the bytes) and then going back through the data and decoding
-                    // each key-value pair in the map.
-                    let nextIndex = self.data.startIndex.advanced(by: 1)
-                    let remainingData = self.data.suffix(from: nextIndex)
-                    return try? CBORDecoder(input: remainingData.map { $0 }).readPairsUntilBreak().keys.count
-                default:
-                    return nil
-                }
-            } catch {
-                return nil
-            }
-        }()
-
-        var data: ArraySlice<UInt8>
-        var index: Data.Index
-        var codingPath: [CodingKey]
-        var userInfo: [CodingUserInfoKey: Any]
-        let options: CodableCBORDecoder._Options
-
-        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
-            self.codingPath = codingPath
-            self.userInfo = userInfo
-            self.data = data
-            self.index = self.data.startIndex
-            self.options = options
         }
 
-        func checkCanDecodeValue(forKey key: Key) throws {
-            guard self.contains(key) else {
-                let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
-                throw DecodingError.keyNotFound(key, context)
+        func count() throws -> Int? {
+            if let count = self._count {
+                return count
             }
+
+            let count: Int?
+
+            let format = try self.readByte()
+            switch format {
+            case 0xa0...0xb7: count = Int(format & 0x1F)
+            case 0xb8: count = Int(try read(UInt8.self))
+            case 0xb9: count = Int(try read(UInt16.self))
+            case 0xba: count = Int(try read(UInt32.self))
+            case 0xbb: count = Int(try read(UInt64.self))
+            case 0xbf:
+                // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
+                // nestedContainers code so that if we're working with a map that has a break at the end
+                // it creates the containers as it goes, rather than first calculating the count (which
+                // involves going through all the bytes) and then going back through the data and decoding
+                // each key-value pair in the map.
+                let nextIndex = self.data.startIndex.advanced(by: 1)
+                let remainingData = self.data.suffix(from: nextIndex)
+                count = try? CBORDecoder(input: remainingData.map { $0 }).readPairsUntilBreak().keys.count
+            default:
+                let context = DecodingError.Context(
+                    codingPath: self.codingPath,
+                    debugDescription: "Unable to get count of elements in dictionary"
+                )
+                throw DecodingError.typeMismatch(Int.self, context)
+            }
+
+            self._count = count
+            return count
         }
     }
 }
 
 extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     var allKeys: [Key] {
-        return self.nestedContainers.keys.map { $0.key() }
+        if let containers = try? self.nestedContainers() {
+            return containers.keys.map { $0.key() }
+        }
+        return []
     }
 
     func contains(_ key: Key) -> Bool {
-        return self.nestedContainers.keys.contains(anyCodingKeyForKey(key))
+        if let containers = try? self.nestedContainers() {
+            return containers.keys.contains(anyCodingKeyForKey(key))
+        }
+        return false
     }
 
     func decodeNil(forKey key: Key) throws -> Bool {
-        let container = self.nestedContainers[anyCodingKeyForKey(key)]
+        let container = try self.nestedContainers()[anyCodingKeyForKey(key)]
         switch container {
         case is _CBORDecoder.SingleValueContainer:
             return (container as! _CBORDecoder.SingleValueContainer).decodeNil()
@@ -117,7 +139,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
-        let container = self.nestedContainers[anyCodingKeyForKey(key)]!
+        let container = try self.nestedContainers()[anyCodingKeyForKey(key)]!
         let decoder = CodableCBORDecoder()
         decoder.setOptions(self.options)
         return try decoder.decode(T.self, from: container.data)
@@ -126,7 +148,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
         try checkCanDecodeValue(forKey: key)
 
-        guard let unkeyedContainer = self.nestedContainers[anyCodingKeyForKey(key)] as? _CBORDecoder.UnkeyedContainer else {
+        guard let unkeyedContainer = try self.nestedContainers()[anyCodingKeyForKey(key)] as? _CBORDecoder.UnkeyedContainer else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
 
@@ -136,7 +158,7 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func nestedContainer<NestedKey: CodingKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> {
         try checkCanDecodeValue(forKey: key)
 
-        guard let anyCodingKeyedContainer = self.nestedContainers[anyCodingKeyForKey(key)] as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
+        guard let anyCodingKeyedContainer = try self.nestedContainers()[anyCodingKeyForKey(key)] as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
             throw DecodingError.dataCorruptedError(forKey: key, in: self, debugDescription: "cannot decode nested container for key: \(key)")
         }
         let container = _CBORDecoder.KeyedContainer<NestedKey>(
