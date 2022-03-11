@@ -50,7 +50,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .boolean(let bool): return bool
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Bool.self, context)
         }
     }
 
@@ -63,7 +63,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .utf8String(let str): return str
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(String.self, context)
         }
     }
 
@@ -92,7 +92,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .half(let flt): return Float(flt)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Float.self, context)
         }
     }
 
@@ -106,7 +106,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .negativeInt(let u64): return -1 - Int(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Int.self, context)
         }
     }
 
@@ -120,7 +120,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .negativeInt(let u64): return -1 - Int8(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Int8.self, context)
         }
     }
 
@@ -134,7 +134,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .negativeInt(let u64): return -1 - Int16(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Int16.self, context)
         }
     }
 
@@ -148,7 +148,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .negativeInt(let u64): return -1 - Int32(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Int32.self, context)
         }
     }
 
@@ -162,7 +162,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .negativeInt(let u64): return -1 - Int64(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Int64.self, context)
         }
     }
 
@@ -175,7 +175,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .unsignedInt(let u64): return UInt(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(UInt.self, context)
         }
     }
 
@@ -188,7 +188,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .unsignedInt(let u64): return UInt8(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(UInt8.self, context)
         }
     }
 
@@ -201,7 +201,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .unsignedInt(let u64): return UInt16(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(UInt16.self, context)
         }
     }
 
@@ -214,7 +214,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .unsignedInt(let u64): return UInt32(u64)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(UInt32.self, context)
         }
     }
 
@@ -227,7 +227,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .unsignedInt(let u64): return u64
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(UInt64.self, context)
         }
     }
 
@@ -240,7 +240,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .byteString(let bytes): return Data(bytes)
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
-            throw DecodingError.typeMismatch(Double.self, context)
+            throw DecodingError.typeMismatch(Data.self, context)
         }
     }
 
