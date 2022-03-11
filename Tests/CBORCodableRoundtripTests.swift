@@ -339,6 +339,22 @@ class CBORCodableRoundtripTests: XCTestCase {
         }
     }
 
+    func testAnyRecursive() {
+        let anyRecursive: AnyRecursive = .object([
+            "intValue": .number(10),
+            "floatValue": .number(130.1),
+            "stringValue": .string("name 1"),
+            "boolValue": .bool(true),
+            "nilValue": .null,
+            "arrayValue": .array([.number(1000), .number(2000), .number(3000)]),
+            "objectValue": .object(["intValue": .number(5100)])
+        ])
+
+        let encoded = try! CodableCBOREncoder().encode(anyRecursive)
+        let decoded = try! CodableCBORDecoder().decode(AnyRecursive.self, from: encoded)
+        XCTAssertEqual(anyRecursive, decoded)
+    }
+
     func testFoundationHeavyType() {
         struct FoundationLaden: Codable, Equatable {
             let date: Date
@@ -462,4 +478,59 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(decoded, macOSOnlyObj)
     }
 #endif
+}
+
+enum AnyRecursive: Equatable {
+    case string(String)
+    case number(Float)
+    case object([String: AnyRecursive])
+    case array([AnyRecursive])
+    case bool(Bool)
+    case null
+}
+
+extension AnyRecursive: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+
+        if let object = try? container.decode([String: AnyRecursive].self) {
+            self = .object(object)
+        } else if let array = try? container.decode([AnyRecursive].self) {
+            self = .array(array)
+        } else if let string = try? container.decode(String.self) {
+            self = .string(string)
+        } else if let bool = try? container.decode(Bool.self) {
+            self = .bool(bool)
+        } else if let number = try? container.decode(Float.self) {
+            self = .number(number)
+        } else if container.decodeNil() {
+            self = .null
+        } else {
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Invalid \(String(describing: AnyRecursive.self)) value."
+                )
+            )
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+
+        switch self {
+        case let .array(array):
+            try container.encode(array)
+        case let .object(object):
+            try container.encode(object)
+        case let .string(string):
+            try container.encode(string)
+        case let .number(number):
+            try container.encode(number)
+        case let .bool(bool):
+            try container.encode(bool)
+        case .null:
+            try container.encodeNil()
+        }
+    }
 }

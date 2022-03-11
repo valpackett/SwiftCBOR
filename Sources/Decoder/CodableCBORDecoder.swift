@@ -76,25 +76,71 @@ final class _CBORDecoder {
 }
 
 extension _CBORDecoder: Decoder {
-    func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedDecodingContainer<Key> {
+    func container<Key: CodingKey>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
+        try ensureMap(self.data.first, keyType: Key.self)
+
         let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return KeyedDecodingContainer(container)
     }
 
-    func unkeyedContainer() -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+        try ensureArray(self.data.first)
+
         let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return container
     }
 
-    func singleValueContainer() -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> SingleValueDecodingContainer {
         let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
         self.container = container
 
         return container
+    }
+
+    func ensureMap<Key: CodingKey>(_ initialByte: UInt8?, keyType: Key.Type) throws {
+        switch initialByte {
+        case .some(0xa0...0xbf):
+            // all good, continue
+            return
+        case nil:
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Unexpected end of data"
+            )
+            throw DecodingError.dataCorrupted(context)
+        default:
+            let typeDescriptionOfByte = typeDescriptionFromByte(initialByte!) ?? "unknown"
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Expected map but found \(typeDescriptionOfByte)"
+            )
+            throw DecodingError.typeMismatch(keyType, context)
+        }
+    }
+
+    func ensureArray(_ initialByte: UInt8?) throws {
+        switch initialByte {
+        case .some(0x80...0x9f):
+            // all good, continue
+            return
+        case nil:
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Unexpected end of data"
+            )
+            throw DecodingError.dataCorrupted(context)
+        default:
+            let typeDescriptionOfByte = typeDescriptionFromByte(initialByte!) ?? "unknown"
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Expected array but found \(typeDescriptionOfByte)"
+            )
+            throw DecodingError.typeMismatch(Array<Any?>.self, context)
+        }
     }
 }
 
@@ -141,5 +187,23 @@ extension CBORDecodingContainer {
         let stride = MemoryLayout<T>.stride
         let bytes = [UInt8](try read(stride))
         return T(bytes: bytes)
+    }
+}
+
+func typeDescriptionFromByte(_ byte: UInt8) -> String? {
+    switch byte {
+    case 0x00...0x1b, 0x20...0x3b: return "integer"
+    case 0x40...0x5b, 0x5f: return "byte string"
+    case 0x60...0x7b, 0x7f: return "string"
+    case 0x80...0x9f: return "array"
+    case 0xa0...0xbf: return "map"
+    case 0xc0: return "text-based date/time"
+    case 0xc1: return "epoch-based date/time"
+    case 0xc2...0xdb: return "unspecified tagged value"
+    case 0xf4, 0xf5: return "boolean"
+    case 0xf6: return "null"
+    case 0xf8...0xfb: return "float"
+    default:
+        return nil
     }
 }

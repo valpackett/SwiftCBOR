@@ -102,7 +102,7 @@ extension _CBORDecoder {
 }
 
 extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
-   
+
     func decodeNil() throws -> Bool {
         if self.isEmpty {
             return false
@@ -195,7 +195,7 @@ extension _CBORDecoder.UnkeyedContainer {
         // Maps
         case 0xa0...0xbf:
             let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
-            _ = container.nestedContainers // FIXME
+            let _ = try container.nestedContainers() // FIXME
 
             self.index = container.index
             return container
