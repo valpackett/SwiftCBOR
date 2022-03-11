@@ -137,4 +137,35 @@ class CBORDecoderTests: XCTestCase {
         let decoded = try! CBOR.decode(data)
         XCTAssertEqual(decoded, expectedMap)
     }
+
+    func testDecodeFromIssue78() {
+        struct CborFiles: Codable {
+            let files: [File]
+            let status: Int
+        }
+
+        struct File: Codable {
+            let name: String
+            let time, id, size, checksum: Int
+        }
+
+        let withDefiniteArrayHex = "bf6566696c657381a5626964016474696d651a001b7d4868636865636b73756d1a0ad227576473697a6505646e616d656d2f6c66732f68722f31312e68726673746174757301ff"
+        let _ = try! CodableCBORDecoder().decode(CborFiles.self, from: withDefiniteArrayHex.hexaData)
+
+        let withIndefiniteArrayHex = "bf6566696c65739fa5626964016474696d651a001b7d4868636865636b73756d1a0ad227576473697a6505646e616d656d2f6c66732f68722f31312e6872ff6673746174757301ff"
+        let _ = try! CodableCBORDecoder().decode(CborFiles.self, from: withIndefiniteArrayHex.hexaData)
+    }
+
+    func testDecodeOfStructContainingNestedIndefiniteMapsAndArrays() {
+        struct NestedIndefinite: Codable, Equatable {
+            let nested: [String: [String: [[String: [[[String: [[String: Int]]]? ]]]]]]
+        }
+
+        let hex = "bf666e6573746564bf6161bf61629fbf61639f9fbf61649fbf6165187bffffffff9fff9ff6ffffffffffffff"
+
+        let decoded = try! CodableCBORDecoder().decode(NestedIndefinite.self, from: hex.hexaData)
+        let expected = NestedIndefinite(nested: ["a": ["b": [["c": [[["d": [["e": 123 ]] ]], [], [nil]]]]]])
+
+        XCTAssertEqual(decoded, expected)
+    }
 }

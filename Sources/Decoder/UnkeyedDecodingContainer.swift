@@ -191,6 +191,13 @@ extension _CBORDecoder.UnkeyedContainer {
             _ = container.nestedContainers
 
             self.index = container.index
+            // Ensure that we're moving the index along for indefinite arrays so
+            // that we don't try and decode the break byte (0xff)
+            if format == 0x9f {
+                if self.data.suffix(from: self.index).count > 0 {
+                    self.index = self.index.advanced(by: 1)
+                }
+            }
             return container
         // Maps
         case 0xa0...0xbf:
@@ -198,6 +205,13 @@ extension _CBORDecoder.UnkeyedContainer {
             let _ = try container.nestedContainers() // FIXME
 
             self.index = container.index
+            // Ensure that we're moving the index along for indefinite arrays so
+            // that we don't try and decode the break byte (0xff)
+            if format == 0xbf {
+                if self.data.suffix(from: self.index).count > 0 {
+                    self.index = self.index.advanced(by: 1)
+                }
+            }
             return container
         case 0xc0:
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling text-based date/time is not supported yet")
