@@ -6,7 +6,7 @@ Pod::Spec.new do |s|
   s.homepage = 'https://github.com/myfreeweb/SwiftCBOR'
   s.authors = {
     'Greg' => 'greg@unrelenting.technology',
-    'Ham' => 'hamchapman@gmail.comn'
+    'Ham' => 'hamchapman@gmail.com'
   }
   s.source = { git: 'https://github.com/myfreeweb/SwiftCBOR.git', tag: "v#{s.version}" }
   s.swift_version = '5.0'
