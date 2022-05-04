@@ -1,4 +1,3 @@
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
 
 # SwiftCBOR
@@ -19,10 +18,11 @@ A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder
 
 ## Installation
 
-There are many ways: Swift Package Manager, Carthage, CocoaPods, git submodule...
+There are many ways: Swift Package Manager, CocoaPods, git submodule...
 
 The CocoaPod is [submitted by contributors](https://github.com/myfreeweb/SwiftCBOR/issues/7), updates can be delayed there.
-Carthage is the recommended dependency manager for Cocoa projects.
+
+Swift Package Manager is the recommended dependency manager.
 
 ## Decoding
 
@@ -58,15 +58,15 @@ The `CBOR` enum can be [expressed with literals](https://developer.apple.com/doc
 
 ```swift
 public protocol CBOREncodable {
-    func encode() -> [UInt8]
+    func encode(options: CBOROptions) -> [UInt8]
 }
 
 struct MyStruct: CBOREncodable {
     var x: Int
     var y: String
 
-    public func encode() -> [UInt8] {
-        let cborWrapper : CBOR = [
+    public func encode(options: CBOROptions = CBOROption()) -> [UInt8] {
+        let cborWrapper: CBOR = [
             "x": CBOR(integerLiteral: self.x), // You can use the literal constructors
             "y": CBOR.utf8String(self.y), // Or the enum variants
             "z": 123 // Or literals
@@ -136,14 +136,6 @@ func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B]) -> [UInt8
 ### Note on endian reversal
 
 Finally, a technical note on encoding byte string when using the general purpose array encoder, `CBOR.encode(..)`. If the function parameter `asByteString` is true, then arrays of ALL types EXCEPT UInt8 will be have the raw bytes of each item reversed (but not the order of the items together) if the computer is little endian (CBOR uses big endian or network byte order). Arrays of UInt8, are considered to be already in network byte order.
-
-## Building
-
-To ensure that you get the correct configuration for the project when generating a new Xcode project you must run:
-
-```
-swift package generate-xcodeproj --xcconfig-overrides Package.xcconfig
-```
 
 ## Contributing
 
