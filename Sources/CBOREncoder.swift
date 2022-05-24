@@ -297,6 +297,14 @@ extension CBOR {
         switch any {
         case is Int:
             return (any as! Int).encode()
+        case is Int8:
+            return (any as! Int8).encode()
+        case is Int16:
+            return (any as! Int16).encode()
+        case is Int32:
+            return (any as! Int32).encode()
+        case is Int64:
+            return (any as! Int64).encode()
         case is UInt:
             return (any as! UInt).encode()
         case is UInt8:
@@ -353,6 +361,84 @@ extension CBOR {
                 return try [UInt8](encoder.encode(encodable))
             }
             throw CBOREncoderError.invalidType
+        }
+    }
+
+    internal static func cborFromAny(_ any: Any?, options: CBOROptions = CBOROptions()) throws -> CBOR {
+        switch any {
+        case is Int:
+            return cborFromInt64(Int64(any as! Int))
+        case is Int8:
+            return cborFromInt64(Int64(any as! Int8))
+        case is Int16:
+            return cborFromInt64(Int64(any as! Int16))
+        case is Int32:
+            return cborFromInt64(Int64(any as! Int32))
+        case is Int64:
+            return cborFromInt64(any as! Int64)
+        case is UInt:
+            return CBOR.unsignedInt(UInt64(any as! UInt))
+        case is UInt8:
+            return CBOR.unsignedInt(UInt64(any as! UInt8))
+        case is UInt16:
+            return CBOR.unsignedInt(UInt64(any as! UInt16))
+        case is UInt32:
+            return CBOR.unsignedInt(UInt64(any as! UInt32))
+        case is UInt64:
+            return CBOR.unsignedInt(any as! UInt64)
+        case is String:
+            return CBOR.utf8String(any as! String)
+        case is Float:
+            return CBOR.float(any as! Float)
+        case is Double:
+            return CBOR.double(any as! Double)
+        case is Bool:
+            return CBOR.boolean(any as! Bool)
+        case is [UInt8]:
+            return CBOR.byteString(any as! [UInt8])
+        #if canImport(Foundation)
+        case is Data:
+            return CBOR.byteString((any as! Data).map { $0 })
+        case is Date:
+            return CBOR.date(any as! Date)
+        case is NSNull:
+            return CBOR.null
+        #endif
+        case is [Any?]:
+            let anyArr = any as! [Any?]
+            return try CBOR.array(anyArr.map { try cborFromAny($0) })
+        case is [String: Any?]:
+            let anyMap = any as! [String: Any?]
+            return try CBOR.map(Dictionary(
+                uniqueKeysWithValues: anyMap.map { try (cborFromAny($0.key), cborFromAny($0.value)) }
+            ))
+        case is Void:
+            return CBOR.undefined
+        case nil:
+            return CBOR.null
+        default:
+            if let encodable = any as? CBOREncodable {
+                return encodable.toCBOR(options: options)
+            } else if let encodable = any as? Codable {
+                // This is very much a slow path - we fully encode and then
+                // decode the value to get it as a `CBOR`
+                let encoder = CodableCBOREncoder()
+                encoder.setOptions(options.toCodableEncoderOptions())
+                let encoded = try [UInt8](encoder.encode(encodable))
+                guard let decoded = try CBOR.decode(encoded) else {
+                    throw CBOREncoderError.invalidType
+                }
+                return decoded
+            }
+            throw CBOREncoderError.invalidType
+        }
+    }
+
+    private static func cborFromInt64(_ i: Int64) -> CBOR {
+        if i < 0 {
+            return CBOR.negativeInt(~UInt64(bitPattern: i))
+        } else {
+            return CBOR.unsignedInt(UInt64(i))
         }
     }
 
