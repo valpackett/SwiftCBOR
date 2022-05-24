@@ -250,6 +250,10 @@ class CBOREncoderTests: XCTestCase {
                 ]
                 return cborWrapper.encode(options: options)
             }
+
+            public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+                return CBOR(dictionaryLiteral:("x", CBOR(integerLiteral: self.x)), ("y", .utf8String(self.y)))
+            }
         }
 
         let encoded = MyStruct(x: 42, y: "words").encode()
