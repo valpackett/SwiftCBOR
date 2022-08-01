@@ -323,8 +323,6 @@ extension CBOR {
             return (any as! Double).encode()
         case is Bool:
             return (any as! Bool).encode()
-        case is [UInt8]:
-            return CBOR.encodeByteString(any as! [UInt8], options: options)
         #if canImport(Foundation)
         case is Data:
             return CBOR.encodeByteString((any as! Data).map { $0 }, options: options)
@@ -394,8 +392,6 @@ extension CBOR {
             return CBOR.double(any as! Double)
         case is Bool:
             return CBOR.boolean(any as! Bool)
-        case is [UInt8]:
-            return CBOR.byteString(any as! [UInt8])
         #if canImport(Foundation)
         case is Data:
             return CBOR.byteString((any as! Data).map { $0 })
