@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.summary = 'A CBOR implementation for Swift'
   s.homepage = 'https://github.com/unrelentingtech/SwiftCBOR'
   s.authors = {
-    'unrelentingtech' => 'hello@unrelenting.technology',
+    'Val' => 'val@packett.cool',
     'Ham' => 'hamchapman@gmail.com'
   }
   s.source = { git: 'https://github.com/unrelentingtech/SwiftCBOR.git', tag: "v#{s.version}" }
