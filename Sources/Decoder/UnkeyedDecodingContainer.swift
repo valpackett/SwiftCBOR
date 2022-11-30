@@ -109,11 +109,17 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         }
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
-
-        let container = self.nestedContainers[self.currentIndex] as! _CBORDecoder.SingleValueContainer
-        let value = container.decodeNil()
-
-        return value
+        
+        switch self.nestedContainers[self.currentIndex] {
+        case let singleValueContainer as _CBORDecoder.SingleValueContainer:
+            return singleValueContainer.decodeNil()
+        case is _CBORDecoder.UnkeyedContainer,
+            is _CBORDecoder.KeyedContainer<AnyCodingKey>:
+            return false
+        default:
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "cannot decode nil for index: \(self.currentIndex)")
+            throw DecodingError.typeMismatch(Any?.self, context)
+        }
     }
 
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
