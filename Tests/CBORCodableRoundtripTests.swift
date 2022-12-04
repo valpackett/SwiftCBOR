@@ -355,6 +355,25 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(anyRecursive, decoded)
     }
 
+    func testOptionalArray() {
+        struct StructWithOptionalArray: Codable, Equatable {
+            var array: [InnerStruct]?
+        }
+
+        struct InnerStruct: Codable, Equatable {
+            var parameter: String
+        }
+
+        let test1 = StructWithOptionalArray(array: [InnerStruct(parameter: "present")])
+        let test2 = StructWithOptionalArray(array: nil)
+
+        for testVal in [test1, test2] {
+            let encoded = try! CodableCBOREncoder().encode(testVal)
+            let decoded = try! CodableCBORDecoder().decode(StructWithOptionalArray.self, from: encoded)
+            XCTAssertEqual(testVal, decoded)
+        }
+    }
+
     func testFoundationHeavyType() {
         struct FoundationLaden: Codable, Equatable {
             let date: Date
