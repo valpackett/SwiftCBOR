@@ -1,6 +1,7 @@
 #if canImport(Foundation)
 import Foundation
 #endif
+import OrderedCollections
 
 public indirect enum CBOR : Equatable, Hashable,
         ExpressibleByNilLiteral, ExpressibleByIntegerLiteral, ExpressibleByStringLiteral,
@@ -12,7 +13,7 @@ public indirect enum CBOR : Equatable, Hashable,
     case byteString([UInt8])
     case utf8String(String)
     case array([CBOR])
-    case map([CBOR : CBOR])
+    case map(OrderedDictionary<CBOR,CBOR>)  
     case tagged(Tag, CBOR)
     case simple(UInt8)
     case boolean(Bool)
@@ -84,7 +85,7 @@ public indirect enum CBOR : Equatable, Hashable,
     public init(stringLiteral value: String) { self = .utf8String(value) }
     public init(arrayLiteral elements: CBOR...) { self = .array(elements) }
     public init(dictionaryLiteral elements: (CBOR, CBOR)...) {
-        var result = [CBOR : CBOR]()
+        var result = OrderedDictionary<CBOR,CBOR>() 
         for (key, value) in elements {
             result[key] = value
         }

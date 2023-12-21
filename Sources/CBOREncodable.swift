@@ -1,6 +1,7 @@
 #if canImport(Foundation)
 import Foundation
 #endif
+import OrderedCollections
 
 public protocol CBOREncodable {
     /// Optional function that can potentially serve as an opportunity to optimize encoding.
@@ -25,7 +26,7 @@ extension CBOR: CBOREncodable {
         case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
         case let .utf8String(str): return str.encode(options: options)
         case let .array(a): return CBOR.encodeArray(a, options: options)
-        case let .map(m): return CBOR.encodeMap(m, options: options)
+        case let .map(m): return CBOR.encodeCBORMap(m, options: options)
         #if canImport(Foundation)
         case let .date(d): return CBOR.encodeDate(d, options: options)
         #endif
@@ -210,7 +211,7 @@ extension Dictionary where Key: CBOREncodable, Value: CBOREncodable {
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
-        return CBOR.map(Dictionary<CBOR, CBOR>(uniqueKeysWithValues: self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) }))
+        return CBOR.map(OrderedDictionary<CBOR, CBOR>(uniqueKeysWithValues: self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) }))
     }
 }
 
