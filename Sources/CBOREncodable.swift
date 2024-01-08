@@ -215,6 +215,17 @@ extension Dictionary where Key: CBOREncodable, Value: CBOREncodable {
     }
 }
 
+
+extension OrderedDictionary where Key: CBOREncodable, Value: CBOREncodable {
+		public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
+				return CBOR.encodeCBORMap(OrderedDictionary<CBOR, CBOR>(uniqueKeysWithValues: self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) }), options: options)
+		}
+
+		public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
+			return CBOR.map(OrderedDictionary<CBOR, CBOR>(uniqueKeysWithValues: self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) })) 
+		}
+}
+
 extension Optional where Wrapped: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
         switch self {
