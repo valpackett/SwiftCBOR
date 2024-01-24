@@ -13,6 +13,7 @@ class CBOREncoderTests: XCTestCase {
             XCTAssertEqual((-i).encode().count, 1)
         }
         XCTAssertEqual(Int(-1).encode(), [0x20])
+        XCTAssertEqual(UInt(1).encode(), [0x1])
         XCTAssertEqual(CBOR.encode(-10), [0x29])
         XCTAssertEqual(Int(-24).encode(), [0x37])
         XCTAssertEqual(Int(-25).encode(), [0x38, 24])
