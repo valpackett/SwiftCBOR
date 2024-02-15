@@ -168,4 +168,37 @@ class CBORDecoderTests: XCTestCase {
 
         XCTAssertEqual(decoded, expected)
     }
+    
+    func testDecodeFailsForExtremelyDeepStructures() {
+        let justOverTags: [UInt8] = Array(repeating: 202, count: 1025) + [0]
+        XCTAssertThrowsError(try CBOR.decode(justOverTags, options: CBOROptions(maximumDepth: 1024))) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.maximumDepthExceeded)
+        }
+        let endlessTags: [UInt8] = Array(repeating: 202, count: 10000) + [0]
+        XCTAssertThrowsError(try CBOR.decode(endlessTags, options: CBOROptions(maximumDepth: 1024))) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.maximumDepthExceeded)
+        }
+    }
+    
+    func testDecodeFailsForSillyMaximumDepths() {
+        let singleItem: [UInt8] = [0]
+        XCTAssertThrowsError(try CBOR.decode(singleItem, options: CBOROptions(maximumDepth: -1))) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.maximumDepthExceeded)
+        }
+    }
+    
+    func testDecodeSucceedsForAllowedDeepStructures() {
+        let singleItem: [UInt8] = [0]
+        XCTAssertNoThrow(try CBOR.decode(singleItem, options: CBOROptions(maximumDepth: 0)))
+        let endlessTags: [UInt8] = Array(repeating: 202, count: 1024) + [0]
+        XCTAssertNoThrow(try CBOR.decode(endlessTags, options: CBOROptions(maximumDepth: 1024)))
+    }
+    
+    func testRandomInputDoesNotHitStackLimits() {
+        for _ in 1...50 {
+            let length = Int.random(in: 1...1_000_000)
+            let randomData: [UInt8] = Array(repeating: UInt8.random(in: 0...255), count: length)
+            _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 1024))
+        }
+    }
 }

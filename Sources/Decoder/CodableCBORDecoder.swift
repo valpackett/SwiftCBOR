@@ -7,14 +7,24 @@ final public class CodableCBORDecoder {
     struct _Options {
         let useStringKeys: Bool
         let dateStrategy: DateStrategy
+        let maximumDepth: Int
 
-        init(useStringKeys: Bool = false, dateStrategy: DateStrategy = .taggedAsEpochTimestamp) {
+        init(
+            useStringKeys: Bool = false,
+            dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
+            maximumDepth: Int = .max
+        ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
+            self.maximumDepth = maximumDepth
         }
 
         func toCBOROptions() -> CBOROptions {
-            return CBOROptions(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
+            return CBOROptions(
+                useStringKeys: self.useStringKeys,
+                dateStrategy: self.dateStrategy,
+                maximumDepth: self.maximumDepth
+            )
         }
     }
 
