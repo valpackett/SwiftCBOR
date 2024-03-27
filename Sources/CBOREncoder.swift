@@ -1,6 +1,7 @@
 #if canImport(Foundation)
 import Foundation
 #endif
+import OrderedCollections
 
 let isBigEndian = Int(bigEndian: 42) == 42
 
@@ -153,6 +154,14 @@ extension CBOR {
         try CBOR.encodeMap(map, into: &res, options: options)
         return res
     }
+	
+	public static func encodeCBORMap(_ map: OrderedDictionary<CBOR, CBOR>, options: CBOROptions = CBOROptions()) -> [UInt8] {
+		var res: [UInt8] = []
+		res = map.count.encode(options: options)
+		res[0] = res[0] | 0b101_00000
+		CBOR.encodeCBORMap(map, into: &res, options: options)
+		return res
+	}
 
     // MARK: - major 6: tagged values
 
@@ -271,7 +280,7 @@ extension CBOR {
                 dateCBOR = CBOR.unsignedInt(UInt64(seconds))
             }
 
-            let map: [String: CBOREncodable] = [
+            let map: Dictionary<String, Any?> = [
                 AnnotatedMapDateStrategy.typeKey: AnnotatedMapDateStrategy.typeValue,
                 AnnotatedMapDateStrategy.valueKey: dateCBOR
             ]
@@ -405,7 +414,7 @@ extension CBOR {
             return try CBOR.array(anyArr.map { try cborFromAny($0) })
         case is [String: Any?]:
             let anyMap = any as! [String: Any?]
-            return try CBOR.map(Dictionary(
+            return try CBOR.map(OrderedDictionary(
                 uniqueKeysWithValues: anyMap.map { try (cborFromAny($0.key), cborFromAny($0.value)) }
             ))
         case is Void:
@@ -454,6 +463,17 @@ extension CBOR {
             res.append(contentsOf: encodedVal)
         }
     }
+	
+	private static func encodeCBORMap(_ map: OrderedDictionary<CBOR, CBOR>, into res: inout [UInt8], options: CBOROptions = CBOROptions()) {
+			let sortedKeysWithEncodedKeys = map.keys
+
+			sortedKeysWithEncodedKeys.forEach { keyTuple in
+				let encodedKey = keyTuple.encode(options: options)
+					res.append(contentsOf: encodedKey)
+				let encodedVal = map[keyTuple]!.encode(options: options)
+					res.append(contentsOf: encodedVal)
+			}
+	}
 }
 
 public enum CBOREncoderError: Error {
