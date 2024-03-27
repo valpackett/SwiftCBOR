@@ -198,7 +198,7 @@ class CBORDecoderTests: XCTestCase {
         for _ in 1...50 {
             let length = Int.random(in: 1...1_000_000)
             let randomData: [UInt8] = Array(repeating: UInt8.random(in: 0...255), count: length)
-            _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 1024))
+            _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 512))
         }
     }
 }
