@@ -1,4 +1,5 @@
 import XCTest
+import OrderedCollections
 @testable import SwiftCBOR
 
 class CBORTests: XCTestCase {
@@ -50,7 +51,7 @@ class CBORTests: XCTestCase {
         let cborEncoded: [UInt8] = try! CBOR.encodeMap(dictionary)
         var cbor = try! CBOR.decode(cborEncoded)!
 
-        let nestedMap: [CBOR: CBOR] = [
+        let nestedMap: OrderedDictionary<CBOR, CBOR> = [
             "joe": "schmoe",
             "age": 56
         ]
