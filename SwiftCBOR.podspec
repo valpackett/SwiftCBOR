@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'SwiftCBOR'
-  s.version = '0.4.7'
+  s.version = '0.5.0'
   s.license = { type: 'public domain', file: 'UNLICENSE' }
   s.summary = 'A CBOR implementation for Swift'
   s.homepage = 'https://github.com/unrelentingtech/SwiftCBOR'
