@@ -136,9 +136,26 @@ extension CBOR {
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
         res = map.count.encode(options: options)
         res[0] = res[0] | 0b101_00000
-        for (k, v) in map {
-            res.append(contentsOf: k.encode(options: options))
-            res.append(contentsOf: v.encode(options: options))
+        
+        if options.shouldSortMapKeys {
+            let sortedKeysWithEncodedKeys = map.keys.map {
+                (encoded: $0.encode(options: options), key: $0)
+            }.sorted(by: {
+                $0.encoded.lexicographicallyPrecedes($1.encoded)
+            })
+
+            sortedKeysWithEncodedKeys.forEach { keyTuple in
+                res.append(contentsOf: keyTuple.encoded)
+                guard let value = map[keyTuple.key] else {
+                    return
+                }
+                res.append(contentsOf: value.encode(options: options))
+            }
+        } else {
+            for (k, v) in map {
+                res.append(contentsOf: k.encode(options: options))
+                res.append(contentsOf: v.encode(options: options))
+            }
         }
         return res
     }
@@ -442,16 +459,24 @@ extension CBOR {
         if options.forbidNonStringMapKeys {
             try ensureStringKey(A.self)
         }
-        let sortedKeysWithEncodedKeys = map.keys.map {
-            (encoded: $0.encode(options: options), key: $0)
-        }.sorted(by: {
-            $0.encoded.lexicographicallyPrecedes($1.encoded)
-        })
+        if options.shouldSortMapKeys {
+            let sortedKeysWithEncodedKeys = map.keys.map {
+                (encoded: $0.encode(options: options), key: $0)
+            }.sorted(by: {
+                $0.encoded.lexicographicallyPrecedes($1.encoded)
+            })
 
-        try sortedKeysWithEncodedKeys.forEach { keyTuple in
-            res.append(contentsOf: keyTuple.encoded)
-            let encodedVal = try encodeAny(map[keyTuple.key]!, options: options)
-            res.append(contentsOf: encodedVal)
+            try sortedKeysWithEncodedKeys.forEach { keyTuple in
+                res.append(contentsOf: keyTuple.encoded)
+                let encodedVal = try encodeAny(map[keyTuple.key]!, options: options)
+                res.append(contentsOf: encodedVal)
+            }
+        } else {
+            for (k, v) in map {
+                res.append(contentsOf: k.encode(options: options))
+                let encodedVal = try encodeAny(v, options: options)
+                res.append(contentsOf: encodedVal)
+            }
         }
     }
 }
