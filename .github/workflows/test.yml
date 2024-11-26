@@ -20,7 +20,7 @@ jobs:
       run: swift test
 
   macos:
-    name: macOS & iOS (Xcode)
+    name: macOS, iOS, tvOS (Xcode)
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
@@ -28,3 +28,5 @@ jobs:
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=OS X,arch=x86_64'
     - name: Test iOS
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+    - name: Test tvOS
+      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=tvOS Simulator,name=Any tvOS Simulator Device'
