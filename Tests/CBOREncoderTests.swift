@@ -102,7 +102,7 @@ class CBOREncoderTests: XCTestCase {
             "a": 1,
             "b": [2, 3]
         ]
-        let encodedMapToAny = try! CBOR.encodeMap(mapToAny)
+        let encodedMapToAny = try! CBOR.encodeMap(mapToAny, options: .init(shouldShortMapKeys: true))
         XCTAssertEqual(encodedMapToAny, [0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03])
 
         let mapToAnyWithIntKeys: [Int: Any] = [
@@ -112,6 +112,19 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertThrowsError(try CBOR.encodeMap(mapToAnyWithIntKeys, options: CBOROptions(forbidNonStringMapKeys: true))) { err in
             XCTAssertEqual(err as! CBOREncoderError, CBOREncoderError.nonStringKeyInMap)
         }
+    }
+    
+    func testEncodeSortedMaps() {
+        XCTAssertEqual(CBOR.encode(Dictionary<Int, Int>()), [0xa0])
+
+        let encoded = CBOR.encode([3: 4, 1: 2])
+        XCTAssert(encoded == [0xa2, 0x01, 0x02, 0x03, 0x04])
+
+        let arr1: CBOR = [1]
+        let arr2: CBOR = [2,3]
+        let nestedEnc: [UInt8] = CBOR.encode(["b": arr2, "a": arr1])
+        let encodedAFirst: [UInt8] = [0xa2, 0x61, 0x61, 0x81, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03]
+        XCTAssert(nestedEnc == encodedAFirst)
     }
 
     func testEncodeTagged() {
