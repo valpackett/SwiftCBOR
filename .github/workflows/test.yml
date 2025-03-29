@@ -16,9 +16,15 @@ jobs:
       image: swift:latest
     steps:
     - uses: actions/checkout@v1
-    - name: Linux Tests
+    - name: Test Linux
       run: swift test
-    - name: Android Tests
+
+  android:
+    name: Android
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - name: Test Android
       uses: skiptools/swift-android-action@v2
 
   macos:
