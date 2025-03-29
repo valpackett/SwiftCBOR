@@ -16,8 +16,10 @@ jobs:
       image: swift:latest
     steps:
     - uses: actions/checkout@v1
-    - name: Test
+    - name: Linux Tests
       run: swift test
+    - name: Android Tests
+      uses: skiptools/swift-android-action@v2
 
   macos:
     name: macOS, iOS, tvOS, Mac Catalyst (Xcode)
