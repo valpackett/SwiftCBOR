@@ -174,6 +174,6 @@ extension CBOR.Tag {
     public static let selfDescribeCBOR = CBOR.Tag(rawValue: 55799)
 }
 
-#if os(Linux) || os(Windows)
+#if os(Linux) || os(Windows) || os(Android)
 let NSEC_PER_SEC: UInt64 = 1_000_000_000
 #endif
