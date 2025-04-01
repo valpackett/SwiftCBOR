@@ -28,7 +28,7 @@ jobs:
       uses: skiptools/swift-android-action@v2
 
   macos:
-    name: macOS, iOS, tvOS, Mac Catalyst (Xcode)
+    name: macOS, iOS, tvOS, Mac Catalyst (Xcode), watchOS
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
@@ -40,3 +40,5 @@ jobs:
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=tvOS Simulator,name=Any tvOS Simulator Device'
     - name: Test Mac Catalyst
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=macOS,variant=Mac Catalyst'
+    - name: Test watchOS
+      run: xcodebuild test -scheme SwiftCBOR -destination 'platform-watchOS Simulator,name=Any watchOS Simulator Device'
