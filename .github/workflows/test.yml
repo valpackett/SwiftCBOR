@@ -41,4 +41,4 @@ jobs:
     - name: Test Mac Catalyst
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=macOS,variant=Mac Catalyst'
     - name: Test watchOS
-      run: xcodebuild test -scheme SwiftCBOR -destination 'platform-watchOS Simulator,name=Any watchOS Simulator Device'
+      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=watchOS Simulator,name=Any watchOS Simulator Device'
