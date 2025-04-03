@@ -39,7 +39,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             options: self.options
         )
         let codingKey = anyCodingKeyForKey(key)
-        self.storage.filter { $0.0 != codingKey }
+        self.storage = self.storage.filter { $0.0 != codingKey }
         self.storage.append( (codingKey, container) )
         return container
     }
@@ -51,7 +51,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             options: self.options
         )
         let codingKey = anyCodingKeyForKey(key)
-        self.storage.filter { $0.0 != codingKey }
+        self.storage = self.storage.filter { $0.0 != codingKey }
         self.storage.append( (codingKey, container) )
         return container
     }
@@ -63,7 +63,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             options: self.options
         )
         let codingKey = anyCodingKeyForKey(key)
-        self.storage.filter { $0.0 != codingKey }
+        self.storage = self.storage.filter { $0.0 != codingKey }
         self.storage.append( (codingKey, container) )
         return KeyedEncodingContainer(container)
     }
