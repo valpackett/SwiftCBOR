@@ -60,8 +60,15 @@ public class CBORDecoder {
             throw CBORError.tooLongSequence
         }
 
+        /// Application-safe limit here
+        let MAX_REASONABLE_LENGTH = 200_000
+        guard n <= MAX_REASONABLE_LENGTH else {
+            throw CBORError.tooLongSequence
+        }
+
         return Int(n)
     }
+
 
     private func readN(_ n: Int) throws -> [CBOR] {
         return try (0..<n).map { _ in
@@ -197,7 +204,7 @@ public class CBORDecoder {
             return CBOR.double(try readBinaryNumber(Float64.self))
 
         case 0xff: return CBOR.break
-        default: return nil
+        default: throw CBORError.unfinishedSequence
         }
     }
 }
