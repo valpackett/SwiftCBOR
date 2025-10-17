@@ -65,7 +65,7 @@ public class CBORDecoder {
 
     private func readN(_ n: Int) throws -> [CBOR] {
         var result: [CBOR] = []
-        for i in 0..<n {
+        for _ in 0..<n {
             guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
             result.append(item)
         }
