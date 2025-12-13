@@ -113,7 +113,7 @@ class CBOREncoderTests: XCTestCase {
             XCTAssertEqual(err as! CBOREncoderError, CBOREncoderError.nonStringKeyInMap)
         }
     }
-    
+
     func testEncodeSortedMaps() {
         XCTAssertEqual(CBOR.encode(Dictionary<Int, Int>()), [0xa0])
 
@@ -124,7 +124,58 @@ class CBOREncoderTests: XCTestCase {
         let arr2: CBOR = [2,3]
         let nestedEnc: [UInt8] = CBOR.encode(["b": arr2, "a": arr1])
         let encodedAFirst: [UInt8] = [0xa2, 0x61, 0x61, 0x81, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03]
-        XCTAssert(nestedEnc == encodedAFirst)
+        XCTAssertEqual(nestedEnc, encodedAFirst)
+
+        // Test comprehensive deterministic encoding with tricky edge cases
+        var keyValuePairs: [(CBOR, CBOR)] = [
+            (CBOR.unsignedInt(1), CBOR.unsignedInt(1)),
+            (CBOR.unsignedInt(10), CBOR.unsignedInt(0)),
+            (CBOR.unsignedInt(100), CBOR.unsignedInt(2)),
+            (CBOR.negativeInt(0), CBOR.unsignedInt(3)),
+            (CBOR.utf8String("a"), CBOR.unsignedInt(4)),
+            (CBOR.utf8String("aa"), CBOR.unsignedInt(5)),
+            (CBOR.utf8String("z"), CBOR.unsignedInt(9)),
+            (CBOR.array([CBOR.unsignedInt(100)]), CBOR.unsignedInt(6)),
+            (CBOR.array([CBOR.negativeInt(0)]), CBOR.unsignedInt(7)),
+            (CBOR.boolean(false), CBOR.unsignedInt(8)),
+        ]
+
+        keyValuePairs.shuffle()
+
+        var mixedMap: [CBOR: CBOR] = [:]
+        for (key, value) in keyValuePairs {
+            mixedMap[key] = value
+        }
+
+        let encodedMixed = mixedMap.encode()
+
+        // Expected canonical order per RFC 8949 Section 4.2.1:
+        // 1. 1 (0x01)
+        // 2. 10 (0x0a)
+        // 3. 100 (0x1864)
+        // 4. -1 (0x20)
+        // 5. "a" (0x6161)
+        // 6. "z" (0x617a)
+        // 7. "aa" (0x626161)
+        // 8. [100] (0x811864)
+        // 9. [-1] (0x8120)
+        // 10. false (0xf4)
+        let expectedCanonical: [UInt8] = [
+            0xaa,                   // map(10)
+            0x01, 0x01,             // 1: 1
+            0x0a, 0x00,             // 10: 0
+            0x18, 0x64, 0x02,       // 100: 2
+            0x20, 0x03,             // -1: 3
+            0x61, 0x61, 0x04,       // "a": 4
+            0x61, 0x7a, 0x09,       // "z": 9
+            0x62, 0x61, 0x61, 0x05, // "aa": 5
+            0x81, 0x18, 0x64, 0x06, // [100]: 6
+            0x81, 0x20, 0x07,       // [-1]: 7
+            0xf4, 0x08              // false: 8
+        ]
+
+        XCTAssertEqual(encodedMixed, expectedCanonical,
+            "Map keys must be sorted in bytewise lexicographic order of their CBOR encodings per RFC 8949")
     }
 
     func testEncodeTagged() {

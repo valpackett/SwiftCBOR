@@ -136,7 +136,7 @@ extension CBOR {
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
         res = map.count.encode(options: options)
         res[0] = res[0] | 0b101_00000
-        
+
         if options.shouldSortMapKeys {
             let sortedKeysWithEncodedKeys = map.keys.map {
                 (encoded: $0.encode(options: options), key: $0)
