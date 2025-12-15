@@ -64,10 +64,12 @@ public class CBORDecoder {
     }
 
     private func readN(_ n: Int) throws -> [CBOR] {
-        return try (0..<n).map { _ in
-            guard let r = try decodeItem() else { throw CBORError.unfinishedSequence }
-            return r
+        var result: [CBOR] = []
+        for _ in 0..<n {
+            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
+            result.append(item)
         }
+        return result
     }
 
     func readUntilBreak() throws -> [CBOR] {
