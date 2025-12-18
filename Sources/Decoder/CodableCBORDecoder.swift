@@ -154,7 +154,7 @@ extension _CBORDecoder: Decoder {
     }
 }
 
-protocol CBORDecodingContainer: AnyObject {
+public protocol CBORDecodingContainer: AnyObject {
     var codingPath: [CodingKey] { get set }
 
     var userInfo: [CodingUserInfoKey : Any] { get }
