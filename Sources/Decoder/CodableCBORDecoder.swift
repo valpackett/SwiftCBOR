@@ -118,7 +118,10 @@ extension _CBORDecoder: Decoder {
 
         try ensureArray(self.data.first)
 
-        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
+        // Check if this is a byte string (0x40-0x5f) being decoded as an array
+        let isByteString = (self.data.first ?? 0) >= 0x40 && (self.data.first ?? 0) <= 0x5f
+
+        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth, isByteString: isByteString)
         self.container = container
 
         return container
@@ -154,8 +157,9 @@ extension _CBORDecoder: Decoder {
 
     func ensureArray(_ initialByte: UInt8?) throws {
         switch initialByte {
-        case .some(0x80...0x9f):
-            // all good, continue
+        case .some(0x80...0x9f), .some(0x40...0x5f):
+            // all good, continue (arrays 0x80-0x9f and byte strings 0x40-0x5f)
+            // Byte strings can be decoded as arrays of UInt8
             return
         case nil:
             let context = DecodingError.Context(

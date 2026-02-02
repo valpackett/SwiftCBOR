@@ -78,6 +78,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
         case .double(let dbl): return dbl
         case .float(let flt): return Double(flt)
         case .half(let flt): return Double(flt)
+        case .date(let date): return date.timeIntervalSinceReferenceDate
         default:
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.typeMismatch(Double.self, context)
