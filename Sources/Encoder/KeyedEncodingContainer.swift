@@ -67,11 +67,21 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
     }
 
     func superEncoder() -> Encoder {
-        fatalError("Unimplemented") // FIXME
+        // Use a special "super" key for encoding class hierarchies
+        let superKey = AnyCodingKey(stringValue: "super")
+        let encoder = _CBOREncoder(options: self.options)
+        encoder.codingPath = self.codingPath + [superKey]
+        encoder.userInfo = self.userInfo
+        self.storage[superKey] = encoder
+        return encoder
     }
 
     func superEncoder(forKey key: Key) -> Encoder {
-        fatalError("Unimplemented") // FIXME
+        let encoder = _CBOREncoder(options: self.options)
+        encoder.codingPath = self.nestedCodingPath(forKey: key)
+        encoder.userInfo = self.userInfo
+        self.storage[anyCodingKeyForKey(key)] = encoder
+        return encoder
     }
 }
 
