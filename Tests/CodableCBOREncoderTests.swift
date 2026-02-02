@@ -130,6 +130,120 @@ class CodableCBOREncoderTests: XCTestCase {
             || encoded == [0xa2, 0x64, 0x6e, 0x61, 0x6d, 0x65, 0x63, 0x48, 0x61, 0x6d, 0x63, 0x61, 0x67, 0x65, 0x18, 0x1b]
         )
     }
+
+    /// Test that superEncoder() works in KeyedEncodingContainer
+    func testSuperEncoderInKeyedContainer() throws {
+        // Create a simple class hierarchy to test super encoding
+        class Base: Encodable {
+            let baseValue: Int
+
+            init(baseValue: Int) {
+                self.baseValue = baseValue
+            }
+        }
+
+        class Derived: Base {
+            let derivedValue: String
+
+            init(baseValue: Int, derivedValue: String) {
+                self.derivedValue = derivedValue
+                super.init(baseValue: baseValue)
+            }
+
+            enum CodingKeys: String, CodingKey {
+                case derivedValue
+            }
+
+            override func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(derivedValue, forKey: .derivedValue)
+                // Use superEncoder to encode the base class
+                try super.encode(to: container.superEncoder())
+            }
+        }
+
+        let derived = Derived(baseValue: 42, derivedValue: "test")
+        let encoded = try CodableCBOREncoder().encode(derived)
+
+        // Should be encodable and decodable
+        XCTAssertNotNil(encoded)
+        XCTAssertGreaterThan(encoded.count, 0)
+
+        // Decode to verify structure
+        let decoded = try CBOR.decode([UInt8](encoded))
+        XCTAssertNotNil(decoded)
+    }
+
+    /// Test that superEncoder() works in UnkeyedEncodingContainer
+    func testSuperEncoderInUnkeyedContainer() throws {
+        struct TestStruct: Encodable {
+            let value: Int
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.unkeyedContainer()
+                try container.encode(value)
+                // Use superEncoder in an array context
+                let superEncoder = container.superEncoder()
+                var nestedContainer = superEncoder.singleValueContainer()
+                try nestedContainer.encode("nested")
+            }
+        }
+
+        let test = TestStruct(value: 123)
+        let encoded = try CodableCBOREncoder().encode(test)
+
+        // Should encode successfully
+        XCTAssertNotNil(encoded)
+        XCTAssertGreaterThan(encoded.count, 0)
+
+        // Verify it's a valid CBOR array with 2 elements
+        let decoded = try CBOR.decode([UInt8](encoded))
+        if case let .array(arr) = decoded {
+            XCTAssertEqual(arr.count, 2)
+            XCTAssertEqual(arr[0], CBOR.unsignedInt(123))
+            XCTAssertEqual(arr[1], CBOR.utf8String("nested"))
+        } else {
+            XCTFail("Expected array, got \(decoded)")
+        }
+    }
+
+    /// Test that superEncoder(forKey:) works correctly
+    func testSuperEncoderForKey() throws {
+        struct TestStruct: Encodable {
+            let value1: Int
+            let value2: String
+
+            enum CodingKeys: String, CodingKey {
+                case value1
+                case customSuper
+            }
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(value1, forKey: .value1)
+
+                // Use superEncoder with a custom key
+                let superEncoder = container.superEncoder(forKey: .customSuper)
+                var nestedContainer = superEncoder.singleValueContainer()
+                try nestedContainer.encode(value2)
+            }
+        }
+
+        let test = TestStruct(value1: 42, value2: "hello")
+        let encoded = try CodableCBOREncoder().encode(test)
+
+        XCTAssertNotNil(encoded)
+        XCTAssertGreaterThan(encoded.count, 0)
+
+        // Verify structure
+        let decoded = try CBOR.decode([UInt8](encoded))
+        if case let .map(dict) = decoded {
+            XCTAssertEqual(dict[CBOR.utf8String("value1")], CBOR.unsignedInt(42))
+            XCTAssertEqual(dict[CBOR.utf8String("customSuper")], CBOR.utf8String("hello"))
+        } else {
+            XCTFail("Expected map, got \(decoded)")
+        }
+    }
 }
 
 extension Array {
