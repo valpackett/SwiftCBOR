@@ -2,7 +2,8 @@ public struct CBOROptions {
     let useStringKeys: Bool
     let dateStrategy: DateStrategy
     let forbidNonStringMapKeys: Bool
-    /// The maximum number of nested items, inclusive, to decode. A maximum set to 0 dissallows anything other than top-level primitives.
+    // The maximum number of nested items, inclusive, to decode. A maximum set to 0 disallows
+    // anything other than top-level primitives.
     let maximumDepth: Int
     let shouldSortMapKeys: Bool
 

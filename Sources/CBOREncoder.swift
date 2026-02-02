@@ -37,7 +37,8 @@ extension CBOR {
 
             array.withUnsafeBytes { bufferPtr in
                 guard let ptr = bufferPtr.baseAddress?.bindMemory(to: UInt8.self, capacity: bytelength) else {
-                    fatalError("Invalid pointer")
+                    // This should never happen with valid Swift arrays, but handle it gracefully
+                    preconditionFailure("Failed to get pointer to array memory")
                 }
                 var j = 0
                 for i in 0..<bytelength {
@@ -52,7 +53,13 @@ extension CBOR {
     }
 
     public static func encode<A: CBOREncodable, B: CBOREncodable>(_ dict: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return encodeMap(dict, options: options)
+        do {
+            return try encodeMap(dict, options: options)
+        } catch {
+            // This can only fail if forbidNonStringMapKeys is true and A is not a String.
+            // This is a programming error, not a data error.
+            preconditionFailure("Failed to encode dictionary with key type \(A.self): \(error)")
+        }
     }
 
     // MARK: - major 0: unsigned integer
@@ -128,9 +135,9 @@ extension CBOR {
 
     // MARK: - major 5: a map of pairs of data items
 
-    public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
+    public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) throws -> [UInt8] {
         if options.forbidNonStringMapKeys {
-            try! ensureStringKey(A.self)
+            try ensureStringKey(A.self)
         }
         var res: [UInt8] = []
         res.reserveCapacity(1 + map.count * (MemoryLayout<A>.size + MemoryLayout<B>.size + 2))
@@ -253,9 +260,9 @@ extension CBOR {
         return res
     }
 
-    public static func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
+    public static func encodeMapChunk<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) throws -> [UInt8] {
         if options.forbidNonStringMapKeys {
-            try! ensureStringKey(A.self)
+            try ensureStringKey(A.self)
         }
         var res: [UInt8] = []
         let count = map.count
@@ -292,6 +299,7 @@ extension CBOR {
                 AnnotatedMapDateStrategy.typeKey: AnnotatedMapDateStrategy.typeValue,
                 AnnotatedMapDateStrategy.valueKey: dateCBOR
             ]
+            // String keys are guaranteed, so this should never throw
             return try! CBOR.encodeMap(map, options: options)
         case .taggedAsEpochTimestamp:
             var res: [UInt8] = [0b110_00001] // Epoch timestamp tag is 1

@@ -49,15 +49,20 @@ extension _CBORDecoder {
             for _ in 0..<count {
                 guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
                     let container = iterator.next() else {
-                        fatalError() // FIXME
+                        throw DecodingError.dataCorrupted(
+                            DecodingError.Context(
+                                codingPath: self.codingPath,
+                                debugDescription: "Malformed map data: expected key-value pairs"
+                            )
+                        )
                 }
 
                 let keyVal: AnyCodingKey
                 if self.options.useStringKeys {
-                    let stringKey = try! keyContainer.decode(String.self)
+                    let stringKey = try keyContainer.decode(String.self)
                     keyVal = AnyCodingKey(stringValue: stringKey)
                 } else {
-                    keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                    keyVal = try keyContainer.decode(AnyCodingKey.self)
                 }
                 nestedContainers[keyVal] = container
             }

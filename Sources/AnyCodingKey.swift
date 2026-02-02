@@ -26,11 +26,17 @@ struct AnyCodingKey: CodingKey, Equatable {
 
     func key<K: CodingKey>() -> K {
         if let intValue = self.intValue {
-            return K(intValue: intValue)!
+            guard let key = K(intValue: intValue) else {
+                preconditionFailure("CodingKey \(K.self) failed to initialize with intValue: \(intValue)")
+            }
+            return key
         } else if let stringValue = self._stringValue {
-            return K(stringValue: stringValue)!
+            guard let key = K(stringValue: stringValue) else {
+                preconditionFailure("CodingKey \(K.self) failed to initialize with stringValue: \(stringValue)")
+            }
+            return key
         } else {
-            fatalError("AnyCodingKey created without a string or int value")
+            preconditionFailure("AnyCodingKey created without a string or int value")
         }
     }
 }
@@ -49,7 +55,13 @@ extension AnyCodingKey: Encodable {
         } else if let stringValue = self._stringValue {
             try container.encode(stringValue)
         } else {
-            fatalError("AnyCodingKey created without a string or int value")
+            throw EncodingError.invalidValue(
+                self,
+                EncodingError.Context(
+                    codingPath: encoder.codingPath,
+                    debugDescription: "AnyCodingKey created without a string or int value"
+                )
+            )
         }
     }
 }
@@ -60,9 +72,17 @@ extension AnyCodingKey: Decodable {
         if let intValue = try? value.decode(Int.self) {
             self._stringValue = nil
             self.intValue = intValue
-        } else {
-            self._stringValue = try! value.decode(String.self)
+        } else if let stringValue = try? value.decode(String.self) {
+            self._stringValue = stringValue
             self.intValue = nil
+        } else {
+            throw DecodingError.typeMismatch(
+                AnyCodingKey.self,
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Expected Int or String key"
+                )
+            )
         }
     }
 }

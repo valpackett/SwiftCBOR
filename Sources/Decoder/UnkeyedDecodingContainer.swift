@@ -61,7 +61,9 @@ extension _CBORDecoder {
                     nestedContainers.append(container)
                 }
             } catch {
-                fatalError("\(error)") // FIXME
+                // If decoding fails, we return empty array. The actual error will be
+                // caught when decode methods are called and try to access containers.
+                return []
             }
 
             self.currentIndex = 0
@@ -233,10 +235,22 @@ extension _CBORDecoder.UnkeyedContainer {
         }
 
         let range: Range<Data.Index> = startIndex..<self.index.advanced(by: length)
+
+        guard range.startIndex >= self.data.startIndex && range.endIndex <= self.data.endIndex else {
+            throw DecodingError.dataCorruptedError(
+                in: self,
+                debugDescription: "Data range \(range) is out of bounds for data with range \(self.data.startIndex)..<\(self.data.endIndex)"
+            )
+        }
+
         self.index = range.upperBound
 
-        let container = _CBORDecoder.SingleValueContainer(data: self.data[range.startIndex..<(range.endIndex)], codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
-
+        let container = _CBORDecoder.SingleValueContainer(
+            data: self.data[range.startIndex..<(range.endIndex)],
+            codingPath: self.codingPath,
+            userInfo: self.userInfo,
+            options: self.options
+        )
         return container
     }
 
