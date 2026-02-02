@@ -102,7 +102,7 @@ class CBOREncoderTests: XCTestCase {
             "a": 1,
             "b": [2, 3]
         ]
-        let encodedMapToAny = try! CBOR.encodeMap(mapToAny, options: .init(shouldShortMapKeys: true))
+        let encodedMapToAny = try! CBOR.encodeMap(mapToAny, options: .init(shouldSortMapKeys: true))
         XCTAssertEqual(encodedMapToAny, [0xa2, 0x61, 0x61, 0x01, 0x61, 0x62, 0x82, 0x02, 0x03])
 
         let mapToAnyWithIntKeys: [Int: Any] = [
