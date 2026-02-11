@@ -3,6 +3,7 @@ import Foundation
 final public class CodableCBORDecoder {
     public var useStringKeys: Bool = false
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
+    public var maximumDepth: Int = .max
 
     struct _Options {
         let useStringKeys: Bool
@@ -29,7 +30,7 @@ final public class CodableCBORDecoder {
     }
 
     var options: _Options {
-        return _Options(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy)
+        return _Options(useStringKeys: self.useStringKeys, dateStrategy: self.dateStrategy, maximumDepth: self.maximumDepth)
     }
 
     public init() {}
@@ -66,6 +67,7 @@ final public class CodableCBORDecoder {
     func setOptions(_ newOptions: _Options) {
         self.useStringKeys = newOptions.useStringKeys
         self.dateStrategy = newOptions.dateStrategy
+        self.maximumDepth = newOptions.maximumDepth
     }
 }
 
@@ -78,34 +80,52 @@ final class _CBORDecoder {
     fileprivate var data: ArraySlice<UInt8>
 
     let options: CodableCBORDecoder._Options
+    var currentDepth: Int
 
-    init(data: ArraySlice<UInt8>, options: CodableCBORDecoder._Options) {
+    init(data: ArraySlice<UInt8>, options: CodableCBORDecoder._Options, currentDepth: Int = 0) {
         self.data = data
         self.options = options
+        self.currentDepth = currentDepth
     }
 }
 
 extension _CBORDecoder: Decoder {
     func container<Key: CodingKey>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> {
+        guard self.currentDepth < self.options.maximumDepth else {
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Maximum decoding depth of \(self.options.maximumDepth) exceeded"
+            )
+            throw DecodingError.dataCorrupted(context)
+        }
+
         try ensureMap(self.data.first, keyType: Key.self)
 
-        let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+        let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
         self.container = container
 
         return KeyedDecodingContainer(container)
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+        guard self.currentDepth < self.options.maximumDepth else {
+            let context = DecodingError.Context(
+                codingPath: self.codingPath,
+                debugDescription: "Maximum decoding depth of \(self.options.maximumDepth) exceeded"
+            )
+            throw DecodingError.dataCorrupted(context)
+        }
+
         try ensureArray(self.data.first)
 
-        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+        let container = UnkeyedContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
         self.container = container
 
         return container
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+        let container = SingleValueContainer(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
         self.container = container
 
         return container

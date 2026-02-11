@@ -61,10 +61,10 @@ public indirect enum CBOR : Equatable, Hashable,
         set(x) {
             switch (self, position) {
             case (var .array(l), let .unsignedInt(i)):
-                l[Int(i)] = x!
+                l[Int(i)] = x ?? .null  // nil becomes CBOR.null
                 self = .array(l)
             case (var .map(l), let i):
-                l[i] = x!
+                l[i] = x  // nil removes the key from dictionary
                 self = .map(l)
             default: break
             }

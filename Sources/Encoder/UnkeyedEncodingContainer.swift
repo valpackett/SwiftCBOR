@@ -59,7 +59,11 @@ extension _CBOREncoder.UnkeyedContainer: UnkeyedEncodingContainer {
     }
 
     func superEncoder() -> Encoder {
-        fatalError("Unimplemented") // FIXME
+        let encoder = _CBOREncoder(options: self.options)
+        encoder.codingPath = self.nestedCodingPath
+        encoder.userInfo = self.userInfo
+        self.storage.append(encoder)
+        return encoder
     }
 }
 

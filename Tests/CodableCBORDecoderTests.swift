@@ -125,4 +125,177 @@ class CodableCBORDecoderTests: XCTestCase {
         let dateTwo = try! CodableCBORDecoder().decode(Date.self, from: Data([0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00]))
         XCTAssertEqual(dateTwo, expectedDateTwo)
     }
+
+    /// Test that maximumDepth option is properly accessible and passed through
+    func testMaximumDepthOptionAccessible() throws {
+        // Test that maximumDepth is accessible and can be set
+        let decoder = CodableCBORDecoder()
+        XCTAssertEqual(decoder.maximumDepth, .max) // Default value
+
+        decoder.maximumDepth = 100
+        XCTAssertEqual(decoder.maximumDepth, 100)
+
+        // Test that options are properly converted
+        let options = decoder.options
+        XCTAssertEqual(options.maximumDepth, 100)
+
+        let cborOptions = options.toCBOROptions()
+        XCTAssertEqual(cborOptions.maximumDepth, 100)
+
+        XCTAssertEqual(decoder.options.maximumDepth, decoder.maximumDepth)
+    }
+
+    /// Test that depth is enforced across nested array structures
+    func testMaximumDepthEnforcedAcrossNestedArrays() throws {
+        // Create a deeply nested array: [[[[42]]]] (4 levels deep)
+        // Level 0: outer array
+        // Level 1: first nested array
+        // Level 2: second nested array
+        // Level 3: third nested array
+        // Level 4: innermost value (42)
+        let deeplyNested = try! CodableCBOREncoder().encode([[[[42]]]])
+
+        // Should succeed with depth limit of 5 or more
+        let decoder5 = CodableCBORDecoder()
+        decoder5.maximumDepth = 5
+        XCTAssertNoThrow(try decoder5.decode([[[[Int]]]].self, from: deeplyNested))
+
+        // Should fail with depth limit of 3 (can't reach level 4)
+        let decoder3 = CodableCBORDecoder()
+        decoder3.maximumDepth = 3
+        XCTAssertThrowsError(try decoder3.decode([[[[Int]]]].self, from: deeplyNested)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+
+        // Should fail with depth limit of 0 (can't even decode top level)
+        let decoder0 = CodableCBORDecoder()
+        decoder0.maximumDepth = 0
+        XCTAssertThrowsError(try decoder0.decode([[[[Int]]]].self, from: deeplyNested)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+    }
+
+    /// Test that depth is enforced across nested map structures
+    func testMaximumDepthEnforcedAcrossNestedMaps() throws {
+        struct Level3: Codable, Equatable { let value: Int }
+        struct Level2: Codable, Equatable { let nested: Level3 }
+        struct Level1: Codable, Equatable { let nested: Level2 }
+        struct Level0: Codable, Equatable { let nested: Level1 }
+
+        let deeply = Level0(nested: Level1(nested: Level2(nested: Level3(value: 42))))
+        let encoded = try! CodableCBOREncoder().encode(deeply)
+
+        // Should succeed with sufficient depth
+        let decoder5 = CodableCBORDecoder()
+        decoder5.maximumDepth = 5
+        XCTAssertNoThrow(try decoder5.decode(Level0.self, from: encoded))
+
+        // Should fail with insufficient depth
+        let decoder2 = CodableCBORDecoder()
+        decoder2.maximumDepth = 2
+        XCTAssertThrowsError(try decoder2.decode(Level0.self, from: encoded)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+    }
+
+    /// Test that depth is enforced across mixed array and map structures
+    func testMaximumDepthEnforcedAcrossMixedStructures() throws {
+        struct Inner: Codable, Equatable { let values: [Int] }
+        struct Outer: Codable, Equatable { let items: [Inner] }
+
+        let mixed = Outer(items: [Inner(values: [1, 2]), Inner(values: [3, 4])])
+        let encoded = try! CodableCBOREncoder().encode(mixed)
+
+        // Structure depth:
+        // Level 0: Outer keyed container
+        // Level 1: items array
+        // Level 2: Inner keyed container
+        // Level 3: values array
+        // Level 4: Int values
+
+        // Should succeed with depth 5
+        let decoder5 = CodableCBORDecoder()
+        decoder5.maximumDepth = 5
+        let decoded = try! decoder5.decode(Outer.self, from: encoded)
+        XCTAssertEqual(decoded, mixed)
+
+        // Should fail with depth 2 (can't reach Inner level)
+        let decoder2 = CodableCBORDecoder()
+        decoder2.maximumDepth = 2
+        XCTAssertThrowsError(try decoder2.decode(Outer.self, from: encoded)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+    }
+
+    /// Test the specific case from the bug report: 10-deep nested array with depth=5 should fail
+    func testDeepNestedArrayRespectDepthLimit() throws {
+        // Create 10-level deep nested array
+        typealias Level10 = [[[[[[[[[[Int]]]]]]]]]]
+
+        let level1: [Int] = [42]
+        let level2: [[Int]] = [level1]
+        let level3: [[[Int]]] = [level2]
+        let level4: [[[[Int]]]] = [level3]
+        let level5: [[[[[Int]]]]] = [level4]
+        let level6: [[[[[[Int]]]]]] = [level5]
+        let level7: [[[[[[[Int]]]]]]] = [level6]
+        let level8: [[[[[[[[Int]]]]]]]] = [level7]
+        let level9: [[[[[[[[[Int]]]]]]]]] = [level8]
+        let level10: Level10 = [level9]
+
+        let encoded = try! CodableCBOREncoder().encode(level10)
+
+        // Should fail with depth limit of 5
+        let decoder = CodableCBORDecoder()
+        decoder.maximumDepth = 5
+
+        XCTAssertThrowsError(try decoder.decode(Level10.self, from: encoded)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+    }
+
+    /// Test that depth tracking works correctly when decoding array elements
+    func testDepthTrackingInArrayElements() throws {
+        // Array of arrays: [[1], [2], [3]]
+        // Each inner array is at depth 1 when decoded as an element
+        let arrayOfArrays = [[1], [2], [3]]
+        let encoded = try! CodableCBOREncoder().encode(arrayOfArrays)
+
+        // Should succeed with depth 3
+        let decoder3 = CodableCBORDecoder()
+        decoder3.maximumDepth = 3
+        let decoded = try! decoder3.decode([[Int]].self, from: encoded)
+        XCTAssertEqual(decoded, arrayOfArrays)
+
+        // Should fail with depth 1 (can't decode inner arrays)
+        let decoder1 = CodableCBORDecoder()
+        decoder1.maximumDepth = 1
+        XCTAssertThrowsError(try decoder1.decode([[Int]].self, from: encoded)) { error in
+            guard case DecodingError.dataCorrupted(let context) = error else {
+                XCTFail("Expected dataCorrupted error, got \(error)")
+                return
+            }
+            XCTAssertTrue(context.debugDescription.contains("Maximum decoding depth"))
+        }
+    }
 }
