@@ -93,12 +93,17 @@ extension _CBOREncoder: Encoder {
     }
 
     func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        assertCanCreateContainer()
-
-        let container = KeyedContainer<Key>(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
-        self.container = container
-
-        return KeyedEncodingContainer(container)
+        if let container = self.container as? AnyKeyedContainer {
+            let container = KeyedContainer<Key>(storage: container.storage, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+            return KeyedEncodingContainer(container)
+        } else {
+            assertCanCreateContainer()
+            
+            let container = KeyedContainer<Key>(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+            self.container = container
+            
+            return KeyedEncodingContainer(container)
+        }
     }
 
     func unkeyedContainer() -> UnkeyedEncodingContainer {
