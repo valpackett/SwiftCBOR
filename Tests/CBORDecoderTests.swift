@@ -168,7 +168,7 @@ class CBORDecoderTests: XCTestCase {
 
         XCTAssertEqual(decoded, expected)
     }
-    
+
     func testDecodeFailsForExtremelyDeepStructures() {
         let justOverTags: [UInt8] = Array(repeating: 202, count: 1025) + [0]
         XCTAssertThrowsError(try CBOR.decode(justOverTags, options: CBOROptions(maximumDepth: 1024))) { error in
@@ -179,21 +179,21 @@ class CBORDecoderTests: XCTestCase {
             XCTAssertEqual(error as? CBORError, CBORError.maximumDepthExceeded)
         }
     }
-    
+
     func testDecodeFailsForSillyMaximumDepths() {
         let singleItem: [UInt8] = [0]
         XCTAssertThrowsError(try CBOR.decode(singleItem, options: CBOROptions(maximumDepth: -1))) { error in
             XCTAssertEqual(error as? CBORError, CBORError.maximumDepthExceeded)
         }
     }
-    
+
     func testDecodeSucceedsForAllowedDeepStructures() {
         let singleItem: [UInt8] = [0]
         XCTAssertNoThrow(try CBOR.decode(singleItem, options: CBOROptions(maximumDepth: 0)))
         let endlessTags: [UInt8] = Array(repeating: 202, count: 1024) + [0]
         XCTAssertNoThrow(try CBOR.decode(endlessTags, options: CBOROptions(maximumDepth: 1024)))
     }
-    
+
     func testRandomInputDoesNotHitStackLimits() {
         for _ in 1...50 {
             let length = Int.random(in: 1...1_000_000)
@@ -201,21 +201,96 @@ class CBORDecoderTests: XCTestCase {
             _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 512))
         }
     }
+
+    /// Test for issue #118: Large array length should not cause crash
+    /// https://github.com/valpackett/SwiftCBOR/issues/118
+    func testLargeArrayLengthShouldNotCrash() throws {
+        let bytes: [UInt8] = [
+            0x9b, // Array with 8-byte length
+            0x54, 0x68, 0x47, 0x9e, 0x98, 0x41, 0xd5, 0xed, // Huge length value
+            0xae, 0x42, 0x4b, 0x9e, 0x68, 0x68, 0x47,
+            0xa0, 0xf0, 0x41, 0xe2, 0xc4, 0x73, 0x42, 0x4f, 0x8c, 0x48, 0x68, 0x47, 0xa3, 0x48, 0x41, 0xe2,
+            0x6c, 0xf2, 0x42, 0x3f, 0x1b, 0x3c, 0x68, 0x47, 0xa5, 0xa0, 0x41, 0xe1, 0xce, 0x5a, 0x42, 0x3d,
+            0x71, 0x74, 0x68, 0x47, 0xa7, 0xf8, 0x41, 0xe2, 0x57, 0x12, 0x42, 0x3b, 0x54, 0x6c, 0x68, 0x47,
+            0xaa, 0x50, 0x41, 0xe4, 0x17, 0x84, 0x42, 0x40, 0x6d, 0x24, 0x68, 0x47, 0xac, 0xa8, 0x41, 0xe0,
+            0xa1, 0x91, 0x42, 0x41, 0xef, 0xdc, 0x68, 0x47, 0xaf, 0x0, 0x41, 0xd8, 0x93, 0xd0, 0x42, 0x48,
+            0xfa, 0xa0, 0x68, 0x47, 0xb1, 0x58, 0x41, 0xd5, 0x5a, 0x5, 0x42, 0x4e, 0xfd, 0xb4, 0x68, 0x47,
+            0xb3, 0xb0, 0x41, 0xd4, 0x43, 0x1c, 0x42, 0x50, 0x57, 0x6c, 0x68, 0x47, 0xb6, 0x8, 0x41, 0xd3,
+            0xc5, 0x54, 0x42, 0x52, 0x37, 0xe4, 0x68, 0x47, 0xb8, 0x60, 0x41, 0xd4, 0x38, 0x2c, 0x42, 0x5f,
+            0x84, 0x3c, 0x68, 0x47, 0xba, 0xb8, 0x41, 0xd3, 0x94, 0x1b, 0x42, 0x63, 0x6c, 0x40, 0x68, 0x47,
+            0xbd, 0x10, 0x41, 0xd3, 0x5, 0xeb, 0x42, 0x61, 0x5e, 0xdc, 0x68, 0x47
+        ]
+        // Should throw an error, not crash
+        XCTAssertThrowsError(try CBOR.decode(bytes)) { error in
+            // Should be an unfinished sequence or incorrectUTF8String error
+            XCTAssertTrue(error is CBORError)
+        }
+    }
+
+    /// Test for issue #69: Corrupted data with out-of-bounds range should not crash
+    /// https://github.com/valpackett/SwiftCBOR/issues/69
+    func testCorruptedDataRangeShouldNotCrash() throws {
+        // Array with declared length that exceeds actual data
+        let bytes: [UInt8] = [
+            0x84, // Array of 4 items
+            0x01, // Item 1
+            0x02, // Item 2
+            // Missing items 3 and 4
+        ]
+        XCTAssertThrowsError(try CBOR.decode(bytes)) { error in
+            XCTAssertTrue(error is CBORError || error is DecodingError)
+        }
+    }
+
+    /// Test that AnyCodingKey properly handles invalid key types
+    func testAnyCodingKeyInvalidTypeThrows() throws {
+        struct TestKey: Codable {
+            let key: AnyCodingKey
+        }
+
+        // Create CBOR with a boolean key (invalid)
+        let bytes = CBOR.encode(["key": true])
+
+        let decoder = CodableCBORDecoder()
+        XCTAssertThrowsError(try decoder.decode(TestKey.self, from: Data(bytes))) { error in
+            // Should be a decoding error, not a crash
+            XCTAssertTrue(error is DecodingError)
+        }
+    }
+
+    /// Test that malformed map data throws instead of crashing
+    func testMalformedMapDataThrows() throws {
+        // Map with declared count but missing values
+        let bytes: [UInt8] = [
+            0xa2, // Map with 2 entries
+            0x01, // Key 1
+            0x02, // Value 1
+            0x03, // Key 2
+            // Missing value 2
+        ]
+
+        struct TestStruct: Codable {
+            let value: [Int: Int]
+        }
+
+        let decoder = CodableCBORDecoder()
+        XCTAssertThrowsError(try decoder.decode(TestStruct.self, from: Data(bytes))) { error in
+            XCTAssertTrue(error is CBORError || error is DecodingError)
+        }
+    }
 }
 
 #if os(Android)
-
 extension XCTestCase {
     /// XCTestCase.measure on Android is problematic because
     /// the emulator on a virtualized runner can be quite slow
     /// but there is no way to set the standard deviation threshold
     /// for failure, so we override it to simply run the block
     /// and not perform any measurement.
-    /// 
+    ///
     /// See: https://github.com/swiftlang/swift-corelibs-xctest/pull/506
     func measure(_ count: Int = 0, _ block: () -> ()) {
         block()
     }
 }
 #endif
-

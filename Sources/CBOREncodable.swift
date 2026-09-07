@@ -25,7 +25,7 @@ extension CBOR: CBOREncodable {
         case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
         case let .utf8String(str): return str.encode(options: options)
         case let .array(a): return CBOR.encodeArray(a, options: options)
-        case let .map(m): return CBOR.encodeMap(m, options: options)
+        case let .map(m): return try! CBOR.encodeMap(m, options: options)
         #if canImport(Foundation)
         case let .date(d): return CBOR.encodeDate(d, options: options)
         #endif
@@ -206,7 +206,13 @@ extension Array where Element: CBOREncodable {
 
 extension Dictionary where Key: CBOREncodable, Value: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeMap(self, options: options)
+        do {
+            return try CBOR.encodeMap(self, options: options)
+        } catch {
+            // This can only fail if forbidNonStringMapKeys is true and Key is not a String.
+            // This is a programming error, not a data error.
+            preconditionFailure("Failed to encode dictionary with key type \(Key.self): \(error)")
+        }
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {

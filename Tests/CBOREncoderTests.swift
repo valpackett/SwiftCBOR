@@ -250,7 +250,7 @@ class CBOREncoderTests: XCTestCase {
         let map2 = ["B": 2]
         let a1_enc: [UInt8] = [0x61, 0x61, 0x01]
         let b2_enc: [UInt8] = [0x61, 0x42, 0x02]
-        let final: [UInt8] = CBOR.encodeMapStreamStart() + CBOR.encodeMapChunk(map) + CBOR.encodeMapChunk(map2) + CBOR.encodeStreamEnd()
+        let final: [UInt8] = CBOR.encodeMapStreamStart() + (try! CBOR.encodeMapChunk(map)) + (try! CBOR.encodeMapChunk(map2)) + CBOR.encodeStreamEnd()
         XCTAssertEqual(final, [0xbf] + a1_enc + b2_enc + [0xff])
     }
 

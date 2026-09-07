@@ -64,10 +64,13 @@ public class CBORDecoder {
     }
 
     private func readN(_ n: Int) throws -> [CBOR] {
-        return try (0..<n).map { _ in
-            guard let r = try decodeItem() else { throw CBORError.unfinishedSequence }
-            return r
+        var result: [CBOR] = []
+        result.reserveCapacity(min(n, 1024)) // Reserve capacity but cap at reasonable size
+        for _ in 0..<n {
+            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
+            result.append(item)
         }
+        return result
     }
 
     func readUntilBreak() throws -> [CBOR] {
@@ -110,9 +113,10 @@ public class CBORDecoder {
     }
 
     public func decodeItem() throws -> CBOR? {
-        guard currentDepth <= options.maximumDepth
-        else { throw CBORError.maximumDepthExceeded }
-        
+        guard currentDepth <= options.maximumDepth else {
+            throw CBORError.maximumDepthExceeded
+        }
+
         currentDepth += 1
         defer { currentDepth -= 1 }
         let b = try istream.popByte()
