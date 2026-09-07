@@ -1,6 +1,10 @@
 [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
+## SwiftCBOR (Scytales clone)
+
 
 # SwiftCBOR
+This is a fork of the original SwiftCBOR library based on the following [PR #96](https://github.com/valpackett/SwiftCBOR/pull/96) . The original library is available [here](https://github.com/valpackett/SwiftCBOR)
+
 
 A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder and encoder in Swift. Encode directly from Swift types or use a wrapper object. Decode to a CBOR value type that can be accessed with native Swift subscripting and expressed with the equivalent literal notation.
 
