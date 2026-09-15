@@ -202,7 +202,7 @@ public class CBORDecoder {
     }
 }
 
-func getDateFromTimestamp(_ item: CBOR) throws -> Date {
+public func getDateFromTimestamp(_ item: CBOR) throws -> Date {
     switch item {
     case .double(let d):
         return Date(timeIntervalSince1970: TimeInterval(d))

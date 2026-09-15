@@ -48,22 +48,23 @@ extension _CBORDecoder {
 
         var currentIndex: Int = 0
 
-        lazy var nestedContainers: [CBORDecodingContainer] = {
+        lazy var nestedContainers: [CBORDecodingContainer?] = {
             guard let count = self.count else {
                 return []
             }
 
-            var nestedContainers: [CBORDecodingContainer] = []
+            var nestedContainers: [CBORDecodingContainer?] = []
 
-            do {
-                for _ in 0..<count {
+            for _ in 0..<count {
+                do {
                     let container = try self.decodeContainer()
                     nestedContainers.append(container)
+                } catch {
+                    print("<SwiftCBOR> ERROR: \(error)") // FIXME
+                    nestedContainers.append(nil)
                 }
-            } catch {
-                fatalError("\(error)") // FIXME
             }
-
+            
             self.currentIndex = 0
 
             return nestedContainers
@@ -125,7 +126,10 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex]
+        guard let container = self.nestedContainers[self.currentIndex] else {
+            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Failed to decode \(T.self)")
+        }
+        
         let decoder = CodableCBORDecoder()
         decoder.setOptions(self.options)
         let value = try decoder.decode(T.self, from: container.data)
@@ -219,8 +223,12 @@ extension _CBORDecoder.UnkeyedContainer {
             }
             return container
         case 0xc0:
-            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling text-based date/time is not supported yet")
-        // Tagged value (epoch-baed date/time)
+            // Tagged value (epoch-baed date/time)
+            print("<SwiftCBOR> ERROR: Handling text-based date/time is not supported yet")
+//            throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling text-based date/time is not supported yet")
+            // TODO: handle as c1 yet
+            length = try getLengthOfItem(format: try self.peekByte(), startIndex: startIndex.advanced(by: 1)) + 1
+            
         case 0xc1:
             length = try getLengthOfItem(format: try self.peekByte(), startIndex: startIndex.advanced(by: 1)) + 1
         case 0xc2...0xdb:

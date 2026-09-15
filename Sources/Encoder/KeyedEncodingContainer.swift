@@ -2,7 +2,7 @@ import Foundation
 
 extension _CBOREncoder {
     final class KeyedContainer<Key: CodingKey> {
-        var storage: [AnyCodingKey: CBOREncodingContainer] = [:]
+        var storage: [(AnyCodingKey, CBOREncodingContainer)] = []
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
@@ -38,7 +38,9 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        let codingKey = anyCodingKeyForKey(key)
+        self.storage = self.storage.filter { $0.0 != codingKey }
+        self.storage.append( (codingKey, container) )
         return container
     }
 
@@ -48,7 +50,9 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        let codingKey = anyCodingKeyForKey(key)
+        self.storage = self.storage.filter { $0.0 != codingKey }
+        self.storage.append( (codingKey, container) )
         return container
     }
 
@@ -58,7 +62,9 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        let codingKey = anyCodingKeyForKey(key)
+        self.storage = self.storage.filter { $0.0 != codingKey }
+        self.storage.append( (codingKey, container) )
         return KeyedEncodingContainer(container)
     }
 
