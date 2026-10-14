@@ -201,7 +201,39 @@ class CBORDecoderTests: XCTestCase {
             _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 512))
         }
     }
+    
+    func testDecodeFailsForAbsurdlyBigArrayOrMapLength() {
+        
+        let hugeArrayHeader: [UInt8] = [
+            0x9b,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        ]
+        
+        XCTAssertThrowsError(try CBORDecoder(input: hugeArrayHeader).decodeItem()) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.tooLongSequence)
+        }
+        
+        let hugeMapHeader: [UInt8] = [
+            0xbb,
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+        ]
+        
+        XCTAssertThrowsError(try CBORDecoder(input: hugeMapHeader).decodeItem()) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.tooLongSequence)
+        }
+    }
+    
+    func testDecodeFailsForEmptyInput() {
+        let emptyInput: [UInt8] = []
+        XCTAssertThrowsError(try CBORDecoder(input: emptyInput).decodeItem()) { error in
+            XCTAssertEqual(error as? CBORError, CBORError.unfinishedSequence)
+        }
+    }
+
+
 }
+
+
 
 #if os(Android)
 
