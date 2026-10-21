@@ -1,6 +1,10 @@
 [![unlicense](https://img.shields.io/badge/un-license-green.svg?style=flat)](http://unlicense.org)
+## SwiftCBOR (Scytales clone)
+
 
 # SwiftCBOR
+This is a fork of the original SwiftCBOR library based on the following [PR #96](https://github.com/valpackett/SwiftCBOR/pull/96) . The original library is available [here](https://github.com/valpackett/SwiftCBOR)
+
 
 A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder and encoder in Swift. Encode directly from Swift types or use a wrapper object. Decode to a CBOR value type that can be accessed with native Swift subscripting and expressed with the equivalent literal notation.
 
@@ -35,6 +39,18 @@ print(decoded)
 ```
 
 To unwrap the decoded `CBOR` values, use [PATTERN MATCHING](https://alisoftware.github.io/swift/pattern-matching/2016/05/16/pattern-matching-4/)!!
+
+To reject duplicate map keys, pass `CBOROptions(rejectDuplicateMapKeys: true)`
+to `CBOR.decode` or `CBORDecoder`. Both definite-length and indefinite-length
+maps, including nested maps, throw `CBORError.duplicateMapKey` before overwriting
+an existing key. Keys are compared as decoded `CBOR` values. The default is
+`false`, preserving the existing behavior of keeping the last value. This option
+applies to the raw CBOR decoder; `CodableCBORDecoder` has separate configuration.
+
+```swift
+let options = CBOROptions(rejectDuplicateMapKeys: true)
+let decoded = try CBOR.decode(bytes, options: options)
+```
 
 ## Encoding
 

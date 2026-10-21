@@ -1,5 +1,6 @@
 import XCTest
 @testable import SwiftCBOR
+import OrderedCollections
 
 class CBOREncodableTests: XCTestCase {
     func testToCBOR() {
@@ -58,9 +59,10 @@ class CBOREncodableTests: XCTestCase {
 
         XCTAssertEqual(CBOR.array([CBOR.unsignedInt(1), CBOR.unsignedInt(2)]), [1, 2].toCBOR(options: CBOROptions()))
 
+			let orderedDict: OrderedDictionary<CBOR,CBOR> = ["a": 1, "b": 2]
         XCTAssertEqual(
             CBOR.map([CBOR.utf8String("a"): CBOR.unsignedInt(1), CBOR.utf8String("b"): CBOR.unsignedInt(2)]),
-            ["a": 1, "b": 2].toCBOR(options: CBOROptions())
+            orderedDict.toCBOR(options: CBOROptions())
         )
     }
 }

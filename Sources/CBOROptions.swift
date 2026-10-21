@@ -5,19 +5,23 @@ public struct CBOROptions {
     /// The maximum number of nested items, inclusive, to decode. A maximum set to 0 dissallows anything other than top-level primitives.
     let maximumDepth: Int
     let shouldSortMapKeys: Bool
+    /// Reject repeated map keys during CBOR decoding instead of keeping the last value.
+    let rejectDuplicateMapKeys: Bool
 
     public init(
         useStringKeys: Bool = false,
         dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
         forbidNonStringMapKeys: Bool = false,
         maximumDepth: Int = .max,
-        shouldShortMapKeys: Bool = true
+        shouldSortMapKeys: Bool = true,
+        rejectDuplicateMapKeys: Bool = false
     ) {
         self.useStringKeys = useStringKeys
         self.dateStrategy = dateStrategy
         self.forbidNonStringMapKeys = forbidNonStringMapKeys
         self.maximumDepth = maximumDepth
-        self.shouldSortMapKeys = shouldShortMapKeys
+        self.shouldSortMapKeys = shouldSortMapKeys
+        self.rejectDuplicateMapKeys = rejectDuplicateMapKeys
     }
 
     func toCodableEncoderOptions() -> CodableCBOREncoder._Options {
