@@ -11,13 +11,13 @@ public struct CBOROptions {
         dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
         forbidNonStringMapKeys: Bool = false,
         maximumDepth: Int = .max,
-        shouldShortMapKeys: Bool = true
+        shouldSortMapKeys: Bool = true
     ) {
         self.useStringKeys = useStringKeys
         self.dateStrategy = dateStrategy
         self.forbidNonStringMapKeys = forbidNonStringMapKeys
         self.maximumDepth = maximumDepth
-        self.shouldSortMapKeys = shouldShortMapKeys
+        self.shouldSortMapKeys = shouldSortMapKeys
     }
 
     func toCodableEncoderOptions() -> CodableCBOREncoder._Options {
