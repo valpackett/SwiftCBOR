@@ -98,6 +98,14 @@ class CBORDecoderTests: XCTestCase {
     func testDecodeFloats() {
         XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.half(-4.0))
         XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xfc, 0x00]).decodeItem(), CBOR.half(-Float.infinity))
+        // subnormal half floats (RFC 8949 Appendix A)
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x00, 0x01]).decodeItem(), CBOR.half(5.960464477539063e-8))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x03, 0xff]).decodeItem(), CBOR.half(6.097555160522461e-5))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x80, 0x01]).decodeItem(), CBOR.half(-5.960464477539063e-8))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x04, 0x00]).decodeItem(), CBOR.half(6.103515625e-5))
+        guard case let .half(negativeZero)? = try! CBORDecoder(input: [0xf9, 0x80, 0x00]).decodeItem() else { return XCTFail() }
+        XCTAssertEqual(negativeZero, 0)
+        XCTAssertEqual(negativeZero.sign, .minus)
         XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x47, 0xc3, 0x50, 0x00]).decodeItem(), 100000.0)
         XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x7f, 0x80, 0x00, 0x00]).decodeItem(), CBOR.float(Float.infinity))
         XCTAssertEqual(try! CBORDecoder(input: [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66]).decodeItem(), CBOR.double(-4.1))

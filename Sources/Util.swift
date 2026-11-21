@@ -25,7 +25,6 @@ final class Util {
 
     // https://gist.github.com/martinkallman/5049614
     // rewritten to Swift + applied fixes from comments + added NaN/Inf checks
-    // should be good enough, who cares about float16
     static func readFloat16(x: UInt16) -> Float32 {
         if (x & 0x7fff) > 0x7c00 {
             return Float32.nan
@@ -36,13 +35,15 @@ final class Util {
         if x == 0xfc00 {
             return -Float32.infinity
         }
+        if (x & 0x7c00) == 0 {
+            // Zero or subnormal: mantissa * 2^-24
+            return Float32(sign: (x & 0x8000) != 0 ? .minus : .plus, exponent: -24, significand: Float32(x & 0x03ff))
+        }
         var t1 = UInt32(x & 0x7fff)        // Non-sign bits
         var t2 = UInt32(x & 0x8000)        // Sign bit
-        let t3 = UInt32(x & 0x7c00)        // Exponent
         t1 <<= 13                          // Align mantissa on MSB
         t2 <<= 16                          // Shift sign bit into position
         t1 += 0x38000000                   // Adjust bias
-        t1 = (t3 == 0 ? 0 : t1)            // Denormals-as-zero
         t1 |= t2                           // Re-insert sign bit
         return Float32(bitPattern: t1)
     }
