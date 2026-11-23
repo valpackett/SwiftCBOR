@@ -25,19 +25,22 @@ final class Util {
 
     // https://gist.github.com/martinkallman/5049614
     // rewritten to Swift + applied fixes from comments + added NaN/Inf checks
+    // The zero, subnormal, infinity and NaN cases follow RFC 8949 Appendix D.
     static func readFloat16(x: UInt16) -> Float32 {
-        if (x & 0x7fff) > 0x7c00 {
+        let exponent = (x >> 10) & 0x1f
+        let mantissa = x & 0x03ff
+        let sign: FloatingPointSign = (x & 0x8000) != 0 ? .minus : .plus
+
+        if exponent == 0x1f {
+            // Infinity or NaN.
+            if mantissa == 0 {
+                return sign == .minus ? -Float32.infinity : Float32.infinity
+            }
             return Float32.nan
         }
-        if x == 0x7c00 {
-            return Float32.infinity
-        }
-        if x == 0xfc00 {
-            return -Float32.infinity
-        }
-        if (x & 0x7c00) == 0 {
-            // Zero or subnormal: mantissa * 2^-24
-            return Float32(sign: (x & 0x8000) != 0 ? .minus : .plus, exponent: -24, significand: Float32(x & 0x03ff))
+        if exponent == 0 {
+            // Zero or subnormal: the value is the mantissa multiplied by 2^-24.
+            return Float32(sign: sign, exponent: -24, significand: Float32(mantissa))
         }
         var t1 = UInt32(x & 0x7fff)        // Non-sign bits
         var t2 = UInt32(x & 0x8000)        // Sign bit
