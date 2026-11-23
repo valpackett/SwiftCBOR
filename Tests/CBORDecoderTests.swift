@@ -201,6 +201,18 @@ class CBORDecoderTests: XCTestCase {
             _ = try? CBOR.decode(randomData, options: CBOROptions(maximumDepth: 512))
         }
     }
+
+    /// A declared array length must not be trusted to size an allocation. See
+    /// https://github.com/valpackett/SwiftCBOR/issues/133
+    func testDecodeFailsForUnreasonablyLongArray() {
+        // An array header claiming 2^60 elements, which cannot be allocated.
+        let hugeArray: [UInt8] = [0x9b, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        XCTAssertThrowsError(try CBOR.decode(hugeArray))
+
+        // The same for a map, which is built incrementally and so already fails cleanly.
+        let hugeMap: [UInt8] = [0xbb, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]
+        XCTAssertThrowsError(try CBOR.decode(hugeMap))
+    }
 }
 
 #if os(Android)
