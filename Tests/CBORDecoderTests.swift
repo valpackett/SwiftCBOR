@@ -61,6 +61,22 @@ class CBORDecoderTests: XCTestCase {
         XCTAssertEqual(try! CBORDecoder(input: [0x7f, 0x78, 3, 0x41, 0x42, 0x43, 0x63, 0x41, 0x42, 0x43, 0xff]).decodeItem(), "ABCABC")
     }
 
+    func testDecodeRejectsInvalidUtf8Strings() {
+        let invalidInputs: [[UInt8]] = [
+            [0x61, 0xff],                   // Invalid leading byte.
+            [0x62, 0xe2, 0x82],             // Truncated three-byte scalar.
+            [0x62, 0xc0, 0xaf],             // Overlong encoding.
+            [0x63, 0xed, 0xa0, 0x80],       // UTF-16 surrogate.
+            [0x64, 0xf4, 0x90, 0x80, 0x80]  // Beyond Unicode's maximum scalar.
+        ]
+
+        for input in invalidInputs {
+            XCTAssertThrowsError(try CBOR.decode(input)) { error in
+                XCTAssertEqual(error as? CBORError, CBORError.incorrectUTF8String)
+            }
+        }
+    }
+
     func testDecodeArrays() {
         XCTAssertEqual(try! CBORDecoder(input: [0x80]).decodeItem(), [])
         XCTAssertEqual(try! CBORDecoder(input: [0x82, 0x18, 1, 0x79, 0x00, 3, 0x41, 0x42, 0x43]).decodeItem(), [1, "ABC"])
