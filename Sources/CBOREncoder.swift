@@ -103,17 +103,21 @@ extension CBOR {
 
     #if canImport(Foundation)
     public static func encodeData(_ data: Data, options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return encodeByteString([UInt8](data), options: options)
+        var res = data.count.encode(options: options)
+        res[0] = res[0] | 0b010_00000
+        res.reserveCapacity(res.count + data.count)
+        res.append(contentsOf: data)
+        return res
     }
     #endif
 
     // MARK: - major 3: UTF8 string
 
     public static func encodeString(_ str: String, options: CBOROptions = CBOROptions()) -> [UInt8] {
-        let utf8array = Array(str.utf8)
-        var res = utf8array.count.encode(options: options)
+        var res = str.utf8.count.encode(options: options)
         res[0] = res[0] | 0b011_00000
-        res.append(contentsOf: utf8array)
+        res.reserveCapacity(res.count + str.utf8.count)
+        res.append(contentsOf: str.utf8)
         return res
     }
 
@@ -128,6 +132,35 @@ extension CBOR {
 
     // MARK: - major 5: a map of pairs of data items
 
+    internal static func encodeCBORMap(_ map: [CBOR: CBOR], options: CBOROptions = CBOROptions()) -> [UInt8] {
+        if options.forbidNonStringMapKeys {
+            try! ensureStringKey(CBOR.self)
+        }
+        var res: [UInt8] = []
+        res.reserveCapacity(1 + map.count * 2)
+        res = map.count.encode(options: options)
+        res[0] = res[0] | 0b101_00000
+
+        if options.shouldSortMapKeys {
+            let sortedEntries = map.map {
+                (encodedKey: $0.key.encode(options: options), value: $0.value)
+            }.sorted(by: {
+                $0.encodedKey.lexicographicallyPrecedes($1.encodedKey)
+            })
+
+            for entry in sortedEntries {
+                res.append(contentsOf: entry.encodedKey)
+                res.append(contentsOf: entry.value.encode(options: options))
+            }
+        } else {
+            for (key, value) in map {
+                res.append(contentsOf: key.encode(options: options))
+                res.append(contentsOf: value.encode(options: options))
+            }
+        }
+        return res
+    }
+
     public static func encodeMap<A: CBOREncodable, B: CBOREncodable>(_ map: [A: B], options: CBOROptions = CBOROptions()) -> [UInt8] {
         if options.forbidNonStringMapKeys {
             try! ensureStringKey(A.self)
@@ -138,18 +171,15 @@ extension CBOR {
         res[0] = res[0] | 0b101_00000
 
         if options.shouldSortMapKeys {
-            let sortedKeysWithEncodedKeys = map.keys.map {
-                (encoded: $0.encode(options: options), key: $0)
+            let sortedEntries = map.map {
+                (encodedKey: $0.key.encode(options: options), value: $0.value)
             }.sorted(by: {
-                $0.encoded.lexicographicallyPrecedes($1.encoded)
+                $0.encodedKey.lexicographicallyPrecedes($1.encodedKey)
             })
 
-            sortedKeysWithEncodedKeys.forEach { keyTuple in
-                res.append(contentsOf: keyTuple.encoded)
-                guard let value = map[keyTuple.key] else {
-                    return
-                }
-                res.append(contentsOf: value.encode(options: options))
+            for entry in sortedEntries {
+                res.append(contentsOf: entry.encodedKey)
+                res.append(contentsOf: entry.value.encode(options: options))
             }
         } else {
             for (k, v) in map {
@@ -415,7 +445,7 @@ extension CBOR {
             return (any as! Bool).encode()
         #if canImport(Foundation)
         case is Data:
-            return CBOR.encodeByteString((any as! Data).map { $0 }, options: options)
+            return CBOR.encodeData(any as! Data, options: options)
         case is Date:
             return CBOR.encodeDate((any as! Date), options: options)
         case is NSNull:

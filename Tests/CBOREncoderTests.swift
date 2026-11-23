@@ -178,6 +178,20 @@ class CBOREncoderTests: XCTestCase {
             "Map keys must be sorted in bytewise lexicographic order of their CBOR encodings per RFC 8949")
     }
 
+    func testCBORMapEncodingMatchesGenericMapEncoding() {
+        let map: [CBOR: CBOR] = [
+            "z": 1,
+            "a": [100],
+            "aa": -1,
+            CBOR.boolean(false): "value"
+        ]
+
+        for shouldSortMapKeys in [false, true] {
+            let options = CBOROptions(shouldSortMapKeys: shouldSortMapKeys)
+            XCTAssertEqual(CBOR.map(map).encode(options: options), CBOR.encodeMap(map, options: options))
+        }
+    }
+
     func testEncodeTagged() {
         let bignum: [UInt8] = [0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] // 2**64
         let bignumCBOR = CBOR.byteString(bignum)
