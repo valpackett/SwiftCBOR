@@ -64,10 +64,16 @@ public class CBORDecoder {
     }
 
     private func readN(_ n: Int) throws -> [CBOR] {
-        return try (0..<n).map { _ in
-            guard let r = try decodeItem() else { throw CBORError.unfinishedSequence }
-            return r
+        var result: [CBOR] = []
+        // The count comes from the input, so it must not be used to size an allocation:
+        // a handful of bytes can claim a count that is impossible to allocate. Reserve a
+        // little, then grow the array as the items are decoded.
+        result.reserveCapacity(min(n, 1024))
+        for _ in 0..<n {
+            guard let item = try decodeItem() else { throw CBORError.unfinishedSequence }
+            result.append(item)
         }
+        return result
     }
 
     func readUntilBreak() throws -> [CBOR] {
