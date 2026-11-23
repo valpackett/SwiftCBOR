@@ -96,11 +96,38 @@ class CBORDecoderTests: XCTestCase {
     }
 
     func testDecodeFloats() {
-        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.half(-4.0))
-        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xfc, 0x00]).decodeItem(), CBOR.half(-Float.infinity))
         XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x47, 0xc3, 0x50, 0x00]).decodeItem(), 100000.0)
         XCTAssertEqual(try! CBORDecoder(input: [0xfa, 0x7f, 0x80, 0x00, 0x00]).decodeItem(), CBOR.float(Float.infinity))
         XCTAssertEqual(try! CBORDecoder(input: [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66]).decodeItem(), CBOR.double(-4.1))
+    }
+
+    /// The half-precision float vectors from RFC 8949 Appendix A, along with the subnormal
+    /// half floats that RFC 8949 leaves to IEEE 754.
+    func testDecodeHalfFloats() {
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x00, 0x00]).decodeItem(), CBOR.half(0.0))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x3c, 0x00]).decodeItem(), CBOR.half(1.0))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x3e, 0x00]).decodeItem(), CBOR.half(1.5))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x7b, 0xff]).decodeItem(), CBOR.half(65504.0))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xc4, 0x00]).decodeItem(), CBOR.half(-4.0))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x00, 0x01]).decodeItem(), CBOR.half(5.960464477539063e-8))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x04, 0x00]).decodeItem(), CBOR.half(0.00006103515625))
+
+        // Subnormal half floats. 0x03ff is the largest of them.
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x03, 0xff]).decodeItem(), CBOR.half(6.097555160522461e-5))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x80, 0x01]).decodeItem(), CBOR.half(-5.960464477539063e-8))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0x83, 0xff]).decodeItem(), CBOR.half(-6.097555160522461e-5))
+
+        // Infinity and NaN.
+        guard case let .half(positiveInfinity)? = try! CBORDecoder(input: [0xf9, 0x7c, 0x00]).decodeItem() else { return XCTFail() }
+        XCTAssertEqual(positiveInfinity, Float32.infinity)
+        XCTAssertEqual(try! CBORDecoder(input: [0xf9, 0xfc, 0x00]).decodeItem(), CBOR.half(-Float.infinity))
+        guard case let .half(notANumber)? = try! CBORDecoder(input: [0xf9, 0x7e, 0x00]).decodeItem() else { return XCTFail() }
+        XCTAssertTrue(notANumber.isNaN)
+
+        // Negative zero keeps its sign, which CBOR's equality cannot see.
+        guard case let .half(negativeZero)? = try! CBORDecoder(input: [0xf9, 0x80, 0x00]).decodeItem() else { return XCTFail() }
+        XCTAssertEqual(negativeZero, 0)
+        XCTAssertEqual(negativeZero.sign, .minus)
     }
 
     func testDecodeDates() {

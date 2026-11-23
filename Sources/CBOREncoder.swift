@@ -15,7 +15,7 @@ func rawBytes<T>(of x: T) -> [UInt8] {
 
 /// Defines basic CBOR.encode API.
 /// Defines more fine-grained functions of form CBOR.encode*(_ x)
-/// for all CBOR types except Float16
+/// for all CBOR types
 extension CBOR {
     public static func encode<T: CBOREncodable>(_ value: T, options: CBOROptions = CBOROptions()) -> [UInt8] {
         return value.encode(options: options)
@@ -200,6 +200,79 @@ extension CBOR {
 
     public static func encodeBreak() -> [UInt8] {
         return [0xff]
+    }
+
+    /// Encodes a value as an IEEE 754 half-precision float, using the CBOR major type 7
+    /// additional information 25.
+    ///
+    /// Values that are not exactly representable in half precision are rounded to the nearest
+    /// representable value, with ties resolved towards the even significand, which is the same
+    /// conversion Swift performs for `Float16`. Values that are too large to represent round
+    /// to infinity, and values that are too small round to a subnormal half float or to zero.
+    public static func encodeHalf(_ x: Float) -> [UInt8] {
+        let bits = x.bitPattern
+        let sign = UInt16((bits >> 16) & 0x8000)
+        let exponent = Int((bits >> 23) & 0xFF)
+        let significand = bits & 0x007FFFFF
+
+        if exponent == 0xFF {
+            // Infinity, or a NaN. A NaN is encoded as a quiet NaN, keeping the leading
+            // payload bits of the float.
+            let payload = significand == 0 ? UInt16(0) : UInt16(0x0200 | (significand >> 13))
+            return [0xf9] + rawBytes(of: sign | 0x7C00 | payload)
+        }
+        if exponent == 0 {
+            // Zero, or a float subnormal, which is smaller than the smallest half float
+            // subnormal and so rounds to a signed zero.
+            return [0xf9] + rawBytes(of: sign)
+        }
+
+        // The float significand with the implicit leading bit made explicit, so that the
+        // value is the integer significand scaled by 2^(exponent - 127).
+        let significandWithImplicitBit = significand | 0x00800000
+        let unbiasedExponent = exponent - 127
+
+        if unbiasedExponent > 15 {
+            // Larger than the largest half float, which is 65504.
+            return [0xf9] + rawBytes(of: sign | 0x7C00)
+        }
+
+        if unbiasedExponent >= -14 {
+            // A normal half float: the exponent is biased by 15, and the top 10 bits of the
+            // significand are kept.
+            var halfExponent = UInt16(unbiasedExponent + 15)
+            var halfSignificand = UInt16((significandWithImplicitBit >> 13) & 0x03FF)
+            let remainder = significandWithImplicitBit & 0x1FFF
+            if remainder > 0x1000 || (remainder == 0x1000 && (halfSignificand & 1) == 1) {
+                halfSignificand += 1
+            }
+            if halfSignificand == 0x400 {
+                // Rounding up carried into the exponent, and an exponent of 31 is infinity.
+                halfSignificand = 0
+                halfExponent += 1
+                if halfExponent > 30 {
+                    return [0xf9] + rawBytes(of: sign | 0x7C00)
+                }
+            }
+            return [0xf9] + rawBytes(of: sign | (halfExponent << 10) | halfSignificand)
+        }
+
+        // A subnormal half float: the value is a multiple of 2^-24, so scale it into those
+        // units and round to nearest, with ties resolved towards even.
+        let shift = -(unbiasedExponent + 1)
+        var units: UInt32 = 0
+        if shift < 32 {
+            let scaled = UInt32(significandWithImplicitBit)
+            units = scaled >> UInt32(shift)
+            let remainder = scaled & ((UInt32(1) << UInt32(shift)) - 1)
+            let halfway = UInt32(1) << UInt32(shift - 1)
+            if remainder > halfway || (remainder == halfway && (units & 1) == 1) {
+                units += 1
+            }
+        }
+        // A value that rounds up to 1024 units is the smallest normal half float, which
+        // the encoding of the subnormal significand already produces.
+        return [0xf9] + rawBytes(of: sign | UInt16(units))
     }
 
     public static func encodeFloat(_ x: Float) -> [UInt8] {

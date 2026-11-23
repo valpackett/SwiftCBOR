@@ -17,7 +17,7 @@ extension CBOREncodable {
 }
 
 extension CBOR: CBOREncodable {
-    /// Encodes a wrapped CBOR value. CBOR.half (Float16) is not supported and encodes as `undefined`.
+    /// Encodes a wrapped CBOR value.
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
         switch self {
         case let .unsignedInt(ui): return CBOR.encodeVarUInt(ui)
@@ -34,7 +34,7 @@ extension CBOR: CBOREncodable {
         case let .boolean(b): return b.encode(options: options)
         case .null: return CBOR.encodeNull()
         case .undefined: return CBOR.encodeUndefined()
-        case .half(_): return CBOR.undefined.encode(options: options)
+        case let .half(f): return CBOR.encodeHalf(f)
         case let .float(f): return f.encode()
         case let .double(d): return d.encode()
         case .break: return CBOR.encodeBreak()
