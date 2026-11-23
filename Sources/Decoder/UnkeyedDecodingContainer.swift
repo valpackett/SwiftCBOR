@@ -14,6 +14,10 @@ extension _CBORDecoder {
         var index: Data.Index
 
         let options: CodableCBORDecoder._Options
+        let currentDepth: Int
+
+        // Track if this is a byte string being decoded as an array
+        let isByteString: Bool
 
         lazy var count: Int? = {
             do {
@@ -37,7 +41,18 @@ extension _CBORDecoder {
                     // decoding each item in the array.
                     let nextIndex = self.data.startIndex.advanced(by: 1)
                     let remainingData = self.data.suffix(from: nextIndex)
-                    return try? CBORDecoder(input: remainingData).readUntilBreak().count
+                    return try? CBORDecoder(input: remainingData, options: self.options.toCBOROptions()).readUntilBreak().count
+                // Byte strings (0x40-0x5f) - return length so they can be decoded as arrays
+                case 0x40...0x57:
+                    return Int(format & 0x1F)
+                case 0x58:
+                    return Int(try read(UInt8.self))
+                case 0x59:
+                    return Int(try read(UInt16.self))
+                case 0x5a:
+                    return Int(try read(UInt32.self))
+                case 0x5b:
+                    return Int(try read(UInt64.self))
                 default:
                     return nil
                 }
@@ -65,10 +80,42 @@ extension _CBORDecoder {
             }
 
             var containers: [CBORDecodingContainer] = []
-            for _ in 0..<count {
-                containers.append(try self.decodeContainer())
-            }
 
+            // Check if this container was created for a byte string
+            if self.isByteString {
+                // Byte string: treat each byte as a UInt8 array element
+                // Note: self.count has already consumed the format byte and length,
+                // so self.index now points to the first content byte
+
+                for _ in 0..<count {
+                    let byte = try self.readByte()
+
+                    // Wrap byte in proper CBOR encoding for UInt8
+                    let cborBytes: [UInt8]
+                    if byte < 24 {
+                        // Small integers 0-23 encode directly
+                        cborBytes = [byte]
+                    } else {
+                        // Larger integers use 0x18 prefix
+                        cborBytes = [0x18, byte]
+                    }
+
+                    let container = _CBORDecoder.SingleValueContainer(
+                        data: cborBytes[...],
+                        codingPath: self.nestedCodingPath,
+                        userInfo: self.userInfo,
+                        options: self.options,
+                        currentDepth: self.currentDepth
+                    )
+                    containers.append(container)
+                }
+            } else {
+                // Normal array: decode each element
+                for _ in 0..<count {
+                    let container = try self.decodeContainer()
+                    containers.append(container)
+                }
+            }
             self.currentIndex = 0
             self._nestedContainers = containers
             return containers
@@ -83,12 +130,14 @@ extension _CBORDecoder {
             return containers[index]
         }
 
-        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options, currentDepth: Int = 0, isByteString: Bool = false) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data
             self.index = self.data.startIndex
             self.options = options
+            self.currentDepth = currentDepth
+            self.isByteString = isByteString
         }
 
         var isAtEnd: Bool {
@@ -140,11 +189,10 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         defer { self.currentIndex += 1 }
 
         let container = try self.nestedContainer(at: self.currentIndex)
-        let decoder = CodableCBORDecoder()
-        decoder.setOptions(self.options)
-        let value = try decoder.decode(T.self, from: container.data)
-
-        return value
+        let innerDecoder = _CBORDecoder(data: container.data, options: self.options, currentDepth: self.currentDepth + 1)
+        innerDecoder.codingPath = self.codingPath + [AnyCodingKey(intValue: self.currentIndex)]
+        innerDecoder.userInfo = self.userInfo
+        return try T(from: innerDecoder)
     }
 
     func nestedUnkeyedContainer() throws -> UnkeyedDecodingContainer {
@@ -176,13 +224,14 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
             data: anyCodingKeyContainer.data,
             codingPath: anyCodingKeyContainer.codingPath,
             userInfo: anyCodingKeyContainer.userInfo,
-            options: anyCodingKeyContainer.options
+            options: anyCodingKeyContainer.options,
+            currentDepth: anyCodingKeyContainer.currentDepth
         )
         return KeyedDecodingContainer(container)
     }
 
     func superDecoder() throws -> Decoder {
-        return _CBORDecoder(data: self.data, options: self.options)
+        return _CBORDecoder(data: self.data, options: self.options, currentDepth: self.currentDepth + 1)
     }
 }
 
@@ -216,7 +265,7 @@ extension _CBORDecoder.UnkeyedContainer {
             throw DecodingError.dataCorruptedError(in: self, debugDescription: "Handling UTF8 strings with break bytes is not supported yet")
         // Arrays
         case 0x80...0x9f:
-            let container = _CBORDecoder.UnkeyedContainer(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
+            let container = _CBORDecoder.UnkeyedContainer(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
             _ = try container.nestedContainers()
 
             self.index = container.index
@@ -230,7 +279,7 @@ extension _CBORDecoder.UnkeyedContainer {
             return container
         // Maps
         case 0xa0...0xbf:
-            let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
+            let container = _CBORDecoder.KeyedContainer<AnyCodingKey>(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
             let _ = try container.nestedContainers() // FIXME
 
             self.index = container.index
@@ -267,8 +316,13 @@ extension _CBORDecoder.UnkeyedContainer {
 
         self.index = range.upperBound
 
-        let container = _CBORDecoder.SingleValueContainer(data: self.data[range.startIndex..<(range.endIndex)], codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
-
+        let container = _CBORDecoder.SingleValueContainer(
+            data: self.data[range.startIndex..<(range.endIndex)],
+            codingPath: self.codingPath,
+            userInfo: self.userInfo,
+            options: self.options,
+            currentDepth: self.currentDepth
+        )
         return container
     }
 
