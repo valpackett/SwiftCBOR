@@ -226,6 +226,54 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(0.0), [0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
     }
 
+    /// The half-precision float vectors from RFC 8949 Appendix A.
+    func testEncodeHalfFloats() {
+        XCTAssertEqual(CBOR.half(0.0).encode(), [0xf9, 0x00, 0x00])
+        XCTAssertEqual(CBOR.half(1.0).encode(), [0xf9, 0x3c, 0x00])
+        XCTAssertEqual(CBOR.half(1.5).encode(), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(CBOR.half(65504.0).encode(), [0xf9, 0x7b, 0xff])
+        XCTAssertEqual(CBOR.half(-4.0).encode(), [0xf9, 0xc4, 0x00])
+        XCTAssertEqual(CBOR.half(5.960464477539063e-8).encode(), [0xf9, 0x00, 0x01])
+        XCTAssertEqual(CBOR.half(0.00006103515625).encode(), [0xf9, 0x04, 0x00])
+        XCTAssertEqual(CBOR.half(-0.0).encode(), [0xf9, 0x80, 0x00])
+        XCTAssertEqual(CBOR.half(Float.infinity).encode(), [0xf9, 0x7c, 0x00])
+        XCTAssertEqual(CBOR.half(-Float.infinity).encode(), [0xf9, 0xfc, 0x00])
+
+        // A NaN is encoded as a quiet NaN.
+        XCTAssertEqual(CBOR.half(Float.nan).encode(), [0xf9, 0x7e, 0x00])
+
+        // The largest subnormal half float.
+        XCTAssertEqual(CBOR.half(6.097555160522461e-5).encode(), [0xf9, 0x03, 0xff])
+
+        // Values that are not exactly representable are rounded to nearest, with ties
+        // resolved towards the even significand.
+        XCTAssertEqual(CBOR.half(0.1).encode(), [0xf9, 0x2e, 0x66])
+        XCTAssertEqual(CBOR.half(1.00048828125).encode(), [0xf9, 0x3c, 0x00])
+        XCTAssertEqual(CBOR.half(1.00146484375).encode(), [0xf9, 0x3c, 0x02])
+
+        // Values that are too large round to infinity, and values that are too small round
+        // to zero.
+        XCTAssertEqual(CBOR.half(65520.0).encode(), [0xf9, 0x7c, 0x00])
+        XCTAssertEqual(CBOR.half(100000.0).encode(), [0xf9, 0x7c, 0x00])
+        XCTAssertEqual(CBOR.half(1e-30).encode(), [0xf9, 0x00, 0x00])
+    }
+
+    /// Every half float that is not a NaN must survive a decode and an encode unchanged.
+    func testHalfFloatRoundTrip() {
+        var mismatches: [UInt16] = []
+        for bits in UInt16(0)...UInt16(0xffff) {
+            // A NaN is decoded to a canonical quiet NaN, so those patterns are not
+            // round-tripped.
+            guard (bits & 0x7c00) != 0x7c00 else { continue }
+            let encoded: [UInt8] = [0xf9, UInt8(bits >> 8), UInt8(bits & 0xff)]
+            guard case let .half(value)? = try! CBOR.decode(encoded) else { return XCTFail() }
+            if CBOR.half(value).encode() != encoded {
+                mismatches.append(bits)
+            }
+        }
+        XCTAssertEqual(mismatches, [], "half floats that did not survive a decode and an encode unchanged")
+    }
+
     func testEncodeIndefiniteArrays() {
         var indefArray = CBOR.encodeArrayStreamStart()
         XCTAssertEqual(indefArray, [0x9f])
