@@ -35,10 +35,10 @@ jobs:
     - name: Test macOS
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=OS X,arch=x86_64'
     - name: Test iOS
-      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest'
+      run: scripts/test-simulator.sh iOS iPhone
     - name: Test tvOS
-      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=tvOS Simulator,name=Any tvOS Simulator Device'
+      run: scripts/test-simulator.sh tvOS "Apple TV"
     - name: Test Mac Catalyst
       run: xcodebuild test -scheme SwiftCBOR -destination 'platform=macOS,variant=Mac Catalyst'
     - name: Test watchOS
-      run: xcodebuild test -scheme SwiftCBOR -destination 'platform=watchOS Simulator,name=Any watchOS Simulator Device'
+      run: scripts/test-simulator.sh watchOS "Apple Watch"
