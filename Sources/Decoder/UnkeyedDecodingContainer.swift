@@ -48,26 +48,40 @@ extension _CBORDecoder {
 
         var currentIndex: Int = 0
 
-        lazy var nestedContainers: [CBORDecodingContainer] = {
+        private var _nestedContainers: [CBORDecodingContainer]?
+
+        /// The containers for the items of this array.
+        ///
+        /// Building them can fail on malformed data, in which case the error is thrown to the
+        /// caller rather than trapping the process.
+        func nestedContainers() throws -> [CBORDecodingContainer] {
+            if let cached = self._nestedContainers {
+                return cached
+            }
+
             guard let count = self.count else {
+                self._nestedContainers = []
                 return []
             }
 
-            var nestedContainers: [CBORDecodingContainer] = []
-
-            do {
-                for _ in 0..<count {
-                    let container = try self.decodeContainer()
-                    nestedContainers.append(container)
-                }
-            } catch {
-                fatalError("\(error)") // FIXME
+            var containers: [CBORDecodingContainer] = []
+            for _ in 0..<count {
+                containers.append(try self.decodeContainer())
             }
 
             self.currentIndex = 0
+            self._nestedContainers = containers
+            return containers
+        }
 
-            return nestedContainers
-        }()
+        /// The container for the item at the given index.
+        func nestedContainer(at index: Int) throws -> CBORDecodingContainer {
+            let containers = try self.nestedContainers()
+            guard index < containers.count else {
+                throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
+            }
+            return containers[index]
+        }
 
         init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
             self.codingPath = codingPath
@@ -110,7 +124,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        switch self.nestedContainers[self.currentIndex] {
+        switch try self.nestedContainer(at: self.currentIndex) {
         case let singleValueContainer as _CBORDecoder.SingleValueContainer:
             return singleValueContainer.decodeNil()
         case is _CBORDecoder.UnkeyedContainer, is _CBORDecoder.KeyedContainer<AnyCodingKey>:
@@ -125,7 +139,7 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex]
+        let container = try self.nestedContainer(at: self.currentIndex)
         let decoder = CodableCBORDecoder()
         decoder.setOptions(self.options)
         let value = try decoder.decode(T.self, from: container.data)
@@ -137,7 +151,12 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let container = self.nestedContainers[self.currentIndex] as! _CBORDecoder.UnkeyedContainer
+        guard let container = try self.nestedContainer(at: self.currentIndex) as? _CBORDecoder.UnkeyedContainer else {
+            throw DecodingError.typeMismatch(
+                UnkeyedDecodingContainer.self,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Cannot decode a nested unkeyed container at index \(self.currentIndex)")
+            )
+        }
 
         return container
     }
@@ -146,7 +165,12 @@ extension _CBORDecoder.UnkeyedContainer: UnkeyedDecodingContainer {
         try checkCanDecodeValue()
         defer { self.currentIndex += 1 }
 
-        let anyCodingKeyContainer = self.nestedContainers[self.currentIndex] as! _CBORDecoder.KeyedContainer<AnyCodingKey>
+        guard let anyCodingKeyContainer = try self.nestedContainer(at: self.currentIndex) as? _CBORDecoder.KeyedContainer<AnyCodingKey> else {
+            throw DecodingError.typeMismatch(
+                KeyedDecodingContainer<AnyCodingKey>.self,
+                DecodingError.Context(codingPath: self.codingPath, debugDescription: "Cannot decode a nested keyed container at index \(self.currentIndex)")
+            )
+        }
 
         let container = _CBORDecoder.KeyedContainer<NestedKey>(
             data: anyCodingKeyContainer.data,
@@ -193,7 +217,7 @@ extension _CBORDecoder.UnkeyedContainer {
         // Arrays
         case 0x80...0x9f:
             let container = _CBORDecoder.UnkeyedContainer(data: self.data.suffix(from: startIndex), codingPath: self.nestedCodingPath, userInfo: self.userInfo, options: self.options)
-            _ = container.nestedContainers
+            _ = try container.nestedContainers()
 
             self.index = container.index
             // Ensure that we're moving the index along for indefinite arrays so
@@ -233,6 +257,14 @@ extension _CBORDecoder.UnkeyedContainer {
         }
 
         let range: Range<Data.Index> = startIndex..<self.index.advanced(by: length)
+
+        guard range.startIndex >= self.data.startIndex && range.endIndex <= self.data.endIndex else {
+            throw DecodingError.dataCorruptedError(
+                in: self,
+                debugDescription: "Data range \(range) is out of bounds for data with range \(self.data.startIndex)..<\(self.data.endIndex)"
+            )
+        }
+
         self.index = range.upperBound
 
         let container = _CBORDecoder.SingleValueContainer(data: self.data[range.startIndex..<(range.endIndex)], codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)

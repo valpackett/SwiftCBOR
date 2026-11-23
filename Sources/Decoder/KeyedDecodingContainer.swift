@@ -24,7 +24,9 @@ extension _CBORDecoder {
         }
 
         func checkCanDecodeValue(forKey key: Key) throws {
-            guard self.contains(key) else {
+            // Look the key up directly rather than through contains(_:), so that a malformed
+            // map reports the error that caused it instead of a missing key.
+            guard try self.nestedContainers().keys.contains(anyCodingKeyForKey(key)) else {
                 let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
                 throw DecodingError.keyNotFound(key, context)
             }
@@ -44,20 +46,25 @@ extension _CBORDecoder {
             let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
             unkeyedContainer.count = count * 2
 
-            var iterator = unkeyedContainer.nestedContainers.makeIterator()
+            var iterator = try unkeyedContainer.nestedContainers().makeIterator()
 
             for _ in 0..<count {
                 guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
                     let container = iterator.next() else {
-                        fatalError() // FIXME
+                        throw DecodingError.dataCorrupted(
+                            DecodingError.Context(
+                                codingPath: self.codingPath,
+                                debugDescription: "Malformed map data: expected a key and a value for each entry"
+                            )
+                        )
                 }
 
                 let keyVal: AnyCodingKey
                 if self.options.useStringKeys {
-                    let stringKey = try! keyContainer.decode(String.self)
+                    let stringKey = try keyContainer.decode(String.self)
                     keyVal = AnyCodingKey(stringValue: stringKey)
                 } else {
-                    keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                    keyVal = try keyContainer.decode(AnyCodingKey.self)
                 }
                 nestedContainers[keyVal] = container
             }
@@ -139,7 +146,10 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
-        let container = try self.nestedContainers()[anyCodingKeyForKey(key)]!
+        guard let container = try self.nestedContainers()[anyCodingKeyForKey(key)] else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
+            throw DecodingError.keyNotFound(key, context)
+        }
         let decoder = CodableCBORDecoder()
         decoder.setOptions(self.options)
         return try decoder.decode(T.self, from: container.data)

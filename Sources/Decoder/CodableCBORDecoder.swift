@@ -90,6 +90,10 @@ extension _CBORDecoder: Decoder {
         try ensureMap(self.data.first, keyType: Key.self)
 
         let container = KeyedContainer<Key>(data: self.data, codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+        // Build the containers for the entries up front, so that malformed data is reported
+        // here. The allKeys and contains(_:) accessors cannot throw, so an error that only
+        // surfaced there would be silently swallowed.
+        _ = try container.nestedContainers()
         self.container = container
 
         return KeyedDecodingContainer(container)
