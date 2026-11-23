@@ -104,6 +104,24 @@ class CodableCBORDecoderTests: XCTestCase {
         XCTAssertEqual(nestedIndefiniteArrays, [[1], [2, 3], [4, 5]])
     }
 
+    /// Malformed data must be reported as a thrown error rather than trapping the process.
+    /// See https://github.com/valpackett/SwiftCBOR/issues/132 and
+    /// https://github.com/valpackett/SwiftCBOR/issues/69
+    func testMalformedDataThrowsRatherThanTrapping() {
+        // A map with one pair whose key is a byte string, so it is neither an Int nor a String.
+        let malformedMap = Data([0xa1, 0x42, 0x01, 0x02, 0x63, 0x61])
+        XCTAssertThrowsError(try CodableCBORDecoder().decode([String: String].self, from: malformedMap))
+        XCTAssertThrowsError(try CodableCBORDecoder().decode(AnyCodingKey.self, from: malformedMap))
+
+        // An array that claims three items but only holds one.
+        let truncatedArray = Data([0x83, 0x01])
+        XCTAssertThrowsError(try CodableCBORDecoder().decode([Int].self, from: truncatedArray))
+
+        // A byte string that claims more bytes than the data holds.
+        let truncatedByteString = Data([0x81, 0x58, 0x64, 0x01])
+        XCTAssertThrowsError(try CodableCBORDecoder().decode([Data].self, from: truncatedByteString))
+    }
+
     func testDecodeMaps() {
         let empty = try! CodableCBORDecoder().decode([String: String].self, from: Data([0xa0]))
         XCTAssertEqual(empty, [:])
