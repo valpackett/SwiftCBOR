@@ -50,12 +50,12 @@ class CBORTests: XCTestCase {
         let cborEncoded: [UInt8] = try! CBOR.encodeMap(dictionary)
         var cbor = try! CBOR.decode(cborEncoded)!
 
-        let nestedMap: [CBOR: CBOR] = [
-            "joe": "schmoe",
-            "age": 56
-        ]
+        let nestedMap = CBORMap([
+            ("joe", "schmoe"),
+            ("age", 56)
+        ])
 
-        cbor["tags"]?[2] = CBOR.map(nestedMap)
-        XCTAssertEqual(cbor["tags"]?[2], CBOR.map(nestedMap))
+        cbor["tags"]?[2] = .map(nestedMap)
+        XCTAssertEqual(cbor["tags"]?[2], .map(nestedMap))
     }
 }

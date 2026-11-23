@@ -25,7 +25,7 @@ extension CBOR: CBOREncodable {
         case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
         case let .utf8String(str): return str.encode(options: options)
         case let .array(a): return CBOR.encodeArray(a, options: options)
-        case let .map(m): return CBOR.encodeMap(m, options: options)
+        case let .map(m): return CBOR.encodeCBORMap(m, options: options)
         #if canImport(Foundation)
         case let .date(d): return CBOR.encodeDate(d, options: options)
         #endif
@@ -210,7 +210,7 @@ extension Dictionary where Key: CBOREncodable, Value: CBOREncodable {
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
-        return CBOR.map(Dictionary<CBOR, CBOR>(uniqueKeysWithValues: self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) }))
+        return CBOR.map(CBORMap(self.map { ($0.key.toCBOR(options: options), $0.value.toCBOR(options: options)) }))
     }
 }
 

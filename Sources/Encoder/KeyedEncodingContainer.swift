@@ -2,7 +2,8 @@ import Foundation
 
 extension _CBOREncoder {
     final class KeyedContainer<Key: CodingKey> {
-        var storage: [AnyCodingKey: CBOREncodingContainer] = [:]
+        /// The containers for the keys of this object, in the order the keys were encoded in.
+        var storage: [(key: AnyCodingKey, container: CBOREncodingContainer)] = []
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
@@ -38,7 +39,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.setContainer(container, forKey: anyCodingKeyForKey(key))
         return container
     }
 
@@ -48,7 +49,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.setContainer(container, forKey: anyCodingKeyForKey(key))
         return container
     }
 
@@ -58,8 +59,17 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.setContainer(container, forKey: anyCodingKeyForKey(key))
         return KeyedEncodingContainer(container)
+    }
+
+    /// Adds the container for a key, replacing the container for that key if there is one.
+    private func setContainer(_ container: CBOREncodingContainer, forKey key: AnyCodingKey) {
+        if let index = self.storage.firstIndex(where: { $0.key == key }) {
+            self.storage[index] = (key: key, container: container)
+        } else {
+            self.storage.append((key: key, container: container))
+        }
     }
 
     fileprivate func anyCodingKeyForKey(_ key: Key) -> AnyCodingKey {

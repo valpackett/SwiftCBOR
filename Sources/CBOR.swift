@@ -12,7 +12,7 @@ public indirect enum CBOR : Equatable, Hashable,
     case byteString([UInt8])
     case utf8String(String)
     case array([CBOR])
-    case map([CBOR : CBOR])
+    case map(CBORMap)
     case tagged(Tag, CBOR)
     case simple(UInt8)
     case boolean(Bool)
@@ -33,7 +33,7 @@ public indirect enum CBOR : Equatable, Hashable,
         case let .byteString(l):  Util.djb2Hash(l.map { Int($0) }).hash(into: &hasher)
         case let .utf8String(l):  l.hash(into: &hasher)
         case let .array(l):       Util.djb2Hash(l.map { $0.hashValue }).hash(into: &hasher)
-        case let .map(l):         Util.djb2Hash(l.map { $0.hashValue &+ $1.hashValue }).hash(into: &hasher)
+        case let .map(l):         l.hash(into: &hasher)
         case let .tagged(t, l):   t.hash(into: &hasher)
                                   l.hash(into: &hasher)
         case let .simple(l):      l.hash(into: &hasher)
@@ -84,11 +84,7 @@ public indirect enum CBOR : Equatable, Hashable,
     public init(stringLiteral value: String) { self = .utf8String(value) }
     public init(arrayLiteral elements: CBOR...) { self = .array(elements) }
     public init(dictionaryLiteral elements: (CBOR, CBOR)...) {
-        var result = [CBOR : CBOR]()
-        for (key, value) in elements {
-            result[key] = value
-        }
-        self = .map(result)
+        self = .map(CBORMap(elements))
     }
     public init(booleanLiteral value: Bool) { self = .boolean(value) }
     public init(floatLiteral value: Float32) { self = .float(value) }

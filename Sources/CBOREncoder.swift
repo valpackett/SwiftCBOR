@@ -275,6 +275,37 @@ extension CBOR {
         return [0xf9] + rawBytes(of: sign | UInt16(units))
     }
 
+    /// Encodes a map of CBOR values.
+    ///
+    /// The keys are encoded in the order they are stored in, or sorted by their encoded
+    /// bytes when the options ask for map keys to be sorted, as RFC 8949 Section 4.2.1
+    /// requires for deterministic encoding.
+    public static func encodeCBORMap(_ map: CBORMap, options: CBOROptions = CBOROptions()) -> [UInt8] {
+        var res: [UInt8] = []
+        res.reserveCapacity(1 + map.count * 2)
+        res = map.count.encode(options: options)
+        res[0] = res[0] | 0b101_00000
+
+        if options.shouldSortMapKeys {
+            let sortedKeysWithEncodedKeys = map.keys.map {
+                (encoded: $0.encode(options: options), key: $0)
+            }.sorted(by: {
+                $0.encoded.lexicographicallyPrecedes($1.encoded)
+            })
+
+            for keyTuple in sortedKeysWithEncodedKeys {
+                res.append(contentsOf: keyTuple.encoded)
+                res.append(contentsOf: map[keyTuple.key]!.encode(options: options))
+            }
+        } else {
+            for (key, value) in map.pairs {
+                res.append(contentsOf: key.encode(options: options))
+                res.append(contentsOf: value.encode(options: options))
+            }
+        }
+        return res
+    }
+
     public static func encodeFloat(_ x: Float) -> [UInt8] {
         return [0xfa] + rawBytes(of: x)
     }
@@ -495,9 +526,8 @@ extension CBOR {
             return try CBOR.array(anyArr.map { try cborFromAny($0) })
         case is [String: Any?]:
             let anyMap = any as! [String: Any?]
-            return try CBOR.map(Dictionary(
-                uniqueKeysWithValues: anyMap.map { try (cborFromAny($0.key), cborFromAny($0.value)) }
-            ))
+            let pairs = try anyMap.map { try (cborFromAny($0.key), cborFromAny($0.value)) }
+            return try CBOR.map(CBORMap(pairs))
         case is Void:
             return CBOR.undefined
         case nil:

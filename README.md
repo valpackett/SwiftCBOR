@@ -12,6 +12,7 @@ A [CBOR (RFC 7049 Concise Binary Object Representation)](http://cbor.io) decoder
 - And `subscript` too. So you can access CBOR maps and arrays like this: `myDecodedObject["numbers"][1]`.
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
 - Half floats can be decoded to a Float and encoded again from a `CBOR.half` value.
+- Maps keep the order their keys arrived in, so a map that is decoded and encoded again comes back out the way it went in.
 - Memory efficiency of encoding needs tuning. (Encoding is not typically done in-place.)
 - Encoding indefinite-length data is supported but you need to explicitly add open and close information to your streaming data.
 - [cbor.me](http://cbor.me) is recommended for viewing your CBOR-encoded data.

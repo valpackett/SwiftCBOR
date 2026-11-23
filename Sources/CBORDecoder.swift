@@ -87,8 +87,8 @@ public class CBORDecoder {
         return result
     }
 
-    private func readNPairs(_ n: Int) throws -> [CBOR : CBOR] {
-        var result: [CBOR: CBOR] = [:]
+    private func readNPairs(_ n: Int) throws -> CBORMap {
+        var result = CBORMap()
         for _ in (0..<n) {
             guard let key  = try decodeItem() else { throw CBORError.unfinishedSequence }
             guard let val  = try decodeItem() else { throw CBORError.unfinishedSequence }
@@ -97,8 +97,8 @@ public class CBORDecoder {
         return result
     }
 
-    func readPairsUntilBreak() throws -> [CBOR : CBOR] {
-        var result: [CBOR: CBOR] = [:]
+    func readPairsUntilBreak() throws -> CBORMap {
+        var result = CBORMap()
         var key = try decodeItem()
         if key == CBOR.break {
             return result
