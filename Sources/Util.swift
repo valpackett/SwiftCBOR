@@ -19,8 +19,8 @@ final class Util {
         return result
     }
 
-    static func djb2Hash(_ array: [Int]) -> Int {
-        return array.reduce(5381, { hash, elem in ((hash << 5) &+ hash) &+ Int(elem) })
+    static func djb2Hash<S: Sequence>(_ values: S) -> Int where S.Element == Int {
+        values.reduce(5381, { hash, elem in ((hash << 5) &+ hash) &+ elem })
     }
 
     // https://gist.github.com/martinkallman/5049614

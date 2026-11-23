@@ -30,7 +30,7 @@ public indirect enum CBOR : Equatable, Hashable,
         switch self {
         case let .unsignedInt(l): l.hash(into: &hasher)
         case let .negativeInt(l): l.hash(into: &hasher)
-        case let .byteString(l):  Util.djb2Hash(l.map { Int($0) }).hash(into: &hasher)
+        case let .byteString(l):  Util.djb2Hash(l.lazy.map { Int($0) }).hash(into: &hasher)
         case let .utf8String(l):  l.hash(into: &hasher)
         case let .array(l):       Util.djb2Hash(l.map { $0.hashValue }).hash(into: &hasher)
         case let .map(l):         Util.djb2Hash(l.map { $0.hashValue &+ $1.hashValue }).hash(into: &hasher)
