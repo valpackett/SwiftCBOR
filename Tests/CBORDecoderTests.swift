@@ -143,6 +143,31 @@ class CBORDecoderTests: XCTestCase {
         XCTAssertEqual(try! CBORDecoder(input: [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66]).decodeItem(), CBOR.double(-4.1))
     }
 
+    func testDecodeRejectsBreakWhereDataItemIsExpected() {
+        let malformed: [[UInt8]] = [
+            [0xff],
+            [0x81, 0xff],
+            [0x82, 0x00, 0xff],
+            [0xa1, 0xff],
+            [0xa1, 0xff, 0x00],
+            [0xa1, 0x00, 0xff],
+            [0xbf, 0x00, 0xff],
+            [0xc0, 0xff]
+        ]
+        for input in malformed {
+            XCTAssertThrowsError(try CBOR.decode(input), "break must not decode as a data item in \(input)") { error in
+                XCTAssertEqual(error as? CBORError, .wrongTypeInsideSequence)
+            }
+        }
+    }
+
+    func testDecodeAcceptsBreakAsIndefiniteLengthTerminator() {
+        XCTAssertEqual(try CBOR.decode([0x9f, 0x01, 0xff]), .array([1]))
+        XCTAssertEqual(try CBOR.decode([0xbf, 0x00, 0x01, 0xff]), .map([0: 1]))
+        XCTAssertEqual(try CBOR.decode([0x5f, 0xff]), .byteString([]))
+        XCTAssertEqual(try CBOR.decode([0x7f, 0xff]), .utf8String(""))
+    }
+
     /// The half-precision float vectors from RFC 8949 Appendix A, along with the subnormal
     /// half floats that RFC 8949 leaves to IEEE 754.
     func testDecodeHalfFloats() {
