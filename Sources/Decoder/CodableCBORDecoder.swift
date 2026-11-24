@@ -144,11 +144,7 @@ extension _CBORDecoder: Decoder {
             // all good, continue
             return
         case nil:
-            let context = DecodingError.Context(
-                codingPath: self.codingPath,
-                debugDescription: "Unexpected end of data"
-            )
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         default:
             let typeDescriptionOfByte = typeDescriptionFromByte(initialByte!) ?? "unknown"
             let context = DecodingError.Context(
@@ -166,11 +162,7 @@ extension _CBORDecoder: Decoder {
             // Byte strings can be decoded as arrays of UInt8
             return
         case nil:
-            let context = DecodingError.Context(
-                codingPath: self.codingPath,
-                debugDescription: "Unexpected end of data"
-            )
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         default:
             let typeDescriptionOfByte = typeDescriptionFromByte(initialByte!) ?? "unknown"
             let context = DecodingError.Context(
@@ -194,8 +186,7 @@ protocol CBORDecodingContainer: AnyObject {
 extension CBORDecodingContainer {
     func readByte() throws -> UInt8 {
         guard self.index < self.data.endIndex else {
-            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         }
         defer { self.index += 1 }
         return self.data[self.index]
@@ -204,8 +195,7 @@ extension CBORDecodingContainer {
     func read(_ length: Int) throws -> Data {
         let nextIndex = self.index.advanced(by: length)
         guard nextIndex <= self.data.endIndex else {
-            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         }
         defer { self.index = nextIndex }
 
@@ -214,8 +204,7 @@ extension CBORDecodingContainer {
 
     func peekByte() throws -> UInt8 {
         guard self.index < self.data.endIndex else {
-            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         }
         return self.data[self.index]
     }
@@ -223,8 +212,7 @@ extension CBORDecodingContainer {
     func peek(_ length: Int) throws -> ArraySlice<UInt8> {
         let nextIndex = self.index.advanced(by: length)
         guard nextIndex <= self.data.endIndex else {
-            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         }
 
         return self.data[self.index..<(nextIndex)]
@@ -234,8 +222,7 @@ extension CBORDecodingContainer {
         let stride = MemoryLayout<T>.stride
         let nextIndex = self.index.advanced(by: stride)
         guard nextIndex <= self.data.endIndex else {
-            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
-            throw DecodingError.dataCorrupted(context)
+            throw unexpectedEndOfDataError(codingPath: self.codingPath)
         }
         var result: T = 0
         for byte in self.data[self.index..<nextIndex] {
@@ -244,6 +231,11 @@ extension CBORDecodingContainer {
         self.index = nextIndex
         return result
     }
+}
+
+func unexpectedEndOfDataError(codingPath: [CodingKey]) -> DecodingError {
+    let context = DecodingError.Context(codingPath: codingPath, debugDescription: "Unexpected end of data")
+    return DecodingError.dataCorrupted(context)
 }
 
 func typeDescriptionFromByte(_ byte: UInt8) -> String? {

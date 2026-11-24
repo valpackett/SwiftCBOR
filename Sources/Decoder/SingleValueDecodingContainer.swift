@@ -20,7 +20,7 @@ extension _CBORDecoder {
 
         func checkCanDecode<T>(_ type: T.Type, format: UInt8) throws {
             guard self.index < self.data.endIndex else {
-                throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
+                throw unexpectedEndOfDataError(codingPath: self.codingPath)
             }
 
             guard self.data[self.index] == format else {
