@@ -25,7 +25,7 @@ extension CBOR: CBOREncodable {
         case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
         case let .utf8String(str): return str.encode(options: options)
         case let .array(a): return CBOR.encodeArray(a, options: options)
-        case let .map(m): return CBOR.encodeMap(m, options: options)
+        case let .map(m): return CBOR.encodeCBORMap(m, options: options)
         #if canImport(Foundation)
         case let .date(d): return CBOR.encodeDate(d, options: options)
         #endif
@@ -253,7 +253,7 @@ extension Date: CBOREncodable {
 
 extension Data: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeByteString(self.map{ $0 }, options: options)
+        return CBOR.encodeData(self, options: options)
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
