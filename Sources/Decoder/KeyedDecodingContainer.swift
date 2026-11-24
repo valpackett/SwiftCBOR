@@ -43,14 +43,35 @@ extension _CBORDecoder {
                 return [:]
             }
 
-            var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = [:]
+            if let nestedContainers = self._nestedContainers {
+                return nestedContainers
+            }
 
             let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
             unkeyedContainer.count = count * 2
 
-            var iterator = try unkeyedContainer.nestedContainers().makeIterator()
+            let containers = try unkeyedContainer.nestedContainers()
+            let nestedContainers = try self.keyedContainers(from: containers)
 
-            for _ in 0..<count {
+            self.index = unkeyedContainer.index
+            self._nestedContainers = nestedContainers
+            return nestedContainers
+        }
+
+        private func keyedContainers(from containers: [CBORDecodingContainer]) throws -> [AnyCodingKey: CBORDecodingContainer] {
+            guard containers.count.isMultiple(of: 2) else {
+                throw DecodingError.dataCorrupted(
+                    DecodingError.Context(
+                        codingPath: self.codingPath,
+                        debugDescription: "Malformed map data: expected a key and a value for each entry"
+                    )
+                )
+            }
+
+            var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = [:]
+            var iterator = containers.makeIterator()
+
+            for _ in 0..<containers.count / 2 {
                 guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
                     let container = iterator.next() else {
                         throw DecodingError.dataCorrupted(
@@ -70,9 +91,6 @@ extension _CBORDecoder {
                 }
                 nestedContainers[keyVal] = container
             }
-
-            self.index = unkeyedContainer.index
-            self._nestedContainers = nestedContainers
             return nestedContainers
         }
 
@@ -91,14 +109,13 @@ extension _CBORDecoder {
             case 0xba: count = Int(try read(UInt32.self))
             case 0xbb: count = Int(try read(UInt64.self))
             case 0xbf:
-                // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
-                // nestedContainers code so that if we're working with a map that has a break at the end
-                // it creates the containers as it goes, rather than first calculating the count (which
-                // involves going through all the bytes) and then going back through the data and decoding
-                // each key-value pair in the map.
-                let nextIndex = self.data.startIndex.advanced(by: 1)
-                let remainingData = self.data.suffix(from: nextIndex)
-                count = try? CBORDecoder(input: remainingData.map { $0 }, options: self.options.toCBOROptions()).readPairsUntilBreak().keys.count
+                // Build the entries directly instead of decoding the map once to count it and again to use it.
+                let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
+                let containers = try unkeyedContainer.readContainersUntilBreak()
+                let nestedContainers = try self.keyedContainers(from: containers)
+                self.index = unkeyedContainer.index
+                self._nestedContainers = nestedContainers
+                count = nestedContainers.count
             default:
                 let context = DecodingError.Context(
                     codingPath: self.codingPath,

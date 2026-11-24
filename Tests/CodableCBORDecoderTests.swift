@@ -104,6 +104,28 @@ class CodableCBORDecoderTests: XCTestCase {
         XCTAssertEqual(nestedIndefiniteArrays, [[1], [2, 3], [4, 5]])
     }
 
+    func testIndefiniteCollectionBoundaries() throws {
+        let emptyArray = try CodableCBORDecoder().decode([Int].self, from: Data([0x9f, 0xff]))
+        XCTAssertEqual(emptyArray, [])
+
+        let array = try CodableCBORDecoder().decode([Int].self, from: Data([0x9f, 0x01, 0x02, 0xff]))
+        XCTAssertEqual(array, [1, 2])
+
+        let emptyMap = try CodableCBORDecoder().decode([String: Int].self, from: Data([0xbf, 0xff]))
+        XCTAssertEqual(emptyMap, [:])
+
+        let map = try CodableCBORDecoder().decode([String: Int].self, from: Data([0xbf, 0x61, 0x61, 0x01, 0xff]))
+        XCTAssertEqual(map, ["a": 1])
+    }
+
+    func testMalformedIndefiniteMapsThrow() {
+        // A key without a value.
+        XCTAssertThrowsError(try CodableCBORDecoder().decode([String: Int].self, from: Data([0xbf, 0x61, 0x61, 0xff])))
+
+        // No terminating break.
+        XCTAssertThrowsError(try CodableCBORDecoder().decode([String: Int].self, from: Data([0xbf, 0x61, 0x61, 0x01])))
+    }
+
     /// Malformed data must be reported as a thrown error rather than trapping the process.
     /// See https://github.com/valpackett/SwiftCBOR/issues/132 and
     /// https://github.com/valpackett/SwiftCBOR/issues/69

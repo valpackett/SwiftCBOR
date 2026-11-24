@@ -5,7 +5,7 @@ extension _CBORDecoder {
         var codingPath: [CodingKey]
 
         var nestedCodingPath: [CodingKey] {
-            return self.codingPath + [AnyCodingKey(intValue: self.count ?? 0)]
+            return self.codingPath + [AnyCodingKey(intValue: self.isReadingUntilBreak ? self.currentIndex : (self.count ?? 0))]
         }
 
         var userInfo: [CodingUserInfoKey: Any]
@@ -34,14 +34,9 @@ extension _CBORDecoder {
                 case 0x9b:
                     return Int(try read(UInt64.self))
                 case 0x9f:
-                    // FIXME: This is a very inefficient way of doing this. Really we should be modifying the
-                    // nestedContainers code so that if we're working with an array that has a break at the
-                    // end it creates the containers as it goes, rather than first calculating the count
-                    // (which involves going through all the bytes) and then going back through the data and
-                    // decoding each item in the array.
-                    let nextIndex = self.data.startIndex.advanced(by: 1)
-                    let remainingData = self.data.suffix(from: nextIndex)
-                    return try? CBORDecoder(input: remainingData, options: self.options.toCBOROptions()).readUntilBreak().count
+                    let containers = try self.readContainersUntilBreak()
+                    self._nestedContainers = containers
+                    return containers.count
                 // Byte strings (0x40-0x5f) - return length so they can be decoded as arrays
                 case 0x40...0x57:
                     return Int(format & 0x1F)
@@ -64,6 +59,7 @@ extension _CBORDecoder {
         var currentIndex: Int = 0
 
         private var _nestedContainers: [CBORDecodingContainer]?
+        private var isReadingUntilBreak = false
 
         /// The containers for the items of this array.
         ///
@@ -77,6 +73,10 @@ extension _CBORDecoder {
             guard let count = self.count else {
                 self._nestedContainers = []
                 return []
+            }
+
+            if let cached = self._nestedContainers {
+                return cached
             }
 
             var containers: [CBORDecodingContainer] = []
@@ -130,6 +130,24 @@ extension _CBORDecoder {
             return containers[index]
         }
 
+        func readContainersUntilBreak() throws -> [CBORDecodingContainer] {
+            self.isReadingUntilBreak = true
+            defer { self.isReadingUntilBreak = false }
+
+            var containers: [CBORDecodingContainer] = []
+            while true {
+                guard self.index < self.data.endIndex else {
+                    throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
+                }
+                if self.data[self.index] == 0xff {
+                    break
+                }
+                containers.append(try self.decodeContainer())
+            }
+            self.currentIndex = 0
+            return containers
+        }
+
         init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options, currentDepth: Int = 0, isByteString: Bool = false) {
             self.codingPath = codingPath
             self.userInfo = userInfo
@@ -156,6 +174,9 @@ extension _CBORDecoder {
         }
 
         func checkCanDecodeValue() throws {
+            if self.isReadingUntilBreak {
+                return
+            }
             guard !self.isAtEnd else {
                 throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
             }
