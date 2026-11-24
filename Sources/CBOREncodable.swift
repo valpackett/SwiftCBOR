@@ -257,7 +257,7 @@ extension Data: CBOREncodable {
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
-        return CBOR.byteString(self.map { $0 })
+        return CBOR.byteString(self.withUnsafeBytes { Array($0) })
     }
 }
 #endif

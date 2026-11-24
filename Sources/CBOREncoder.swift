@@ -520,7 +520,7 @@ extension CBOR {
             return CBOR.boolean(any as! Bool)
         #if canImport(Foundation)
         case is Data:
-            return CBOR.byteString((any as! Data).map { $0 })
+            return CBOR.byteString((any as! Data).withUnsafeBytes { Array($0) })
         case is Date:
             return CBOR.date(any as! Date)
         case is NSNull:
