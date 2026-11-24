@@ -36,10 +36,12 @@ public class CBORDecoder {
         self.options = options
     }
 
-    func readBinaryNumber<T>(_ type: T.Type) throws -> T {
-        Array(try self.istream.popBytes(MemoryLayout<T>.size).reversed()).withUnsafeBytes { ptr in
-            return ptr.load(as: T.self)
+    func readBinaryNumber<T: FixedWidthInteger>(_ type: T.Type) throws -> T {
+        var result: T = 0
+        for byte in try self.istream.popBytes(MemoryLayout<T>.size) {
+            result = (result << 8) | T(byte)
         }
+        return result
     }
 
     func readVarUInt(_ v: UInt8, base: UInt8) throws -> UInt64 {
@@ -198,9 +200,9 @@ public class CBORDecoder {
         case 0xf9:
             return CBOR.half(Util.readFloat16(x: try readBinaryNumber(UInt16.self)))
         case 0xfa:
-            return CBOR.float(try readBinaryNumber(Float32.self))
+            return CBOR.float(Float32(bitPattern: try readBinaryNumber(UInt32.self)))
         case 0xfb:
-            return CBOR.double(try readBinaryNumber(Float64.self))
+            return CBOR.double(Float64(bitPattern: try readBinaryNumber(UInt64.self)))
 
         case 0xff: return CBOR.break
         default: return nil
