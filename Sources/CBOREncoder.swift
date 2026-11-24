@@ -312,26 +312,40 @@ extension CBOR {
     }
 
     public static func encodeFloat(_ x: Float) -> [UInt8] {
-        if x.isNaN {
-            return [0xf9, 0x7e, 0x00]
-        }
-        let half = encodeHalf(x)
-        let halfBits = UInt16(half[1]) << 8 | UInt16(half[2])
-        if Util.readFloat16(x: halfBits).bitPattern == x.bitPattern {
-            return half
-        }
         return [0xfa] + rawBytes(of: x)
     }
 
     public static func encodeDouble(_ x: Double) -> [UInt8] {
+        return [0xfb] + rawBytes(of: x)
+    }
+
+    static func encodePreferredFloat(_ x: Float) -> [UInt8] {
+        let bits = x.bitPattern
         if x.isNaN {
-            return [0xf9, 0x7e, 0x00]
+            let significand = bits & 0x007FFFFF
+            guard significand & 0x1FFF == 0 else { return encodeFloat(x) }
+            let halfBits = UInt16((bits >> 16) & 0x8000) | 0x7C00 | UInt16(significand >> 13)
+            return [0xf9] + rawBytes(of: halfBits)
+        }
+        let half = encodeHalf(x)
+        let halfBits = UInt16(half[1]) << 8 | UInt16(half[2])
+        return Util.readFloat16(x: halfBits).bitPattern == bits ? half : encodeFloat(x)
+    }
+
+    static func encodePreferredDouble(_ x: Double) -> [UInt8] {
+        let bits = x.bitPattern
+        if x.isNaN {
+            let significand = bits & 0x000F_FFFF_FFFF_FFFF
+            if significand & 0x0000_03FF_FFFF_FFFF == 0 {
+                let halfBits = UInt16((bits >> 48) & 0x8000) | 0x7C00 | UInt16(significand >> 42)
+                return [0xf9] + rawBytes(of: halfBits)
+            }
+            guard significand & 0x1FFF_FFFF == 0 else { return encodeDouble(x) }
+            let floatBits = UInt32((bits >> 32) & 0x8000_0000) | 0x7F80_0000 | UInt32(significand >> 29)
+            return [0xfa] + rawBytes(of: floatBits)
         }
         let float = Float(x)
-        if Double(float).bitPattern == x.bitPattern {
-            return encodeFloat(float)
-        }
-        return [0xfb] + rawBytes(of: x)
+        return Double(float).bitPattern == bits ? encodePreferredFloat(float) : encodeDouble(x)
     }
 
     public static func encodeBool(_ x: Bool) -> [UInt8] {

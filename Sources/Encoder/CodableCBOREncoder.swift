@@ -4,27 +4,32 @@ public class CodableCBOREncoder {
     public var useStringKeys: Bool = false
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
     public var forbidNonStringMapKeys: Bool = false
+    public var preferredFloatSerialization: Bool = false
 
     struct _Options {
         let useStringKeys: Bool
         let dateStrategy: DateStrategy
         let forbidNonStringMapKeys: Bool
+        let preferredFloatSerialization: Bool
 
         init(
             useStringKeys: Bool = false,
             dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
-            forbidNonStringMapKeys: Bool = false
+            forbidNonStringMapKeys: Bool = false,
+            preferredFloatSerialization: Bool = false
         ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
             self.forbidNonStringMapKeys = forbidNonStringMapKeys
+            self.preferredFloatSerialization = preferredFloatSerialization
         }
 
         func toCBOROptions() -> CBOROptions {
             return CBOROptions(
                 useStringKeys: self.useStringKeys,
                 dateStrategy: self.dateStrategy,
-                forbidNonStringMapKeys: self.forbidNonStringMapKeys
+                forbidNonStringMapKeys: self.forbidNonStringMapKeys,
+                preferredFloatSerialization: self.preferredFloatSerialization
             )
         }
     }
@@ -33,7 +38,8 @@ public class CodableCBOREncoder {
         return _Options(
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
-            forbidNonStringMapKeys: self.forbidNonStringMapKeys
+            forbidNonStringMapKeys: self.forbidNonStringMapKeys,
+            preferredFloatSerialization: self.preferredFloatSerialization
         )
     }
 
@@ -62,6 +68,7 @@ public class CodableCBOREncoder {
         self.useStringKeys = newOptions.useStringKeys
         self.dateStrategy = newOptions.dateStrategy
         self.forbidNonStringMapKeys = newOptions.forbidNonStringMapKeys
+        self.preferredFloatSerialization = newOptions.preferredFloatSerialization
     }
 }
 

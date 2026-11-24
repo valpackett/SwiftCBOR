@@ -5,6 +5,8 @@ public struct CBOROptions {
     /// The maximum number of nested items, inclusive, to decode. A maximum set to 0 dissallows anything other than top-level primitives.
     let maximumDepth: Int
     let shouldSortMapKeys: Bool
+    /// Whether to use the shortest floating-point encoding that preserves the value exactly.
+    let preferredFloatSerialization: Bool
     /// Whether to reject a map that holds the same key more than once.
     ///
     /// A map with duplicate keys is well formed, but not valid. RFC 8949 Section 5.6 lists
@@ -19,6 +21,7 @@ public struct CBOROptions {
         forbidNonStringMapKeys: Bool = false,
         maximumDepth: Int = .max,
         shouldSortMapKeys: Bool = true,
+        preferredFloatSerialization: Bool = false,
         rejectDuplicateMapKeys: Bool = false
     ) {
         self.useStringKeys = useStringKeys
@@ -26,6 +29,7 @@ public struct CBOROptions {
         self.forbidNonStringMapKeys = forbidNonStringMapKeys
         self.maximumDepth = maximumDepth
         self.shouldSortMapKeys = shouldSortMapKeys
+        self.preferredFloatSerialization = preferredFloatSerialization
         self.rejectDuplicateMapKeys = rejectDuplicateMapKeys
     }
 
@@ -33,7 +37,8 @@ public struct CBOROptions {
         return CodableCBOREncoder._Options(
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
-            forbidNonStringMapKeys: self.forbidNonStringMapKeys
+            forbidNonStringMapKeys: self.forbidNonStringMapKeys,
+            preferredFloatSerialization: self.preferredFloatSerialization
         )
     }
 

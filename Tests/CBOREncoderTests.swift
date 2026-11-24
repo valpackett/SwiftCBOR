@@ -211,40 +211,57 @@ class CBOREncoderTests: XCTestCase {
     }
 
     func testEncodeFloats() {
-        // RFC 8949 preferred serialization uses the shortest exact representation.
-        XCTAssertEqual(Float(0.0).encode(), [0xf9, 0x00, 0x00])
-        XCTAssertEqual(Float(-0.0).encode(), [0xf9, 0x80, 0x00])
-        XCTAssertEqual(Float(1.0).encode(), [0xf9, 0x3c, 0x00])
-        XCTAssertEqual(Float(1.5).encode(), [0xf9, 0x3e, 0x00])
-        XCTAssertEqual(Float(65504.0).encode(), [0xf9, 0x7b, 0xff])
-        XCTAssertEqual(Float(5.960464477539063e-8).encode(), [0xf9, 0x00, 0x01])
-        XCTAssertEqual(Double(1.5).encode(), [0xf9, 0x3e, 0x00])
-        XCTAssertEqual(Double(5.960464477539063e-8).encode(), [0xf9, 0x00, 0x01])
+        // The following tests are modifications of examples of Float16 in the RFC
+        XCTAssertEqual(Float(0.0).encode(), [0xfa,0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(Float(-0.0).encode(), [0xfa, 0x80, 0x00, 0x00, 0x00])
+        XCTAssertEqual(Float(1.0).encode(), [0xfa, 0x3f, 0x80, 0x00, 0x00])
+        XCTAssertEqual(Float(1.5).encode(), [0xfa,0x3f,0xc0, 0x00,0x00])
+        XCTAssertEqual(Float(65504.0).encode(), [0xfa, 0x47, 0x7f, 0xe0, 0x00])
 
-        // Values that are not exactly representable in half precision use a longer form.
+        // The following are seen as Float32s in the RFC
         XCTAssertEqual(Float(100000.0).encode(), [0xfa,0x47,0xc3,0x50,0x00])
         XCTAssertEqual(Float(3.4028234663852886e+38).encode(), [0xfa, 0x7f, 0x7f, 0xff, 0xff])
-        XCTAssertEqual(Float(1.00048828125).encode(), [0xfa, 0x3f, 0x80, 0x10, 0x00])
-        XCTAssertEqual(Float.leastNonzeroMagnitude.encode(), [0xfa, 0x00, 0x00, 0x00, 0x01])
-        XCTAssertEqual(Double(100000.0).encode(), [0xfa, 0x47, 0xc3, 0x50, 0x00])
-        XCTAssertEqual(Double(Float.pi).encode(), [0xfa, 0x40, 0x49, 0x0f, 0xda])
 
         // The following are seen as Doubles in the RFC
         XCTAssertEqual(Double(1.1).encode(), [0xfb,0x3f,0xf1,0x99,0x99,0x99,0x99,0x99,0x9a])
         XCTAssertEqual(Double(-4.1).encode(), [0xfb, 0xc0, 0x10, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66])
         XCTAssertEqual(CBOR.encode(1.0e+300), [0xfb, 0x7e, 0x37, 0xe4, 0x3c, 0x88, 0x00, 0x75, 0x9c])
-        XCTAssertEqual(Double.leastNonzeroMagnitude.encode(), [0xfb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+        XCTAssertEqual(Double(5.960464477539063e-8).encode(), [0xfb, 0x3e, 0x70, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
         // Special values
-        XCTAssertEqual(Float.infinity.encode(), [0xf9, 0x7c, 0x00])
-        XCTAssertEqual(CBOR.encode(-Float.infinity), [0xf9, 0xfc, 0x00])
-        XCTAssertEqual(Double.infinity.encode(), [0xf9, 0x7c, 0x00])
-        XCTAssertEqual(CBOR.encode(-Double.infinity), [0xf9, 0xfc, 0x00])
-        XCTAssertEqual(Float.nan.encode(), [0xf9, 0x7e, 0x00])
-        XCTAssertEqual(Double.nan.encode(), [0xf9, 0x7e, 0x00])
+        XCTAssertEqual(Float.infinity.encode(), [0xfa, 0x7f, 0x80, 0x00, 0x00])
+        XCTAssertEqual(CBOR.encode(-Float.infinity), [0xfa, 0xff, 0x80, 0x00, 0x00])
+        XCTAssertEqual(Double.infinity.encode(), [0xfb, 0x7f, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(CBOR.encode(-Double.infinity), [0xfb, 0xff, 0xf0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+        XCTAssertEqual(Float.nan.encode(), [0xfa,0x7f, 0xc0, 0x00, 0x00])
+        XCTAssertEqual(Double.nan.encode(), [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
 
         // Swift's floating point literals are read as Doubles unless specifically specified. e.g.
-        XCTAssertEqual(CBOR.encode(0.0), [0xf9, 0x00, 0x00])
+        XCTAssertEqual(CBOR.encode(0.0), [0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
+    }
+
+    func testPreferredFloatSerialization() {
+        let options = CBOROptions(preferredFloatSerialization: true)
+
+        XCTAssertEqual(Float(0.0).encode(options: options), [0xf9, 0x00, 0x00])
+        XCTAssertEqual(Float(-0.0).encode(options: options), [0xf9, 0x80, 0x00])
+        XCTAssertEqual(Float(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(Double(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(Double(5.960464477539063e-8).encode(options: options), [0xf9, 0x00, 0x01])
+        XCTAssertEqual(CBOR.float(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(CBOR.double(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+
+        XCTAssertEqual(Float(100000.0).encode(options: options), [0xfa, 0x47, 0xc3, 0x50, 0x00])
+        XCTAssertEqual(Float(1.00048828125).encode(options: options), [0xfa, 0x3f, 0x80, 0x10, 0x00])
+        XCTAssertEqual(Double(Float.pi).encode(options: options), [0xfa, 0x40, 0x49, 0x0f, 0xda])
+        XCTAssertEqual(Double(1.1).encode(options: options), [0xfb, 0x3f, 0xf1, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9a])
+
+        XCTAssertEqual(Float.nan.encode(options: options), [0xf9, 0x7e, 0x00])
+        XCTAssertEqual(Double.nan.encode(options: options), [0xf9, 0x7e, 0x00])
+        XCTAssertEqual(Float(bitPattern: 0xffc00000).encode(options: options), [0xf9, 0xfe, 0x00])
+        XCTAssertEqual(Float(bitPattern: 0x7fc00001).encode(options: options), [0xfa, 0x7f, 0xc0, 0x00, 0x01])
+        XCTAssertEqual(Double(bitPattern: 0x7ff8000020000000).encode(options: options), [0xfa, 0x7f, 0xc0, 0x00, 0x01])
+        XCTAssertEqual(Double(bitPattern: 0x7ff8000000000001).encode(options: options), [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
     }
 
     /// The half-precision float vectors from RFC 8949 Appendix A.
@@ -291,8 +308,9 @@ class CBOREncoderTests: XCTestCase {
             if CBOR.half(value).encode() != encoded {
                 mismatches.append(bits)
             }
-            XCTAssertEqual(value.encode(), encoded)
-            XCTAssertEqual(Double(value).encode(), encoded)
+            let options = CBOROptions(preferredFloatSerialization: true)
+            XCTAssertEqual(value.encode(options: options), encoded)
+            XCTAssertEqual(Double(value).encode(options: options), encoded)
         }
         XCTAssertEqual(mismatches, [], "half floats that did not survive a decode and an encode unchanged")
     }
