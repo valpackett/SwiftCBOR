@@ -240,6 +240,30 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(0.0), [0xfb,0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00])
     }
 
+    func testPreferredFloatSerialization() {
+        let options = CBOROptions(useShortestFloatEncoding: true)
+
+        XCTAssertEqual(Float(0.0).encode(options: options), [0xf9, 0x00, 0x00])
+        XCTAssertEqual(Float(-0.0).encode(options: options), [0xf9, 0x80, 0x00])
+        XCTAssertEqual(Float(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(Double(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(Double(5.960464477539063e-8).encode(options: options), [0xf9, 0x00, 0x01])
+        XCTAssertEqual(CBOR.float(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+        XCTAssertEqual(CBOR.double(1.5).encode(options: options), [0xf9, 0x3e, 0x00])
+
+        XCTAssertEqual(Float(100000.0).encode(options: options), [0xfa, 0x47, 0xc3, 0x50, 0x00])
+        XCTAssertEqual(Float(1.00048828125).encode(options: options), [0xfa, 0x3f, 0x80, 0x10, 0x00])
+        XCTAssertEqual(Double(Float.pi).encode(options: options), [0xfa, 0x40, 0x49, 0x0f, 0xda])
+        XCTAssertEqual(Double(1.1).encode(options: options), [0xfb, 0x3f, 0xf1, 0x99, 0x99, 0x99, 0x99, 0x99, 0x9a])
+
+        XCTAssertEqual(Float.nan.encode(options: options), [0xf9, 0x7e, 0x00])
+        XCTAssertEqual(Double.nan.encode(options: options), [0xf9, 0x7e, 0x00])
+        XCTAssertEqual(Float(bitPattern: 0xffc00000).encode(options: options), [0xf9, 0xfe, 0x00])
+        XCTAssertEqual(Float(bitPattern: 0x7fc00001).encode(options: options), [0xfa, 0x7f, 0xc0, 0x00, 0x01])
+        XCTAssertEqual(Double(bitPattern: 0x7ff8000020000000).encode(options: options), [0xfa, 0x7f, 0xc0, 0x00, 0x01])
+        XCTAssertEqual(Double(bitPattern: 0x7ff8000000000001).encode(options: options), [0xfb, 0x7f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+    }
+
     /// The half-precision float vectors from RFC 8949 Appendix A.
     func testEncodeHalfFloats() {
         XCTAssertEqual(CBOR.half(0.0).encode(), [0xf9, 0x00, 0x00])
@@ -284,6 +308,9 @@ class CBOREncoderTests: XCTestCase {
             if CBOR.half(value).encode() != encoded {
                 mismatches.append(bits)
             }
+            let options = CBOROptions(useShortestFloatEncoding: true)
+            XCTAssertEqual(value.encode(options: options), encoded)
+            XCTAssertEqual(Double(value).encode(options: options), encoded)
         }
         XCTAssertEqual(mismatches, [], "half floats that did not survive a decode and an encode unchanged")
     }

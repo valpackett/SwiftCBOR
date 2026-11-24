@@ -35,8 +35,8 @@ extension CBOR: CBOREncodable {
         case .null: return CBOR.encodeNull()
         case .undefined: return CBOR.encodeUndefined()
         case let .half(f): return CBOR.encodeHalf(f)
-        case let .float(f): return f.encode()
-        case let .double(d): return d.encode()
+        case let .float(f): return f.encode(options: options)
+        case let .double(d): return d.encode(options: options)
         case .break: return CBOR.encodeBreak()
         }
     }
@@ -166,7 +166,7 @@ extension String: CBOREncodable {
 
 extension Float: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeFloat(self)
+        return options.useShortestFloatEncoding ? CBOR.encodePreferredFloat(self) : CBOR.encodeFloat(self)
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
@@ -176,7 +176,7 @@ extension Float: CBOREncodable {
 
 extension Double: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeDouble(self)
+        return options.useShortestFloatEncoding ? CBOR.encodePreferredDouble(self) : CBOR.encodeDouble(self)
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {

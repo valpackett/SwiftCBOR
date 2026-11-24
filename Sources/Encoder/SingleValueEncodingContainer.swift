@@ -51,14 +51,14 @@ extension _CBOREncoder.SingleValueContainer: SingleValueEncodingContainer {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encodeDouble(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: Float) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encodeFloat(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: Int) throws {
