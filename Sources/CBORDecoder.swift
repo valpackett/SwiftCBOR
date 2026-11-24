@@ -81,11 +81,11 @@ public class CBORDecoder {
 
     func readUntilBreak(allowIndefiniteStrings: Bool = true) throws -> [CBOR] {
         var result: [CBOR] = []
-        var cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings)
+        var cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings, allowBreak: true)
         while cur != CBOR.break {
             guard let curr = cur else { throw CBORError.unfinishedSequence }
             result.append(curr)
-            cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings)
+            cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings, allowBreak: true)
         }
         return result
     }
@@ -105,7 +105,7 @@ public class CBORDecoder {
 
     func readPairsUntilBreak() throws -> [CBOR : CBOR] {
         var result: [CBOR: CBOR] = [:]
-        var key = try decodeItem()
+        var key = try decodeItem(allowBreak: true)
         if key == CBOR.break {
             return result
         }
@@ -117,7 +117,7 @@ public class CBORDecoder {
                 throw CBORError.duplicateMapKey
             }
             result[okey] = oval
-            do { key = try decodeItem() } catch CBORError.unfinishedSequence { key = nil }
+            do { key = try decodeItem(allowBreak: true) } catch CBORError.unfinishedSequence { key = nil }
             guard (key != CBOR.break) else { break } // don't eat the val after the break!
             do { val = try decodeItem() } catch CBORError.unfinishedSequence { val = nil }
         }
@@ -125,10 +125,10 @@ public class CBORDecoder {
     }
 
     public func decodeItem() throws -> CBOR? {
-        return try decodeItem(allowIndefiniteStrings: true)
+        return try decodeItem(allowIndefiniteStrings: true, allowBreak: false)
     }
 
-    private func decodeItem(allowIndefiniteStrings: Bool) throws -> CBOR? {
+    private func decodeItem(allowIndefiniteStrings: Bool = true, allowBreak: Bool = false) throws -> CBOR? {
         guard currentDepth <= options.maximumDepth
         else { throw CBORError.maximumDepthExceeded }
         
@@ -220,7 +220,9 @@ public class CBORDecoder {
         case 0xfb:
             return CBOR.double(Float64(bitPattern: try readBinaryNumber(UInt64.self)))
 
-        case 0xff: return CBOR.break
+        case 0xff:
+            guard allowBreak else { throw CBORError.wrongTypeInsideSequence }
+            return CBOR.break
         default: return nil
         }
     }
