@@ -151,6 +151,17 @@ class CBORDecoderTests: XCTestCase {
         XCTAssertEqual(try! CBOR.decode([0xc1, 0x1a, 0x51, 0x4b, 0x67, 0xb0]), CBOR.date(dateOne))
         let dateTwo = Date(timeIntervalSince1970: 1363896240.5)
         XCTAssertEqual(try! CBOR.decode([0xc1, 0xfb, 0x41, 0xd4, 0x52, 0xd9, 0xec, 0x20, 0x00, 0x00]), CBOR.date(dateTwo))
+        let halfDate = Date(timeIntervalSince1970: 1)
+        XCTAssertEqual(try! CBOR.decode([0xc1, 0xf9, 0x3c, 0x00]), CBOR.date(halfDate))
+
+        let annotatedHalfDate = CBOR.map([
+            .utf8String("__type"): .utf8String("date_epoch_timestamp"),
+            .utf8String("__value"): .half(1),
+        ]).encode()
+        XCTAssertEqual(
+            try! CBOR.decode(annotatedHalfDate, options: CBOROptions(dateStrategy: .annotatedMap)),
+            CBOR.date(halfDate)
+        )
     }
 
     func testDecodePerformance() {
