@@ -14,17 +14,21 @@ extension _CBORDecoder {
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
         let options: CodableCBORDecoder._Options
+        let currentDepth: Int
 
-        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options) {
+        init(data: ArraySlice<UInt8>, codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBORDecoder._Options, currentDepth: Int = 0) {
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.data = data
             self.index = self.data.startIndex
             self.options = options
+            self.currentDepth = currentDepth
         }
 
         func checkCanDecodeValue(forKey key: Key) throws {
-            guard self.contains(key) else {
+            // Look the key up directly rather than through contains(_:), so that a malformed
+            // map reports the error that caused it instead of a missing key.
+            guard try self.nestedContainers().keys.contains(anyCodingKeyForKey(key)) else {
                 let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
                 throw DecodingError.keyNotFound(key, context)
             }
@@ -41,23 +45,28 @@ extension _CBORDecoder {
 
             var nestedContainers: [AnyCodingKey: CBORDecodingContainer] = [:]
 
-            let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
+            let unkeyedContainer = UnkeyedContainer(data: self.data.suffix(from: self.index), codingPath: self.codingPath, userInfo: self.userInfo, options: self.options, currentDepth: self.currentDepth)
             unkeyedContainer.count = count * 2
 
-            var iterator = unkeyedContainer.nestedContainers.makeIterator()
+            var iterator = try unkeyedContainer.nestedContainers().makeIterator()
 
             for _ in 0..<count {
                 guard let keyContainer = iterator.next() as? _CBORDecoder.SingleValueContainer,
                     let container = iterator.next() else {
-                        fatalError() // FIXME
+                        throw DecodingError.dataCorrupted(
+                            DecodingError.Context(
+                                codingPath: self.codingPath,
+                                debugDescription: "Malformed map data: expected a key and a value for each entry"
+                            )
+                        )
                 }
 
                 let keyVal: AnyCodingKey
                 if self.options.useStringKeys {
-                    let stringKey = try! keyContainer.decode(String.self)
+                    let stringKey = try keyContainer.decode(String.self)
                     keyVal = AnyCodingKey(stringValue: stringKey)
                 } else {
-                    keyVal = try! keyContainer.decode(AnyCodingKey.self)
+                    keyVal = try keyContainer.decode(AnyCodingKey.self)
                 }
                 nestedContainers[keyVal] = container
             }
@@ -89,7 +98,7 @@ extension _CBORDecoder {
                 // each key-value pair in the map.
                 let nextIndex = self.data.startIndex.advanced(by: 1)
                 let remainingData = self.data.suffix(from: nextIndex)
-                count = try? CBORDecoder(input: remainingData.map { $0 }).readPairsUntilBreak().keys.count
+                count = try? CBORDecoder(input: remainingData.map { $0 }, options: self.options.toCBOROptions()).readPairsUntilBreak().keys.count
             default:
                 let context = DecodingError.Context(
                     codingPath: self.codingPath,
@@ -139,10 +148,14 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
     func decode<T: Decodable>(_ type: T.Type, forKey key: Key) throws -> T {
         try checkCanDecodeValue(forKey: key)
 
-        let container = try self.nestedContainers()[anyCodingKeyForKey(key)]!
-        let decoder = CodableCBORDecoder()
-        decoder.setOptions(self.options)
-        return try decoder.decode(T.self, from: container.data)
+        guard let container = try self.nestedContainers()[anyCodingKeyForKey(key)] else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "key not found: \(key)")
+            throw DecodingError.keyNotFound(key, context)
+        }
+        let innerDecoder = _CBORDecoder(data: container.data, options: self.options, currentDepth: self.currentDepth + 1)
+        innerDecoder.codingPath = self.codingPath + [key]
+        innerDecoder.userInfo = self.userInfo
+        return try T(from: innerDecoder)
     }
 
     func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
@@ -165,17 +178,18 @@ extension _CBORDecoder.KeyedContainer: KeyedDecodingContainerProtocol {
             data: anyCodingKeyedContainer.data,
             codingPath: anyCodingKeyedContainer.codingPath,
             userInfo: anyCodingKeyedContainer.userInfo,
-            options: anyCodingKeyedContainer.options
+            options: anyCodingKeyedContainer.options,
+            currentDepth: anyCodingKeyedContainer.currentDepth
         )
         return KeyedDecodingContainer(container)
     }
 
     func superDecoder() throws -> Decoder {
-        return _CBORDecoder(data: self.data, options: self.options)
+        return _CBORDecoder(data: self.data, options: self.options, currentDepth: self.currentDepth + 1)
     }
 
     func superDecoder(forKey key: Key) throws -> Decoder {
-        let decoder = _CBORDecoder(data: self.data, options: self.options)
+        let decoder = _CBORDecoder(data: self.data, options: self.options, currentDepth: self.currentDepth + 1)
         decoder.codingPath = [key]
 
         return decoder
