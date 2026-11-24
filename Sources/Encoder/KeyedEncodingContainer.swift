@@ -81,7 +81,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         let encoder = _CBOREncoder(options: self.options)
         encoder.codingPath = self.codingPath + [superKey]
         encoder.userInfo = self.userInfo
-        self.storage[superKey] = encoder
+        self.storage.entries[superKey] = encoder
         return encoder
     }
 
@@ -89,7 +89,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         let encoder = _CBOREncoder(options: self.options)
         encoder.codingPath = self.nestedCodingPath(forKey: key)
         encoder.userInfo = self.userInfo
-        self.storage[anyCodingKeyForKey(key)] = encoder
+        self.storage.entries[anyCodingKeyForKey(key)] = encoder
         return encoder
     }
 }

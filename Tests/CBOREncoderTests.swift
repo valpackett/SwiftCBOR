@@ -411,7 +411,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(decoded, myCodableThing)
     }
     
-    func testEncodeVariant() {
+    func testEncodeVariant() throws {
         enum Variant: Codable, Equatable {
             case small(Small)
             case large(Large)
@@ -458,21 +458,28 @@ class CBOREncoderTests: XCTestCase {
             }
         }
         
-        let smallValue = Int.random(in: 50...50000)
-        let largeValue = Int.random(in: 50...50000)
-        let largeLabel = UUID().uuidString
+        let originalSmall = Variant.small(.init(value: 42))
+        let originalLarge = Variant.large(.init(label: "large", value: 1001))
         
-        let originalSmall = Variant.small(.init(value: smallValue))
-        let originalLarge = Variant.large(.init(label: largeLabel, value: largeValue))
+        let encodedSmall = try CBOR.encodeAny(originalSmall)
+        let encodedLarge = try CBOR.encodeAny(originalLarge)
+
+        let smallCBOR = try XCTUnwrap(CBOR.decode(encodedSmall))
+        guard case let .map(smallMap) = smallCBOR else {
+            return XCTFail("Expected the small variant to encode as a map")
+        }
+        XCTAssertEqual(smallMap, ["style": "small", "value": 42])
+
+        let largeCBOR = try XCTUnwrap(CBOR.decode(encodedLarge))
+        guard case let .map(largeMap) = largeCBOR else {
+            return XCTFail("Expected the large variant to encode as a map")
+        }
+        XCTAssertEqual(largeMap, ["style": "large", "label": "large", "value": 1001])
         
-        let encodedSmall = try! CBOR.encodeAny(originalSmall)
-        let encodedLarge = try! CBOR.encodeAny(originalLarge)
-        
-        let decodedSmall = try! CodableCBORDecoder().decode(Variant.self, from: Data(encodedSmall))
-        let decodedLarge = try! CodableCBORDecoder().decode(Variant.self, from: Data(encodedLarge))
+        let decodedSmall = try CodableCBORDecoder().decode(Variant.self, from: Data(encodedSmall))
+        let decodedLarge = try CodableCBORDecoder().decode(Variant.self, from: Data(encodedLarge))
         
         XCTAssertEqual(decodedSmall, originalSmall)
-        XCTAssertEqual(decodedLarge, originalLarge)
         XCTAssertEqual(decodedLarge, originalLarge)
     }
 }
