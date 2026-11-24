@@ -1,6 +1,16 @@
+#if canImport(Foundation)
+import Foundation
+#endif
+
 final class Util {
     // https://stackoverflow.com/questions/24465475/how-can-i-create-a-string-from-utf8-in-swift
     static func decodeUtf8(_ bytes: ArraySlice<UInt8>) throws -> String {
+#if canImport(Foundation)
+        guard let result = String(bytes: bytes, encoding: .utf8) else {
+            throw CBORError.incorrectUTF8String
+        }
+        return result
+#else
         var result = ""
         var decoder = UTF8()
         var generator = bytes.makeIterator()
@@ -17,6 +27,7 @@ final class Util {
             }
         } while (!finished)
         return result
+#endif
     }
 
     static func djb2Hash<S: Sequence>(_ values: S) -> Int where S.Element == Int {
