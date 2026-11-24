@@ -223,6 +223,8 @@ func getDateFromTimestamp(_ item: CBOR) throws -> Date {
         return Date(timeIntervalSince1970: TimeInterval(d))
     case .negativeInt(let n):
         return Date(timeIntervalSince1970: TimeInterval(-1 - Double(n)))
+    case .half(let h):
+        return Date(timeIntervalSince1970: TimeInterval(h))
     case .float(let f):
         return Date(timeIntervalSince1970: TimeInterval(f))
     case .unsignedInt(let u):
