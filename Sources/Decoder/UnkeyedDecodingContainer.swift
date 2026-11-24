@@ -346,7 +346,7 @@ extension _CBORDecoder.UnkeyedContainer {
             return 8
         // Byte strings
         case 0x40...0x57:
-            return try CBORDecoder(input: [0]).readLength(format, base: 0x40)
+            return Int(format & 0x1f)
         case 0x58:
             let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             return try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 1
@@ -361,7 +361,7 @@ extension _CBORDecoder.UnkeyedContainer {
             return try CBORDecoder(input: remainingData).readLength(format, base: 0x40) + 8
         // UTF8 strings
         case 0x60...0x77:
-            return try CBORDecoder(input: [0]).readLength(format, base: 0x60)
+            return Int(format & 0x1f)
         case 0x78:
             let remainingData = self.data.suffix(from: startIndex.advanced(by: 1))
             return try CBORDecoder(input: remainingData).readLength(format, base: 0x60) + 1
