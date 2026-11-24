@@ -312,10 +312,25 @@ extension CBOR {
     }
 
     public static func encodeFloat(_ x: Float) -> [UInt8] {
+        if x.isNaN {
+            return [0xf9, 0x7e, 0x00]
+        }
+        let half = encodeHalf(x)
+        let halfBits = UInt16(half[1]) << 8 | UInt16(half[2])
+        if Util.readFloat16(x: halfBits).bitPattern == x.bitPattern {
+            return half
+        }
         return [0xfa] + rawBytes(of: x)
     }
 
     public static func encodeDouble(_ x: Double) -> [UInt8] {
+        if x.isNaN {
+            return [0xf9, 0x7e, 0x00]
+        }
+        let float = Float(x)
+        if Double(float).bitPattern == x.bitPattern {
+            return encodeFloat(float)
+        }
         return [0xfb] + rawBytes(of: x)
     }
 
