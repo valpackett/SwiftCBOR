@@ -5,23 +5,27 @@ public class CodableCBOREncoder {
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
     public var forbidNonStringMapKeys: Bool = false
     public var useShortestFloatEncoding: Bool = false
+    public var useShortestIntegerEncoding: Bool = false
 
     struct _Options {
         let useStringKeys: Bool
         let dateStrategy: DateStrategy
         let forbidNonStringMapKeys: Bool
         let useShortestFloatEncoding: Bool
+        let useShortestIntegerEncoding: Bool
 
         init(
             useStringKeys: Bool = false,
             dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
             forbidNonStringMapKeys: Bool = false,
-            useShortestFloatEncoding: Bool = false
+            useShortestFloatEncoding: Bool = false,
+            useShortestIntegerEncoding: Bool = false
         ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
             self.forbidNonStringMapKeys = forbidNonStringMapKeys
             self.useShortestFloatEncoding = useShortestFloatEncoding
+            self.useShortestIntegerEncoding = useShortestIntegerEncoding
         }
 
         func toCBOROptions() -> CBOROptions {
@@ -29,7 +33,8 @@ public class CodableCBOREncoder {
                 useStringKeys: self.useStringKeys,
                 dateStrategy: self.dateStrategy,
                 forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-                useShortestFloatEncoding: self.useShortestFloatEncoding
+                useShortestFloatEncoding: self.useShortestFloatEncoding,
+                useShortestIntegerEncoding: self.useShortestIntegerEncoding
             )
         }
     }
@@ -39,7 +44,8 @@ public class CodableCBOREncoder {
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
             forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-            useShortestFloatEncoding: self.useShortestFloatEncoding
+            useShortestFloatEncoding: self.useShortestFloatEncoding,
+            useShortestIntegerEncoding: self.useShortestIntegerEncoding
         )
     }
 
@@ -69,6 +75,7 @@ public class CodableCBOREncoder {
         self.dateStrategy = newOptions.dateStrategy
         self.forbidNonStringMapKeys = newOptions.forbidNonStringMapKeys
         self.useShortestFloatEncoding = newOptions.useShortestFloatEncoding
+        self.useShortestIntegerEncoding = newOptions.useShortestIntegerEncoding
     }
 }
 

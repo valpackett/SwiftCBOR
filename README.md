@@ -12,6 +12,7 @@ A [CBOR (Concise Binary Object Representation)](https://www.rfc-editor.org/rfc/r
 - And `subscript` too. So you can access CBOR maps and arrays like this: `myDecodedObject["numbers"][1]`.
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
 - Half floats can be decoded to a Float and encoded again from a `CBOR.half` value.
+- General-purpose integer encoding preserves fixed-width output for `UInt16`, `UInt32`, and `UInt64` by default. Set `useShortestIntegerEncoding` to `true` to use the shortest-width argument form described by RFC 8949 preferred serialization; fine-grained `encodeUInt16`, `encodeUInt32`, and `encodeUInt64` remain available for explicit fixed-width output.
 - A map that holds the same key twice keeps the last value for that key. Pass `rejectDuplicateMapKeys` to `CBOROptions` to reject such a map instead, as RFC 8949 Section 5.6 describes.
 - Memory efficiency of encoding needs tuning. (Encoding is not typically done in-place.)
 - Encoding indefinite-length data is supported but you need to explicitly add open and close information to your streaming data.
@@ -96,7 +97,9 @@ MyStruct(x: 42, y: "words").encode()
 
 The `encode` function doesn't *have* to look like that. If you want to do something custom, like [preserving the order of map keys](https://github.com/valpackett/SwiftCBOR/issues/21), you can build the `[UInt8]` manually. Look at the [encoder functions](https://github.com/valpackett/SwiftCBOR/blob/master/Sources/CBOREncoder.swift) for inspiration.
 
-By default, `shouldSortMapKeys` sorts map entries using the bytewise lexicographic map-key ordering described by RFC 8949 Section 4.2.1. Set it to `false` to disable sorting. Sorting alone does not provide a complete deterministic-encoding mode: preferred float serialization and definite-length encoding also need to be considered for your data.
+By default, `shouldSortMapKeys` sorts map entries using the bytewise lexicographic map-key ordering described by RFC 8949 Section 4.2.1. Set it to `false` to disable sorting.
+
+General-purpose integer encoding preserves fixed-width output for `UInt16`, `UInt32`, and `UInt64` by default. Pass `useShortestIntegerEncoding: true` to use RFC 8949 preferred shortest-width serialization instead. Sorting alone does not provide a complete deterministic-encoding mode: preferred integer and float serialization and definite-length encoding also need to be considered for your data.
 
 ### Encoding API
 
@@ -110,7 +113,10 @@ func encode<A: CBOREncodable, B: CBOREncodable>(_ dict: [A: B]) -> [UInt8]
 func encode<T: CBOREncodable>(_ array: [T], asByteString: Bool = false) -> [UInt8]
 
 /// Only needed for fine-grained control:
-func encodeUInt{8, 16, 32, 64}(_ x: UInt8) -> [UInt8]
+func encodeUInt8(_ x: UInt8) -> [UInt8]
+func encodeUInt16(_ x: UInt16) -> [UInt8] // fixed-width
+func encodeUInt32(_ x: UInt32) -> [UInt8] // fixed-width
+func encodeUInt64(_ x: UInt64) -> [UInt8] // fixed-width
 func encodeNegativeInt(_ x: Int) -> [UInt8]
 func encodeByteString(_ bs: [UInt8]) -> [UInt8] // does no endian interpretation
 func encodeString(_ str: String) -> [UInt8]

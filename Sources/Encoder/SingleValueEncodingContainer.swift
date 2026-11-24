@@ -100,35 +100,35 @@ extension _CBOREncoder.SingleValueContainer: SingleValueEncodingContainer {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: UInt8) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: UInt16) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: UInt32) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encode(_ value: UInt64) throws {
         try checkCanEncode(value: value)
         defer { self.canEncodeNewValue = false }
 
-        self.storage.append(contentsOf: CBOR.encode(value))
+        self.storage.append(contentsOf: value.encode(options: self.options.toCBOROptions()))
     }
 
     func encodeDate(_ value: Date) throws {

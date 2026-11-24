@@ -69,4 +69,20 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(values), output)
         XCTAssertEqual(values.encode(), output)
     }
+
+    func testShortestIntegerEncodingOptionAppliesToPublicPaths() {
+        let options = CBOROptions(useShortestIntegerEncoding: true)
+        let values: [UInt16] = [1]
+        let expected: [UInt8] = [0x81, 0x01]
+        var output: [UInt8] = []
+        values.encode(into: &output, options: options)
+
+        XCTAssertEqual(CBOR.encodeArray(values, options: options), expected)
+        XCTAssertEqual(CBOR.encode(values, options: options), expected)
+        XCTAssertEqual(values.encode(options: options), expected)
+        XCTAssertEqual(output, expected)
+        XCTAssertEqual(UInt16(1).encode(options: options), [0x01])
+        XCTAssertEqual(UInt32(1).encode(options: options), [0x01])
+        XCTAssertEqual(UInt64(1).encode(options: options), [0x01])
+    }
 }
