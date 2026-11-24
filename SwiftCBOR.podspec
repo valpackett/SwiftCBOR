@@ -17,6 +17,7 @@ Pod::Spec.new do |s|
   s.watchos.deployment_target = '8.0'
 
   s.source_files = 'Sources/**/*.{swift,h}'
+  s.resource_bundles = { 'SwiftCBOR' => ['Sources/PrivacyInfo.xcprivacy'] }
 
   s.requires_arc = true
 end

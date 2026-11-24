@@ -9,7 +9,7 @@ let package = Package(
         .library(name: "SwiftCBOR", targets: ["SwiftCBOR"])
     ],
     targets: [
-        .target(name: "SwiftCBOR", path: "Sources", exclude: ["Info.plist"]),
+        .target(name: "SwiftCBOR", path: "Sources", exclude: ["Info.plist"], resources: [.copy("PrivacyInfo.xcprivacy")]),
         .testTarget(
             name: "SwiftCBORTests",
             dependencies: ["SwiftCBOR"],
