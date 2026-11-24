@@ -20,7 +20,7 @@ extension _CBORDecoder {
 
         func checkCanDecode<T>(_ type: T.Type, format: UInt8) throws {
             guard self.index < self.data.endIndex else {
-                throw DecodingError.dataCorruptedError(in: self, debugDescription: "Unexpected end of data")
+                throw unexpectedEndOfDataError(codingPath: self.codingPath)
             }
 
             guard self.data[self.index] == format else {
@@ -34,7 +34,7 @@ extension _CBORDecoder {
 
 extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     func decodeNil() -> Bool {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             return false
         }
         switch cbor {
@@ -44,7 +44,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Bool.Type) throws -> Bool {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -57,7 +57,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: String.Type) throws -> String {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -70,7 +70,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Double.Type) throws -> Double {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -86,7 +86,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Float.Type) throws -> Float {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -100,7 +100,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int.Type) throws -> Int {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -114,7 +114,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int8.Type) throws -> Int8 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -128,7 +128,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int16.Type) throws -> Int16 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -142,7 +142,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int32.Type) throws -> Int32 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -156,7 +156,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: Int64.Type) throws -> Int64 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -170,7 +170,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: UInt.Type) throws -> UInt {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -183,7 +183,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: UInt8.Type) throws -> UInt8 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -196,7 +196,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: UInt16.Type) throws -> UInt16 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -209,7 +209,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: UInt32.Type) throws -> UInt32 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
@@ -222,7 +222,7 @@ extension _CBORDecoder.SingleValueContainer: SingleValueDecodingContainer {
     }
 
     func decode(_ type: UInt64.Type) throws -> UInt64 {
-        guard let cbor = try? CBOR.decode(self.data.map { $0 }, options: self.options.toCBOROptions()) else {
+        guard let cbor = try? CBORDecoder(input: self.data, options: self.options.toCBOROptions()).decodeItem() else {
             let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Invalid format: \(self.data)")
             throw DecodingError.dataCorrupted(context)
         }
