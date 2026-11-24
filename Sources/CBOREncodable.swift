@@ -21,7 +21,7 @@ extension CBOR: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
         switch self {
         case let .unsignedInt(ui): return CBOR.encodeVarUInt(ui)
-        case let .negativeInt(ni): return CBOR.encodeNegativeInt(~Int64(bitPattern: ni))
+        case let .negativeInt(ni): return CBOR.encodeNegativeUInt(ni)
         case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
         case let .utf8String(str): return str.encode(options: options)
         case let .array(a): return CBOR.encodeArray(a, options: options)

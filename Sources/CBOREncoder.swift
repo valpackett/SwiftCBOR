@@ -87,7 +87,13 @@ extension CBOR {
 
     public static func encodeNegativeInt(_ x: Int64) -> [UInt8] {
         assert(x < 0)
-        var res = encodeVarUInt(~UInt64(bitPattern: x))
+        return encodeNegativeUInt(~UInt64(bitPattern: x))
+    }
+
+    /// Encodes a negative integer, given the unsigned integer that is encoded, where the
+    /// value of the negative integer is -1 - n.
+    static func encodeNegativeUInt(_ n: UInt64) -> [UInt8] {
+        var res = encodeVarUInt(n)
         res[0] = res[0] | 0b001_00000
         return res
     }
