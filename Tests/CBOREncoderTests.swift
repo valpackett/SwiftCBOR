@@ -85,6 +85,13 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(Array<Int>(1...25)), arr25Enc)
     }
 
+    func testFixedWidthUnsignedTypesKeepTheirLegacyEncoding() {
+        XCTAssertEqual(CBOR.encode(UInt16(1)), [0x19, 0x00, 0x01])
+        XCTAssertEqual(CBOR.encode(UInt32(1)), [0x1a, 0x00, 0x00, 0x00, 0x01])
+        XCTAssertEqual(CBOR.encode(UInt64(1)), [0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
+        XCTAssertEqual(CBOR.encode([UInt16(1), UInt16(256)]), [0x82, 0x19, 0x00, 0x01, 0x19, 0x01, 0x00])
+    }
+
     func testEncodeMaps() {
         XCTAssertEqual(CBOR.encode(Dictionary<Int, Int>()), [0xa0])
 

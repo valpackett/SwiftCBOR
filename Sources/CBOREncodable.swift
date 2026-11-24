@@ -6,11 +6,21 @@ public protocol CBOREncodable {
     /// Optional function that can potentially serve as an opportunity to optimize encoding.
     func encode(options: CBOROptions) -> [UInt8]
 
+    /// Encodes the value by appending its bytes to a shared output buffer.
+    ///
+    /// The default implementation calls `encode(options:)` and appends the result. Types can
+    /// implement this method directly to avoid creating a temporary array for each value.
+    func encode(into output: inout [UInt8], options: CBOROptions)
+
     /// Required function that returns the appropriate `CBOR` variant for a `CBOREncodable`-conforming value.
     func toCBOR(options: CBOROptions) -> CBOR
 }
 
 extension CBOREncodable {
+    public func encode(into output: inout [UInt8], options: CBOROptions = CBOROptions()) {
+        output.append(contentsOf: self.encode(options: options))
+    }
+
     func encode(options: CBOROptions) -> [UInt8] {
         self.toCBOR(options: options).encode(options: options)
     }
@@ -19,26 +29,7 @@ extension CBOREncodable {
 extension CBOR: CBOREncodable {
     /// Encodes a wrapped CBOR value.
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        switch self {
-        case let .unsignedInt(ui): return CBOR.encodeVarUInt(ui)
-        case let .negativeInt(ni): return CBOR.encodeNegativeUInt(ni)
-        case let .byteString(bs): return CBOR.encodeByteString(bs, options: options)
-        case let .utf8String(str): return str.encode(options: options)
-        case let .array(a): return CBOR.encodeArray(a, options: options)
-        case let .map(m): return CBOR.encodeCBORMap(m, options: options)
-        #if canImport(Foundation)
-        case let .date(d): return CBOR.encodeDate(d, options: options)
-        #endif
-        case let .tagged(t, l): return CBOR.encodeTagged(tag: t, value: l, options: options)
-        case let .simple(s): return CBOR.encodeSimpleValue(s)
-        case let .boolean(b): return b.encode(options: options)
-        case .null: return CBOR.encodeNull()
-        case .undefined: return CBOR.encodeUndefined()
-        case let .half(f): return CBOR.encodeHalf(f)
-        case let .float(f): return f.encode(options: options)
-        case let .double(d): return d.encode(options: options)
-        case .break: return CBOR.encodeBreak()
-        }
+        withCBOROutput { self.encode(into: &$0, options: options) }
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
