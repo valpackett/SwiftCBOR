@@ -219,6 +219,7 @@ extension CBOR {
     // MARK: - major 7: floats, simple values, the 'break' stop code
 
     public static func encodeSimpleValue(_ x: UInt8) -> [UInt8] {
+        precondition(x < 24 || x >= 32, "CBOR simple values 24...31 are reserved")
         if x < 24 {
             return [0b111_00000 | x]
         } else {

@@ -79,13 +79,13 @@ public class CBORDecoder {
         return result
     }
 
-    func readUntilBreak() throws -> [CBOR] {
+    func readUntilBreak(allowIndefiniteStrings: Bool = true) throws -> [CBOR] {
         var result: [CBOR] = []
-        var cur = try decodeItem()
+        var cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings)
         while cur != CBOR.break {
             guard let curr = cur else { throw CBORError.unfinishedSequence }
             result.append(curr)
-            cur = try decodeItem()
+            cur = try decodeItem(allowIndefiniteStrings: allowIndefiniteStrings)
         }
         return result
     }
@@ -125,6 +125,10 @@ public class CBORDecoder {
     }
 
     public func decodeItem() throws -> CBOR? {
+        return try decodeItem(allowIndefiniteStrings: true)
+    }
+
+    private func decodeItem(allowIndefiniteStrings: Bool) throws -> CBOR? {
         guard currentDepth <= options.maximumDepth
         else { throw CBORError.maximumDepthExceeded }
         
@@ -146,7 +150,8 @@ public class CBORDecoder {
             let numBytes = try readLength(b, base: 0x40)
             return CBOR.byteString(Array(try istream.popBytes(numBytes)))
         case 0x5f:
-            return CBOR.byteString(try readUntilBreak().flatMap { x -> [UInt8] in
+            guard allowIndefiniteStrings else { throw CBORError.wrongTypeInsideSequence }
+            return CBOR.byteString(try readUntilBreak(allowIndefiniteStrings: false).flatMap { x -> [UInt8] in
                 guard case .byteString(let r) = x else { throw CBORError.wrongTypeInsideSequence }
                 return r
             })
@@ -156,7 +161,8 @@ public class CBORDecoder {
             let numBytes = try readLength(b, base: 0x60)
             return CBOR.utf8String(try Util.decodeUtf8(try istream.popBytes(numBytes)))
         case 0x7f:
-            return CBOR.utf8String(try readUntilBreak().map { x -> String in
+            guard allowIndefiniteStrings else { throw CBORError.wrongTypeInsideSequence }
+            return CBOR.utf8String(try readUntilBreak(allowIndefiniteStrings: false).map { x -> String in
                 guard case .utf8String(let r) = x else { throw CBORError.wrongTypeInsideSequence }
                 return r
             }.joined(separator: ""))
@@ -202,7 +208,10 @@ public class CBORDecoder {
         case 0xf5: return CBOR.boolean(true)
         case 0xf6: return CBOR.null
         case 0xf7: return CBOR.undefined
-        case 0xf8: return CBOR.simple(try istream.popByte())
+        case 0xf8:
+            let value = try istream.popByte()
+            guard value >= 32 else { throw CBORError.wrongTypeInsideSequence }
+            return CBOR.simple(value)
 
         case 0xf9:
             return CBOR.half(Util.readFloat16(x: try readBinaryNumber(UInt16.self)))

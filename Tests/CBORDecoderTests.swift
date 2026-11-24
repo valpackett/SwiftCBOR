@@ -104,11 +104,37 @@ class CBORDecoderTests: XCTestCase {
     func testDecodeSimple() {
         XCTAssertEqual(try! CBORDecoder(input: [0xe0]).decodeItem(), CBOR.simple(0))
         XCTAssertEqual(try! CBORDecoder(input: [0xf3]).decodeItem(), CBOR.simple(19))
-        XCTAssertEqual(try! CBORDecoder(input: [0xf8, 19]).decodeItem(), CBOR.simple(19))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf8, 32]).decodeItem(), CBOR.simple(32))
+        XCTAssertEqual(try! CBORDecoder(input: [0xf8, 255]).decodeItem(), CBOR.simple(255))
         XCTAssertEqual(try! CBORDecoder(input: [0xf4]).decodeItem(), false)
         XCTAssertEqual(try! CBORDecoder(input: [0xf5]).decodeItem(), true)
         XCTAssertEqual(try! CBORDecoder(input: [0xf6]).decodeItem(), CBOR.null)
         XCTAssertEqual(try! CBORDecoder(input: [0xf7]).decodeItem(), CBOR.undefined)
+    }
+
+    func testDecodeRejectsMalformedSimpleValues() {
+        for value in UInt8(0)...UInt8(31) {
+            XCTAssertThrowsError(try CBOR.decode([0xf8, value]), "f8 \(value) must be rejected") { error in
+                XCTAssertEqual(error as? CBORError, .wrongTypeInsideSequence)
+            }
+        }
+    }
+
+    func testDecodeRejectsNestedIndefiniteLengthStrings() {
+        let malformed: [[UInt8]] = [
+            [0x5f, 0x5f, 0x41, 0x01, 0xff, 0xff],
+            [0x5f, 0x7f, 0x61, 0x61, 0xff, 0xff],
+            [0x7f, 0x5f, 0x41, 0x01, 0xff, 0xff],
+            [0x7f, 0x7f, 0x61, 0x61, 0xff, 0xff]
+        ]
+        for input in malformed {
+            XCTAssertThrowsError(try CBOR.decode(input)) { error in
+                XCTAssertEqual(error as? CBORError, .wrongTypeInsideSequence)
+            }
+        }
+
+        XCTAssertEqual(try CBOR.decode([0x5f, 0x41, 0x01, 0x42, 0x02, 0x03, 0xff]), .byteString([1, 2, 3]))
+        XCTAssertEqual(try CBOR.decode([0x7f, 0x61, 0x61, 0x61, 0x62, 0xff]), .utf8String("ab"))
     }
 
     func testDecodeFloats() {

@@ -205,7 +205,7 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.null.encode(), [0xf6])
         XCTAssertEqual(CBOR.undefined.encode(), [0xf7])
         XCTAssertEqual(CBOR.simple(16).encode(), [0xf0])
-        XCTAssertEqual(CBOR.simple(24).encode(), [0xf8, 0x18])
+        XCTAssertEqual(CBOR.simple(32).encode(), [0xf8, 0x20])
         XCTAssertEqual(CBOR.simple(255).encode(), [0xf8, 0xff])
         XCTAssertEqual(CBOR.break.encode(), [0xff])
     }
