@@ -241,7 +241,7 @@ class CBOREncoderTests: XCTestCase {
     }
 
     func testPreferredFloatSerialization() {
-        let options = CBOROptions(preferredFloatSerialization: true)
+        let options = CBOROptions(useShortestFloatEncoding: true)
 
         XCTAssertEqual(Float(0.0).encode(options: options), [0xf9, 0x00, 0x00])
         XCTAssertEqual(Float(-0.0).encode(options: options), [0xf9, 0x80, 0x00])
@@ -308,7 +308,7 @@ class CBOREncoderTests: XCTestCase {
             if CBOR.half(value).encode() != encoded {
                 mismatches.append(bits)
             }
-            let options = CBOROptions(preferredFloatSerialization: true)
+            let options = CBOROptions(useShortestFloatEncoding: true)
             XCTAssertEqual(value.encode(options: options), encoded)
             XCTAssertEqual(Double(value).encode(options: options), encoded)
         }

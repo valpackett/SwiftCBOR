@@ -6,7 +6,7 @@ public struct CBOROptions {
     let maximumDepth: Int
     let shouldSortMapKeys: Bool
     /// Whether to use the shortest floating-point encoding that preserves the value exactly.
-    let preferredFloatSerialization: Bool
+    let useShortestFloatEncoding: Bool
     /// Whether to reject a map that holds the same key more than once.
     ///
     /// A map with duplicate keys is well formed, but not valid. RFC 8949 Section 5.6 lists
@@ -21,7 +21,7 @@ public struct CBOROptions {
         forbidNonStringMapKeys: Bool = false,
         maximumDepth: Int = .max,
         shouldSortMapKeys: Bool = true,
-        preferredFloatSerialization: Bool = false,
+        useShortestFloatEncoding: Bool = false,
         rejectDuplicateMapKeys: Bool = false
     ) {
         self.useStringKeys = useStringKeys
@@ -29,7 +29,7 @@ public struct CBOROptions {
         self.forbidNonStringMapKeys = forbidNonStringMapKeys
         self.maximumDepth = maximumDepth
         self.shouldSortMapKeys = shouldSortMapKeys
-        self.preferredFloatSerialization = preferredFloatSerialization
+        self.useShortestFloatEncoding = useShortestFloatEncoding
         self.rejectDuplicateMapKeys = rejectDuplicateMapKeys
     }
 
@@ -38,7 +38,7 @@ public struct CBOROptions {
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
             forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-            preferredFloatSerialization: self.preferredFloatSerialization
+            useShortestFloatEncoding: self.useShortestFloatEncoding
         )
     }
 

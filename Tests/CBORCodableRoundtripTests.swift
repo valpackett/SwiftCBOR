@@ -264,7 +264,7 @@ class CBORCodableRoundtripTests: XCTestCase {
         XCTAssertEqual(try encoder.encode(Float(1.5)), Data([0xfa, 0x3f, 0xc0, 0x00, 0x00]))
         XCTAssertEqual(try encoder.encode(Double(1.5)), Data([0xfb, 0x3f, 0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]))
 
-        encoder.preferredFloatSerialization = true
+        encoder.useShortestFloatEncoding = true
         XCTAssertEqual(try encoder.encode(Float(1.5)), Data([0xf9, 0x3e, 0x00]))
         XCTAssertEqual(try encoder.encode(Double(1.5)), Data([0xf9, 0x3e, 0x00]))
     }

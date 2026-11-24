@@ -4,24 +4,24 @@ public class CodableCBOREncoder {
     public var useStringKeys: Bool = false
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
     public var forbidNonStringMapKeys: Bool = false
-    public var preferredFloatSerialization: Bool = false
+    public var useShortestFloatEncoding: Bool = false
 
     struct _Options {
         let useStringKeys: Bool
         let dateStrategy: DateStrategy
         let forbidNonStringMapKeys: Bool
-        let preferredFloatSerialization: Bool
+        let useShortestFloatEncoding: Bool
 
         init(
             useStringKeys: Bool = false,
             dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
             forbidNonStringMapKeys: Bool = false,
-            preferredFloatSerialization: Bool = false
+            useShortestFloatEncoding: Bool = false
         ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
             self.forbidNonStringMapKeys = forbidNonStringMapKeys
-            self.preferredFloatSerialization = preferredFloatSerialization
+            self.useShortestFloatEncoding = useShortestFloatEncoding
         }
 
         func toCBOROptions() -> CBOROptions {
@@ -29,7 +29,7 @@ public class CodableCBOREncoder {
                 useStringKeys: self.useStringKeys,
                 dateStrategy: self.dateStrategy,
                 forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-                preferredFloatSerialization: self.preferredFloatSerialization
+                useShortestFloatEncoding: self.useShortestFloatEncoding
             )
         }
     }
@@ -39,7 +39,7 @@ public class CodableCBOREncoder {
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
             forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-            preferredFloatSerialization: self.preferredFloatSerialization
+            useShortestFloatEncoding: self.useShortestFloatEncoding
         )
     }
 
@@ -68,7 +68,7 @@ public class CodableCBOREncoder {
         self.useStringKeys = newOptions.useStringKeys
         self.dateStrategy = newOptions.dateStrategy
         self.forbidNonStringMapKeys = newOptions.forbidNonStringMapKeys
-        self.preferredFloatSerialization = newOptions.preferredFloatSerialization
+        self.useShortestFloatEncoding = newOptions.useShortestFloatEncoding
     }
 }
 
