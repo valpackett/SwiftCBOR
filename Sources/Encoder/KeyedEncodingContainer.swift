@@ -1,15 +1,24 @@
 import Foundation
 
+protocol AnyKeyedContainer {
+    var storage: KeyedContainerStorage { get }
+}
+
+final class KeyedContainerStorage {
+    var entries: [AnyCodingKey: CBOREncodingContainer] = [:]
+}
+
 extension _CBOREncoder {
-    final class KeyedContainer<Key: CodingKey> {
-        var storage: [AnyCodingKey: CBOREncodingContainer] = [:]
+    final class KeyedContainer<Key: CodingKey>: AnyKeyedContainer {
+        var storage: KeyedContainerStorage
 
         var codingPath: [CodingKey]
         var userInfo: [CodingUserInfoKey: Any]
 
         let options: CodableCBOREncoder._Options
 
-        init(codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBOREncoder._Options) {
+        init(storage: KeyedContainerStorage = KeyedContainerStorage(), codingPath: [CodingKey], userInfo: [CodingUserInfoKey : Any], options: CodableCBOREncoder._Options) {
+            self.storage = storage
             self.codingPath = codingPath
             self.userInfo = userInfo
             self.options = options
@@ -38,7 +47,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.storage.entries[anyCodingKeyForKey(key)] = container
         return container
     }
 
@@ -48,7 +57,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.storage.entries[anyCodingKeyForKey(key)] = container
         return container
     }
 
@@ -58,7 +67,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
             userInfo: self.userInfo,
             options: self.options
         )
-        self.storage[anyCodingKeyForKey(key)] = container
+        self.storage.entries[anyCodingKeyForKey(key)] = container
         return KeyedEncodingContainer(container)
     }
 
@@ -72,7 +81,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         let encoder = _CBOREncoder(options: self.options)
         encoder.codingPath = self.codingPath + [superKey]
         encoder.userInfo = self.userInfo
-        self.storage[superKey] = encoder
+        self.storage.entries[superKey] = encoder
         return encoder
     }
 
@@ -80,7 +89,7 @@ extension _CBOREncoder.KeyedContainer: KeyedEncodingContainerProtocol {
         let encoder = _CBOREncoder(options: self.options)
         encoder.codingPath = self.nestedCodingPath(forKey: key)
         encoder.userInfo = self.userInfo
-        self.storage[anyCodingKeyForKey(key)] = encoder
+        self.storage.entries[anyCodingKeyForKey(key)] = encoder
         return encoder
     }
 }
@@ -89,9 +98,9 @@ extension _CBOREncoder.KeyedContainer: CBOREncodingContainer {
     var data: Data {
         // TODO: Check that this works for all sizes of map
         var data: [UInt8] = []
-        data = storage.count.encode()
+        data = storage.entries.count.encode()
         data[0] = data[0] | 0b101_00000
-        for (key, container) in self.storage {
+        for (key, container) in self.storage.entries {
             let keyContainer = _CBOREncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
             try! keyContainer.encode(key)
             data.append(contentsOf: keyContainer.data)

@@ -410,4 +410,76 @@ class CBOREncoderTests: XCTestCase {
         let decoded = try! CodableCBORDecoder().decode(MyCodableThing.self, from: Data(encoded))
         XCTAssertEqual(decoded, myCodableThing)
     }
+    
+    func testEncodeVariant() throws {
+        enum Variant: Codable, Equatable {
+            case small(Small)
+            case large(Large)
+            
+            struct Small: Codable, Equatable {
+                var value: Int
+            }
+            
+            struct Large: Codable, Equatable {
+                var label: String
+                var value: Int
+            }
+            
+            private enum Style: String, Codable {
+                case small
+                case large
+            }
+            
+            private enum CodingKeys: String, CodingKey {
+                case style
+            }
+            
+            func encode(to encoder: any Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                switch self {
+                case .small(let small):
+                    try container.encode(Style.small, forKey: .style)
+                    try small.encode(to: encoder)
+                case .large(let large):
+                    try container.encode(Style.large, forKey: .style)
+                    try large.encode(to: encoder)
+                }
+            }
+            
+            init(from decoder: any Decoder) throws {
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                let style = try container.decode(Style.self, forKey: .style)
+                switch style {
+                case .small:
+                    self = try .small(Small(from: decoder))
+                case .large:
+                    self = try .large(Large(from: decoder))
+                }
+            }
+        }
+        
+        let originalSmall = Variant.small(.init(value: 42))
+        let originalLarge = Variant.large(.init(label: "large", value: 1001))
+        
+        let encodedSmall = try CBOR.encodeAny(originalSmall)
+        let encodedLarge = try CBOR.encodeAny(originalLarge)
+
+        let smallCBOR = try XCTUnwrap(CBOR.decode(encodedSmall))
+        guard case let .map(smallMap) = smallCBOR else {
+            return XCTFail("Expected the small variant to encode as a map")
+        }
+        XCTAssertEqual(smallMap, ["style": "small", "value": 42])
+
+        let largeCBOR = try XCTUnwrap(CBOR.decode(encodedLarge))
+        guard case let .map(largeMap) = largeCBOR else {
+            return XCTFail("Expected the large variant to encode as a map")
+        }
+        XCTAssertEqual(largeMap, ["style": "large", "label": "large", "value": 1001])
+        
+        let decodedSmall = try CodableCBORDecoder().decode(Variant.self, from: Data(encodedSmall))
+        let decodedLarge = try CodableCBORDecoder().decode(Variant.self, from: Data(encodedLarge))
+        
+        XCTAssertEqual(decodedSmall, originalSmall)
+        XCTAssertEqual(decodedLarge, originalLarge)
+    }
 }
