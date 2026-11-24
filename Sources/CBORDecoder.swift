@@ -33,7 +33,7 @@ public class CBORDecoder {
     }
 
     public init(input: [UInt8], options: CBOROptions = CBOROptions()) {
-        self.istream = ArrayUInt8(array: ArraySlice(input))
+        self.istream = ArraySliceUInt8(slice: ArraySlice(input))
         self.options = options
     }
 
