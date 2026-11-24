@@ -2,6 +2,18 @@ import XCTest
 @testable import SwiftCBOR
 
 class CBORTests: XCTestCase {
+    func testByteStringHashMatchesDJB2() {
+        let bytes: [UInt8] = [0, 1, 2, 127, 128, 255, 42]
+        let hash = bytes.reduce(5381) { (($0 << 5) &+ $0) &+ Int($1) }
+
+        var expectedHasher = Hasher()
+        hash.hash(into: &expectedHasher)
+        var actualHasher = Hasher()
+        CBOR.byteString(bytes).hash(into: &actualHasher)
+
+        XCTAssertEqual(actualHasher.finalize(), expectedHasher.finalize())
+    }
+
     func testSubscriptSetter() {
         let dictionary: [String: Any] = [
             "foo": 1,
