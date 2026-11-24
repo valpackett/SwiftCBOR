@@ -193,7 +193,12 @@ protocol CBORDecodingContainer: AnyObject {
 
 extension CBORDecodingContainer {
     func readByte() throws -> UInt8 {
-        return try read(1).first!
+        guard self.index < self.data.endIndex else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
+            throw DecodingError.dataCorrupted(context)
+        }
+        defer { self.index += 1 }
+        return self.data[self.index]
     }
 
     func read(_ length: Int) throws -> Data {
@@ -208,7 +213,11 @@ extension CBORDecodingContainer {
     }
 
     func peekByte() throws -> UInt8 {
-        return try peek(1).first!
+        guard self.index < self.data.endIndex else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
+            throw DecodingError.dataCorrupted(context)
+        }
+        return self.data[self.index]
     }
 
     func peek(_ length: Int) throws -> ArraySlice<UInt8> {
@@ -223,8 +232,17 @@ extension CBORDecodingContainer {
 
     func read<T: FixedWidthInteger>(_ type: T.Type) throws -> T {
         let stride = MemoryLayout<T>.stride
-        let bytes = [UInt8](try read(stride))
-        return T(bytes: bytes)
+        let nextIndex = self.index.advanced(by: stride)
+        guard nextIndex <= self.data.endIndex else {
+            let context = DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unexpected end of data")
+            throw DecodingError.dataCorrupted(context)
+        }
+        var result: T = 0
+        for byte in self.data[self.index..<nextIndex] {
+            result = (result << 8) | T(byte)
+        }
+        self.index = nextIndex
+        return result
     }
 }
 
