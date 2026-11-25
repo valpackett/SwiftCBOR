@@ -100,11 +100,17 @@ extension _CBOREncoder.KeyedContainer: CBOREncodingContainer {
         var data: [UInt8] = []
         data = storage.entries.count.encode()
         data[0] = data[0] | 0b101_00000
-        for (key, container) in self.storage.entries {
+        let entries = self.storage.entries.map { key, container -> (encodedKey: Data, container: CBOREncodingContainer) in
             let keyContainer = _CBOREncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
             try! keyContainer.encode(key)
-            data.append(contentsOf: keyContainer.data)
-            data.append(contentsOf: container.data)
+            return (keyContainer.data, container)
+        }
+        let orderedEntries = options.shouldSortMapKeys ? entries.sorted(by: {
+            $0.encodedKey.lexicographicallyPrecedes($1.encodedKey)
+        }) : entries
+        for entry in orderedEntries {
+            data.append(contentsOf: entry.encodedKey)
+            data.append(contentsOf: entry.container.data)
         }
 
         return Data(data)
