@@ -3,10 +3,10 @@
     "pins": [
       {
         "package": "PropertyBased",
-        "repositoryURL": "https://github.com/hamchapman/swift-property-based.git",
+        "repositoryURL": "https://github.com/x-sheep/swift-property-based.git",
         "state": {
           "branch": null,
-          "revision": "169a57520a649c3569c6a6136f518eed8a39a8b2",
+          "revision": "fbc0b8b83afc91e159ed62ba2024da8029ab7c97",
           "version": null
         }
       }
