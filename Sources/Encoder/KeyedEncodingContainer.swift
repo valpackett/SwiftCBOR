@@ -100,17 +100,27 @@ extension _CBOREncoder.KeyedContainer: CBOREncodingContainer {
         var data: [UInt8] = []
         data = storage.entries.count.encode()
         data[0] = data[0] | 0b101_00000
-        let entries = self.storage.entries.map { key, container -> (encodedKey: Data, container: CBOREncodingContainer) in
-            let keyContainer = _CBOREncoder.SingleValueContainer(codingPath: self.codingPath, userInfo: self.userInfo, options: self.options)
-            try! keyContainer.encode(key)
-            return (keyContainer.data, container)
+        func encodeKey(_ key: AnyCodingKey) -> [UInt8] {
+            if let intValue = key.intValue {
+                return intValue.encode(options: options.toCBOROptions())
+            }
+            return CBOR.encodeString(key.stringValue, options: options.toCBOROptions())
         }
-        let orderedEntries = options.shouldSortMapKeys ? entries.sorted(by: {
-            $0.encodedKey.lexicographicallyPrecedes($1.encodedKey)
-        }) : entries
-        for entry in orderedEntries {
-            data.append(contentsOf: entry.encodedKey)
-            data.append(contentsOf: entry.container.data)
+        if options.shouldSortMapKeys {
+            let entries = storage.entries.map { key, container in
+                (encodedKey: encodeKey(key), container: container)
+            }.sorted {
+                $0.encodedKey.lexicographicallyPrecedes($1.encodedKey)
+            }
+            for entry in entries {
+                data.append(contentsOf: entry.encodedKey)
+                data.append(contentsOf: entry.container.data)
+            }
+        } else {
+            for (key, container) in storage.entries {
+                data.append(contentsOf: encodeKey(key))
+                data.append(contentsOf: container.data)
+            }
         }
 
         return Data(data)
