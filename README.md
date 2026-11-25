@@ -12,7 +12,7 @@ A [CBOR (Concise Binary Object Representation)](https://www.rfc-editor.org/rfc/r
 - And `subscript` too. So you can access CBOR maps and arrays like this: `myDecodedObject["numbers"][1]`.
 - If you want to decode from a stream, implement the `CBORInputStream` protocol on your stream and create the decoder like this: `CBORDecoder(stream: yourStream)`.
 - Half floats can be decoded to a Float and encoded again from a `CBOR.half` value.
-- General-purpose integer encoding preserves fixed-width output for `UInt16`, `UInt32`, and `UInt64` by default. Set `useShortestIntegerEncoding` to `true` to use the shortest-width argument form described by RFC 8949 preferred serialization; fine-grained `encodeUInt16`, `encodeUInt32`, and `encodeUInt64` remain available for explicit fixed-width output.
+- General-purpose integer and floating-point encoding uses RFC 8949 preferred shortest-width serialization by default. Set `useShortestIntegerEncoding` or `useShortestFloatEncoding` to `false` to preserve fixed-width output; fine-grained `encodeUInt16`, `encodeUInt32`, and `encodeUInt64` remain available for explicit fixed-width integer output.
 - A map that holds the same key twice keeps the last value for that key. Pass `rejectDuplicateMapKeys` to `CBOROptions` to reject such a map instead, as RFC 8949 Section 5.6 describes.
 - Memory efficiency of encoding needs tuning. (Encoding is not typically done in-place.)
 - Encoding indefinite-length data is supported but you need to explicitly add open and close information to your streaming data.
@@ -99,7 +99,7 @@ The `encode` function doesn't *have* to look like that. If you want to do someth
 
 `CBOROptions` and `CodableCBOREncoder` sort map entries by default using the bytewise lexicographic map-key ordering described by RFC 8949 Section 4.2.1. Set `shouldSortMapKeys` to `false` to disable sorting.
 
-General-purpose integer encoding preserves fixed-width output for `UInt16`, `UInt32`, and `UInt64` by default. Pass `useShortestIntegerEncoding: true` to use RFC 8949 preferred shortest-width serialization instead. Sorting alone does not provide a complete deterministic-encoding mode: preferred integer and float serialization and definite-length encoding also need to be considered for your data.
+General-purpose integer and floating-point encoding uses RFC 8949 preferred shortest-width serialization by default. Set `useShortestIntegerEncoding` or `useShortestFloatEncoding` to `false` to preserve fixed-width output. Together with the default map-key sorting and definite-length encoding of sized values, these defaults provide RFC 8949 core deterministic encoding for ordinary values through both the direct `CBOR` API and `CodableCBOREncoder`. Explicit indefinite-length streaming values remain available when needed, but are outside that deterministic-encoding guarantee.
 
 ### Encoding API
 

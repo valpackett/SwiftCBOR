@@ -5,8 +5,8 @@ public class CodableCBOREncoder {
     public var dateStrategy: DateStrategy = .taggedAsEpochTimestamp
     public var forbidNonStringMapKeys: Bool = false
     public var shouldSortMapKeys: Bool = true
-    public var useShortestFloatEncoding: Bool = false
-    public var useShortestIntegerEncoding: Bool = false
+    public var useShortestFloatEncoding: Bool = true
+    public var useShortestIntegerEncoding: Bool = true
 
     struct _Options {
         let useStringKeys: Bool
@@ -21,8 +21,8 @@ public class CodableCBOREncoder {
             dateStrategy: DateStrategy = .taggedAsEpochTimestamp,
             forbidNonStringMapKeys: Bool = false,
             shouldSortMapKeys: Bool = true,
-            useShortestFloatEncoding: Bool = false,
-            useShortestIntegerEncoding: Bool = false
+            useShortestFloatEncoding: Bool = true,
+            useShortestIntegerEncoding: Bool = true
         ) {
             self.useStringKeys = useStringKeys
             self.dateStrategy = dateStrategy
