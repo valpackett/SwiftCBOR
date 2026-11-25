@@ -15,7 +15,14 @@ let package = Package(
         .target(name: "SwiftCBOR", path: "Sources", exclude: ["Info.plist"], resources: [.copy("PrivacyInfo.xcprivacy")]),
         .testTarget(
             name: "SwiftCBORTests",
-            dependencies: ["SwiftCBOR", "SwiftCheck"],
+            dependencies: [
+                "SwiftCBOR",
+                .product(
+                    name: "SwiftCheck",
+                    package: "SwiftCheck",
+                    condition: .when(platforms: [.macOS, .iOS, .tvOS, .macCatalyst, .watchOS, .linux])
+                )
+            ],
             path: "Tests",
             exclude: ["Info.plist"]
         )

@@ -1,3 +1,4 @@
+#if canImport(SwiftCheck)
 import SwiftCheck
 import XCTest
 
@@ -186,3 +187,4 @@ final class CBORPropertyTests: XCTestCase {
         }
     }
 }
+#endif
