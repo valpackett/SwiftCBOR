@@ -8,11 +8,14 @@ let package = Package(
     products: [
         .library(name: "SwiftCBOR", targets: ["SwiftCBOR"])
     ],
+    dependencies: [
+        .package(url: "https://github.com/typelift/SwiftCheck.git", from: "0.12.0")
+    ],
     targets: [
         .target(name: "SwiftCBOR", path: "Sources", exclude: ["Info.plist"], resources: [.copy("PrivacyInfo.xcprivacy")]),
         .testTarget(
             name: "SwiftCBORTests",
-            dependencies: ["SwiftCBOR"],
+            dependencies: ["SwiftCBOR", "SwiftCheck"],
             path: "Tests",
             exclude: ["Info.plist"]
         )
