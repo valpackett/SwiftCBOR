@@ -153,10 +153,7 @@ extension Optional where Wrapped: CBOREncodable {
 
 extension Array where Element: CBOREncodable {
     public func encode(into output: inout [UInt8], options: CBOROptions = CBOROptions()) {
-        appendCBORArgument(UInt64(self.count), major: 0x80, to: &output)
-        for element in self {
-            element.encode(into: &output, options: options)
-        }
+        appendCBORArray(self, into: &output, options: options)
     }
 }
 
