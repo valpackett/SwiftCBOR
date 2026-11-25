@@ -117,7 +117,7 @@ extension UInt8: CBOREncodable {
 
 extension UInt16: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeUInt16(self)
+        withCBOROutput { self.encode(into: &$0, options: options) }
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
@@ -127,7 +127,7 @@ extension UInt16: CBOREncodable {
 
 extension UInt32: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeUInt32(self)
+        withCBOROutput { self.encode(into: &$0, options: options) }
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {
@@ -137,7 +137,7 @@ extension UInt32: CBOREncodable {
 
 extension UInt64: CBOREncodable {
     public func encode(options: CBOROptions = CBOROptions()) -> [UInt8] {
-        return CBOR.encodeUInt64(self)
+        withCBOROutput { self.encode(into: &$0, options: options) }
     }
 
     public func toCBOR(options: CBOROptions = CBOROptions()) -> CBOR {

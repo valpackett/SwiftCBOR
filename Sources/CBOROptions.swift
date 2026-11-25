@@ -7,6 +7,10 @@ public struct CBOROptions {
     let shouldSortMapKeys: Bool
     /// Whether to use the shortest floating-point encoding that preserves the value exactly.
     let useShortestFloatEncoding: Bool
+    /// Whether general-purpose encoding uses the shortest-width CBOR argument for
+    /// `UInt16`, `UInt32`, and `UInt64`, as described by RFC 8949 preferred serialization.
+    /// By default, these types preserve their fixed-width CBOR argument.
+    let useShortestIntegerEncoding: Bool
     /// Whether to reject a map that holds the same key more than once.
     ///
     /// A map with duplicate keys is well formed, but not valid. RFC 8949 Section 5.6 lists
@@ -22,6 +26,7 @@ public struct CBOROptions {
         maximumDepth: Int = .max,
         shouldSortMapKeys: Bool = true,
         useShortestFloatEncoding: Bool = false,
+        useShortestIntegerEncoding: Bool = false,
         rejectDuplicateMapKeys: Bool = false
     ) {
         self.useStringKeys = useStringKeys
@@ -30,6 +35,7 @@ public struct CBOROptions {
         self.maximumDepth = maximumDepth
         self.shouldSortMapKeys = shouldSortMapKeys
         self.useShortestFloatEncoding = useShortestFloatEncoding
+        self.useShortestIntegerEncoding = useShortestIntegerEncoding
         self.rejectDuplicateMapKeys = rejectDuplicateMapKeys
     }
 
@@ -38,7 +44,8 @@ public struct CBOROptions {
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
             forbidNonStringMapKeys: self.forbidNonStringMapKeys,
-            useShortestFloatEncoding: self.useShortestFloatEncoding
+            useShortestFloatEncoding: self.useShortestFloatEncoding,
+            useShortestIntegerEncoding: self.useShortestIntegerEncoding
         )
     }
 

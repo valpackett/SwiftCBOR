@@ -85,22 +85,34 @@ extension UInt8 {
 
 extension UInt16 {
     public func encode(into output: inout [UInt8], options: CBOROptions = CBOROptions()) {
-        output.append(0x19)
-        appendBigEndian(self, to: &output)
+        if options.useShortestIntegerEncoding {
+            appendCBORArgument(UInt64(self), major: 0x00, to: &output)
+        } else {
+            output.append(0x19)
+            appendBigEndian(self, to: &output)
+        }
     }
 }
 
 extension UInt32 {
     public func encode(into output: inout [UInt8], options: CBOROptions = CBOROptions()) {
-        output.append(0x1a)
-        appendBigEndian(self, to: &output)
+        if options.useShortestIntegerEncoding {
+            appendCBORArgument(UInt64(self), major: 0x00, to: &output)
+        } else {
+            output.append(0x1a)
+            appendBigEndian(self, to: &output)
+        }
     }
 }
 
 extension UInt64 {
     public func encode(into output: inout [UInt8], options: CBOROptions = CBOROptions()) {
-        output.append(0x1b)
-        appendBigEndian(self, to: &output)
+        if options.useShortestIntegerEncoding {
+            appendCBORArgument(self, major: 0x00, to: &output)
+        } else {
+            output.append(0x1b)
+            appendBigEndian(self, to: &output)
+        }
     }
 }
 

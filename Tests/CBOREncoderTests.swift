@@ -14,6 +14,9 @@ class CBOREncoderTests: XCTestCase {
         }
         XCTAssertEqual(Int(-1).encode(), [0x20])
         XCTAssertEqual(UInt(1).encode(), [0x1])
+        XCTAssertEqual(UInt16(1).encode(), [0x19, 0x00, 0x01])
+        XCTAssertEqual(UInt32(1).encode(), [0x1a, 0x00, 0x00, 0x00, 0x01])
+        XCTAssertEqual(UInt64(1).encode(), [0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
         XCTAssertEqual(CBOR.encode(-10), [0x29])
         XCTAssertEqual(Int(-24).encode(), [0x37])
         XCTAssertEqual(Int(-25).encode(), [0x38, 24])
@@ -90,6 +93,13 @@ class CBOREncoderTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(UInt32(1)), [0x1a, 0x00, 0x00, 0x00, 0x01])
         XCTAssertEqual(CBOR.encode(UInt64(1)), [0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
         XCTAssertEqual(CBOR.encode([UInt16(1), UInt16(256)]), [0x82, 0x19, 0x00, 0x01, 0x19, 0x01, 0x00])
+    }
+
+    func testShortestIntegerEncodingOption() {
+        let options = CBOROptions(useShortestIntegerEncoding: true)
+        XCTAssertEqual(UInt16(1).encode(options: options), [0x01])
+        XCTAssertEqual(UInt32(1).encode(options: options), [0x01])
+        XCTAssertEqual(UInt64(1).encode(options: options), [0x01])
     }
 
     func testEncodeMaps() {
