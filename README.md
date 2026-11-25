@@ -97,7 +97,7 @@ MyStruct(x: 42, y: "words").encode()
 
 The `encode` function doesn't *have* to look like that. If you want to do something custom, like [preserving the order of map keys](https://github.com/valpackett/SwiftCBOR/issues/21), you can build the `[UInt8]` manually. Look at the [encoder functions](https://github.com/valpackett/SwiftCBOR/blob/master/Sources/CBOREncoder.swift) for inspiration.
 
-By default, `shouldSortMapKeys` sorts map entries using the bytewise lexicographic map-key ordering described by RFC 8949 Section 4.2.1. Set it to `false` to disable sorting.
+`CBOROptions` and `CodableCBOREncoder` sort map entries by default using the bytewise lexicographic map-key ordering described by RFC 8949 Section 4.2.1. Set `shouldSortMapKeys` to `false` to disable sorting.
 
 General-purpose integer encoding preserves fixed-width output for `UInt16`, `UInt32`, and `UInt64` by default. Pass `useShortestIntegerEncoding: true` to use RFC 8949 preferred shortest-width serialization instead. Sorting alone does not provide a complete deterministic-encoding mode: preferred integer and float serialization and definite-length encoding also need to be considered for your data.
 

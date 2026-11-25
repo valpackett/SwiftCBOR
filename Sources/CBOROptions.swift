@@ -44,6 +44,7 @@ public struct CBOROptions {
             useStringKeys: self.useStringKeys,
             dateStrategy: self.dateStrategy,
             forbidNonStringMapKeys: self.forbidNonStringMapKeys,
+            shouldSortMapKeys: self.shouldSortMapKeys,
             useShortestFloatEncoding: self.useShortestFloatEncoding,
             useShortestIntegerEncoding: self.useShortestIntegerEncoding
         )
