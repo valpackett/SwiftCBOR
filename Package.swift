@@ -7,7 +7,10 @@ var testDependencies: [Target.Dependency] = ["SwiftCBOR"]
 
 #if compiler(>=6.2)
 dependencies.append(
-    .package(url: "https://github.com/x-sheep/swift-property-based.git", from: "2.0.1")
+    .package(
+        url: "https://github.com/hamchapman/swift-property-based.git",
+        revision: "169a57520a649c3569c6a6136f518eed8a39a8b2"
+    )
 )
 testDependencies.append(
     .product(name: "PropertyBased", package: "swift-property-based")
