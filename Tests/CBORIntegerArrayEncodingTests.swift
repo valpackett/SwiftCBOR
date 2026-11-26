@@ -30,9 +30,9 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         )
     }
 
-    func testPublicEncodingUsesSpecializedPathWhilePreservingUnsignedWidths() {
+    func testPublicEncodingUsesSpecializedPathWithPreferredIntegerWidths() {
         let uint16Values: [UInt16] = [1]
-        let uint16Expected: [UInt8] = [0x81, 0x19, 0x00, 0x01]
+        let uint16Expected: [UInt8] = [0x81, 0x01]
         XCTAssertEqual(CBOR.encodeArray(uint16Values), uint16Expected)
         XCTAssertEqual(CBOR.encode(uint16Values), uint16Expected)
         XCTAssertEqual(uint16Values.encode(), uint16Expected)
@@ -41,7 +41,7 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         XCTAssertEqual(uint16Output, uint16Expected)
 
         let uint32Values: [UInt32] = [1]
-        let uint32Expected: [UInt8] = [0x81, 0x1a, 0x00, 0x00, 0x00, 0x01]
+        let uint32Expected: [UInt8] = [0x81, 0x01]
         XCTAssertEqual(CBOR.encodeArray(uint32Values), uint32Expected)
         XCTAssertEqual(CBOR.encode(uint32Values), uint32Expected)
         XCTAssertEqual(uint32Values.encode(), uint32Expected)
@@ -50,7 +50,7 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         XCTAssertEqual(uint32Output, uint32Expected)
 
         let uint64Values: [UInt64] = [1]
-        let uint64Expected: [UInt8] = [0x81, 0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]
+        let uint64Expected: [UInt8] = [0x81, 0x01]
         XCTAssertEqual(CBOR.encodeArray(uint64Values), uint64Expected)
         XCTAssertEqual(CBOR.encode(uint64Values), uint64Expected)
         XCTAssertEqual(uint64Values.encode(), uint64Expected)
@@ -70,10 +70,10 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         XCTAssertEqual(values.encode(), output)
     }
 
-    func testShortestIntegerEncodingOptionAppliesToPublicPaths() {
-        let options = CBOROptions(useShortestIntegerEncoding: true)
+    func testFixedWidthIntegerEncodingOptionAppliesToPublicPaths() {
+        let options = CBOROptions(useShortestIntegerEncoding: false)
         let values: [UInt16] = [1]
-        let expected: [UInt8] = [0x81, 0x01]
+        let expected: [UInt8] = [0x81, 0x19, 0x00, 0x01]
         var output: [UInt8] = []
         values.encode(into: &output, options: options)
 
@@ -81,8 +81,8 @@ final class CBORIntegerArrayEncodingTests: XCTestCase {
         XCTAssertEqual(CBOR.encode(values, options: options), expected)
         XCTAssertEqual(values.encode(options: options), expected)
         XCTAssertEqual(output, expected)
-        XCTAssertEqual(UInt16(1).encode(options: options), [0x01])
-        XCTAssertEqual(UInt32(1).encode(options: options), [0x01])
-        XCTAssertEqual(UInt64(1).encode(options: options), [0x01])
+        XCTAssertEqual(UInt16(1).encode(options: options), [0x19, 0x00, 0x01])
+        XCTAssertEqual(UInt32(1).encode(options: options), [0x1a, 0x00, 0x00, 0x00, 0x01])
+        XCTAssertEqual(UInt64(1).encode(options: options), [0x1b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01])
     }
 }

@@ -170,10 +170,21 @@ private let codableRecordGenerator = zip(
     }
 }
 
-@Test func generatedCBORRoundTrips() async {
+@Test func generatedFixedWidthCBORRoundTrips() async {
+    let options = CBOROptions(useShortestFloatEncoding: false)
+
     await propertyCheck(count: 500, input: cborGenerator) { value in
-        let decoded = try CBOR.decode(value.encode())
+        let decoded = try CBOR.decode(value.encode(options: options))
         #expect(decoded == value)
+    }
+}
+
+@Test func generatedPreferredCBORRereencodesIdentically() async {
+    await propertyCheck(count: 500, input: cborGenerator) { value in
+        let encoded = value.encode()
+        let decoded = try #require(try CBOR.decode(encoded))
+
+        #expect(decoded.encode() == encoded)
     }
 }
 
