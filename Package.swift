@@ -19,7 +19,7 @@ testDependencies.append(
 
 let package = Package(
     name: "SwiftCBOR",
-    platforms: [.macOS(.v10_13), .iOS(.v13), .tvOS(.v13), .macCatalyst(.v13), .watchOS(.v8)],
+    platforms: [.macOS(.v12), .iOS(.v15), .tvOS(.v15), .macCatalyst(.v15), .watchOS("9.0")],
     products: [
         .library(name: "SwiftCBOR", targets: ["SwiftCBOR"])
     ],

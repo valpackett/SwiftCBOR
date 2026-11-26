@@ -11,6 +11,7 @@
 
 ### Changed
 
+- The minimum Apple platform versions are now macOS 12, iOS 15, tvOS 15, Mac Catalyst 15, and watchOS 9, matching the deployment targets supported by current Xcode releases.
 - **Source-breaking:** the `CBOROptions` initializer label `shouldShortMapKeys` has been corrected to `shouldSortMapKeys`.
 - General-purpose integer and floating-point encoding now defaults to RFC 8949 preferred shortest-width serialization. This changes the default byte output for some `UInt16`, `UInt32`, `UInt64`, `Float`, and `Double` values.
 - The `useShortestIntegerEncoding` and `useShortestFloatEncoding` options on `CBOROptions` and `CodableCBOREncoder` can be set to `false` to retain fixed-width output for that kind of value.

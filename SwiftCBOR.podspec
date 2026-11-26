@@ -11,10 +11,10 @@ Pod::Spec.new do |s|
   s.source = { git: 'https://github.com/valpackett/SwiftCBOR.git', tag: "v#{s.version}" }
   s.swift_version = '5.0'
 
-  s.ios.deployment_target = '13.0'
-  s.osx.deployment_target = '10.13'
-  s.tvos.deployment_target = '13.0'
-  s.watchos.deployment_target = '8.0'
+  s.ios.deployment_target = '15.0'
+  s.osx.deployment_target = '12.0'
+  s.tvos.deployment_target = '15.0'
+  s.watchos.deployment_target = '9.0'
 
   s.source_files = 'Sources/**/*.{swift,h}'
   s.resource_bundles = { 'SwiftCBOR' => ['Sources/PrivacyInfo.xcprivacy'] }
